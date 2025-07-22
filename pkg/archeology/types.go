@@ -142,7 +142,7 @@ func GetKnownNetworks() []Network {
 		{Name: "spc-testnet", ChainID: 36912, BlockchainID: ""},
 		{Name: "hanzo-mainnet", ChainID: 36963, BlockchainID: ""},
 		{Name: "hanzo-testnet", ChainID: 36962, BlockchainID: ""},
-		{Name: "lux-7777", ChainID: 7777, BlockchainID: ""},
+		{Name: "lux-genesis-7777", ChainID: 7777, BlockchainID: ""},
 	}
 }
 

@@ -62,7 +62,7 @@ This command creates a complete snapshot of token holders for genesis inclusion.
 			}
 
 			// Special handling for local chains
-			if chain == "local" || chain == "7777" || chain == "lux-7777" {
+			if chain == "local" || chain == "7777" || chain == "lux-genesis-7777" {
 				if rpcURL == "" {
 					rpcURL = "http://localhost:9650/ext/bc/C/rpc"
 				}

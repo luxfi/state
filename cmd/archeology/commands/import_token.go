@@ -97,7 +97,7 @@ token holder data in a format ready for X-Chain genesis integration.`,
 					if chainID == 0 {
 						chainID = 43114
 					}
-				case "7777", "lux-7777", "local":
+				case "7777", "lux-genesis-7777", "local":
 					rpcURL = "http://localhost:9650/ext/bc/C/rpc"
 					if chainID == 0 {
 						chainID = 7777
@@ -262,7 +262,7 @@ func GetTokenNetworks() []TokenNetworkInfo {
 		{Name: "avalanche", ChainID: 43114, RPC: "https://api.avax.network/ext/bc/C/rpc"},
 		
 		// Local Lux chains
-		{Name: "lux-7777", ChainID: 7777, RPC: "http://localhost:9650/ext/bc/C/rpc", LocalPort: 9650},
+		{Name: "lux-genesis-7777", ChainID: 7777, RPC: "http://localhost:9650/ext/bc/C/rpc", LocalPort: 9650},
 		{Name: "lux-96369", ChainID: 96369, RPC: "http://localhost:9650/ext/bc/C/rpc", LocalPort: 9650},
 		{Name: "lux-96368", ChainID: 96368, RPC: "http://localhost:9650/ext/bc/C/rpc", LocalPort: 9650},
 		

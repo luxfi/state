@@ -60,7 +60,7 @@ import-96369-cchain:
 export-7777-accounts:
 	@echo "Exporting 7777 account balances to CSV..."
 	@go run scripts/export_7777_accounts.go \
-		--db-path chaindata/lux-7777/db \
+		--db-path chaindata/lux-genesis-7777/db \
 		--output exports/7777-accounts.csv \
 		--exclude-treasury 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714
 	@echo "✅ Export complete: exports/7777-accounts.csv"
@@ -102,24 +102,22 @@ clean-chaindata:
 	@echo "✓ Cleaned raw chaindata"
 
 # Build targets
-build: build-tools build-lux-archeology build-genesis build-teleport
+build: build-tools build-archeology build-genesis build-teleport
 
 build-tools:
 	@echo "Building extraction tools..."
 	@mkdir -p bin
 	@echo "  - denamespace"
 	@cd cmd/denamespace && go build -o ../../bin/denamespace . 2>/dev/null || echo "    ⚠️  Failed to build denamespace"
-	@echo "  - denamespace-selective"
-	@cd cmd/denamespace-selective && go build -o ../../bin/denamespace-selective . 2>/dev/null || echo "    ⚠️  Failed to build denamespace-selective"
-	@echo "  - denamespace-universal"
-	@cd cmd/denamespace-universal && go build -o ../../bin/denamespace-universal . 2>/dev/null || echo "    ⚠️  Failed to build denamespace-universal"
+	@echo "  - prefixscan"
+	@cd cmd/prefixscan && go build -o ../../bin/prefixscan . 2>/dev/null || echo "    ⚠️  Failed to build prefixscan"
 	@echo "✅ Extraction tools built"
 
-build-lux-archeology:
-	@echo "Building lux-archeology tool..."
+build-archeology:
+	@echo "Building archeology tool..."
 	@mkdir -p bin
-	@cd cmd/lux-archeology && go build -o ../../bin/lux-archeology . 2>/dev/null || echo "    ⚠️  Failed to build lux-archeology"
-	@echo "✅ lux-archeology tool built"
+	@cd cmd/archeology && go build -o ../../bin/archeology . 2>/dev/null || echo "    ⚠️  Failed to build archeology"
+	@echo "✅ archeology tool built"
 
 build-genesis:
 	@echo "Building genesis tool..."
@@ -135,7 +133,7 @@ build-teleport:
 
 # Keep old archeology for backwards compatibility
 build-archaeology:
-	@echo "Building archeology tool (deprecated - use build-lux-archeology)..."
+	@echo "Building archeology tool (deprecated - use build-archeology)..."
 	@mkdir -p bin
 	@cd cmd/archeology && go build -o ../../bin/archeology . 2>/dev/null || echo "    ⚠️  Failed to build archeology"
 	@echo "✅ Blockchain archaeology tool built"
@@ -288,8 +286,8 @@ run:
 	@case $(network) in \
 		7777) $(LUXD) --dev \
 			--network-id=7777 \
-			--chain-config-dir=configs/lux-7777 \
-			--data-dir=chaindata/lux-7777/db \
+			--chain-config-dir=configs/lux-genesis-7777 \
+			--data-dir=chaindata/lux-genesis-7777/db \
 			--http-port=9630 \
 			--staking-port=9631 \
 			--log-level=info ;; \
@@ -379,17 +377,17 @@ down:
 # New Pipeline Workflows
 pipeline-extract-all:
 	@echo "Extracting all chain data..."
-	@./bin/lux-archeology extract \
+	@./bin/archeology extract \
 		--source /path/to/lux-96369/db/pebbledb \
 		--destination ./data/extracted/lux-96369 \
 		--chain-id 96369 \
 		--include-state
-	@./bin/lux-archeology extract \
+	@./bin/archeology extract \
 		--source /path/to/zoo-200200/db/pebbledb \
 		--destination ./data/extracted/zoo-200200 \
 		--network zoo-mainnet \
 		--include-state
-	@./bin/lux-archeology extract \
+	@./bin/archeology extract \
 		--source /path/to/spc-36911/db/pebbledb \
 		--destination ./data/extracted/spc-36911 \
 		--chain-id 36911 \
@@ -451,23 +449,23 @@ help:
 	@echo "  make build           - Build all tools"
 	@echo ""
 	@echo "New Tools:"
-	@echo "  make build-lux-archeology - Build blockchain data extraction tool"
+	@echo "  make build-archeology    - Build blockchain data extraction tool"
 	@echo "  make build-genesis       - Build genesis generation tool"
 	@echo "  make build-teleport      - Build external asset migration tool"
 	@echo ""
-	@echo "Pipeline Workflows:"
-	@echo "  make pipeline-extract-all    - Extract data from all chains"
-	@echo "  make pipeline-scan-external  - Scan external blockchains for assets"
-	@echo "  make pipeline-generate-genesis - Generate all genesis files"
-	@echo "  make pipeline-full           - Run complete pipeline"
+	@echo "Genesis Workflows:"
+	@echo "  make genesis-extract-all       - Extract data from all chains"
+	@echo "  make genesis-scan-external     - Scan external blockchains for assets"
+	@echo "  make genesis-generate-genesis  - Generate all genesis files"
+	@echo "  make genesis                   - Run complete genesis pipeline"
 	@echo ""
 	@echo "Token Migration:"
 	@echo "  make migrate-token-to-l2 chain=<chain> contract=<addr> name=<name>"
 	@echo ""
 	@echo "Data Conversion:"
-	@echo "  make convert-7777    - Convert 7777 LevelDB to PebbleDB"
-	@echo "  make convert-96369   - Convert 96369 LevelDB to PebbleDB"
-	@echo "  make convert-all     - Convert all chain data"
+	@echo "  make convert network=7777    - Convert 7777 LevelDB to PebbleDB"
+	@echo "  make convert network=96369   - Convert 96369 LevelDB to PebbleDB"
+	@echo "  make convert-all      		  - Convert all chain data"
 	@echo ""
 	@echo "Running Networks:"
 	@echo "  make run network=7777   - Run historic 7777 network"

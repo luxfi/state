@@ -23,7 +23,7 @@ var _ = Describe("Database Operations", func() {
 	Describe("Chain Data Validation", func() {
 		Context("7777 Chain Data", func() {
 			It("should have valid PebbleDB structure", func() {
-				dbPath := filepath.Join(genesisDir, "chaindata/lux-7777/db")
+				dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
 				
 				// Check if it exists
 				Expect(dbPath).To(BeADirectory())
@@ -60,7 +60,7 @@ var _ = Describe("Database Operations", func() {
 			})
 
 			It("should have correct genesis block", func() {
-				dbPath := filepath.Join(genesisDir, "chaindata/lux-7777/db")
+				dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
 				
 				db, err := pebble.Open(dbPath, &pebble.Options{
 					ReadOnly: true,

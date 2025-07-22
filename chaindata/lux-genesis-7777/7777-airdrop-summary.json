@@ -1,0 +1,87 @@
+{
+  "generated": "2025-07-21T05:05:20.543032",
+  "source_chain_id": 7777,
+  "target_chain_id": 96369,
+  "genesis_block_height": 888834,
+  "total_accounts": 151,
+  "total_supply_lux": "2000000000000.000000000000000000",
+  "total_supply_wei": "2000000000000000000000000000000",
+  "treasury_account": {
+    "address": "0x9011e888251ab053b7bd1cdb598db4f9ded94714",
+    "balance_lux": "1994739905397.278564453125000000",
+    "balance_wei": "1994739905397278683064838288203",
+    "percentage": "99.7369952699"
+  },
+  "distribution": {
+    "accounts_excluding_treasury": 150,
+    "supply_excluding_treasury_lux": "5260094602.721317291259765625",
+    "supply_excluding_treasury_wei": "5260094602721316935161711797",
+    "top_10_accounts": [
+      {
+        "rank": 1,
+        "address": "0x9011e888251ab053b7bd1cdb598db4f9ded94714",
+        "balance_lux": "1994739905397.278564453125000000",
+        "percentage": "99.7369952699"
+      },
+      {
+        "rank": 2,
+        "address": "0x1a19d9205a3ec9f3f1ea9778e1b3ad1e20b37a5b",
+        "balance_lux": "1001000000.000000000000000000",
+        "percentage": "0.0500500000"
+      },
+      {
+        "rank": 3,
+        "address": "0x91bb0ed981e9436580c17557fe95ce8602b417dd",
+        "balance_lux": "1000181073.785179018974304199",
+        "percentage": "0.0500090537"
+      },
+      {
+        "rank": 4,
+        "address": "0x542bc5d9068c80a44b89a8ddeeb190326bd0d051",
+        "balance_lux": "1000000001.000000000000000000",
+        "percentage": "0.0500000000"
+      },
+      {
+        "rank": 5,
+        "address": "0x02980f4b5ccbabc37eaf9430a9335fa5da6823f7",
+        "balance_lux": "1000000000.000000000000000000",
+        "percentage": "0.0500000000"
+      },
+      {
+        "rank": 6,
+        "address": "0x883e3b8c7a690d82ad3a93b105b0052c35fd6d96",
+        "balance_lux": "654200530.661396145820617676",
+        "percentage": "0.0327100265"
+      },
+      {
+        "rank": 7,
+        "address": "0x470bc786dccb4b47196ab3a9835b86a14fdb1a21",
+        "balance_lux": "150642224.000000000000000000",
+        "percentage": "0.0075321112"
+      },
+      {
+        "rank": 8,
+        "address": "0x4888e4a2ee0f03051c72d2bd3acf755ed3498b3e",
+        "balance_lux": "149126795.518059492111206055",
+        "percentage": "0.0074563398"
+      },
+      {
+        "rank": 9,
+        "address": "0x29f53ad222d61e75dce48a3b5c8bfb1331ed5066",
+        "balance_lux": "102836592.596402525901794434",
+        "percentage": "0.0051418296"
+      },
+      {
+        "rank": 10,
+        "address": "0x0865451a6c89a73e7d4308e7424fe4c0e33738c3",
+        "balance_lux": "37579479.919828765094280243",
+        "percentage": "0.0018789740"
+      }
+    ]
+  },
+  "files_generated": [
+    "/home/z/work/lux/genesis/data/7777-airdrop-96369-mainnet.csv",
+    "/home/z/work/lux/genesis/data/7777-airdrop-96369-mainnet-no-treasury.csv",
+    "/home/z/work/lux/genesis/data/7777-airdrop-summary.json"
+  ]
+}

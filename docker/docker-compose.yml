@@ -68,16 +68,16 @@ services:
       - lux-network
 
   # Optional: Historic 7777 network (runs separately)
-  lux-7777:
+  lux-genesis-7777:
     build:
       context: ..
       dockerfile: docker/Dockerfile.7777
-    container_name: lux-7777
+    container_name: lux-genesis-7777
     ports:
       - "9730:9630"  # Different port to avoid conflict
       - "9731:9631"
     volumes:
-      - lux-7777-data:/data
+      - lux-genesis-7777-data:/data
     environment:
       - NETWORK_ID=7777
     profiles:
@@ -104,8 +104,8 @@ volumes:
     name: lux-primary-data
   subnet-data:
     name: lux-subnet-data
-  lux-7777-data:
-    name: lux-7777-data
+  lux-genesis-7777-data:
+    name: lux-genesis-7777-data
   prometheus-data:
     name: lux-prometheus-data
 

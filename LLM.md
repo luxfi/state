@@ -28,7 +28,7 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 ├── zoo-mainnet-200200/   # 3.7MB
 ├── zoo-testnet-200201/   # 292KB
 ├── spc-mainnet-36911/    # 48KB
-├── lux-7777/             # Historical
+├── lux-genesis-7777/             # Historical
 └── configs/              # All configurations
 ```
 

@@ -43,7 +43,7 @@ func newListChainsCommand() *cobra.Command {
 			fmt.Println("\nLocal/Development Chains:")
 			fmt.Println("========================")
 			fmt.Println("- local (7777)    - Local Lux chain on port 9650")
-			fmt.Println("- lux-7777        - Legacy Lux chain")
+			fmt.Println("- lux-genesis-7777        - Legacy Lux chain")
 			fmt.Println("- lux-mainnet     - Current Lux mainnet (96369)")
 
 			fmt.Println("\nUse --chain flag with any of these network names")

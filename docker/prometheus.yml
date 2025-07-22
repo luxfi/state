@@ -10,9 +10,9 @@ scrape_configs:
     params:
       module: ['prometheus']
 
-  - job_name: 'lux-7777'
+  - job_name: 'lux-genesis-7777'
     static_configs:
-      - targets: ['lux-7777:9630']
+      - targets: ['lux-genesis-7777:9630']
     metrics_path: '/ext/metrics'
     params:
       module: ['prometheus']
