@@ -26,8 +26,10 @@ echo "Starting incremental chaindata push on branch '$MAIN_BRANCH'..."
 # Iterate chaindata subdirectories (excluding non-dir entries)
 for dir in chaindata/*/; do
   name=$(basename "$dir")
-  # Skip hidden or dot dirs if any
-  [[ "$name" = .* ]] && continue
+  # Skip hidden or dot dirs and the configs folder
+  if [[ "$name" = .* ]] || [[ "$name" = "configs" ]]; then
+    continue
+  fi
 
   echo "--> Committing and pushing chaindata/$name"
   git add "chaindata/$name"
