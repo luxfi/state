@@ -1,0 +1,10 @@
+{
+    "network": "lux-7777",
+    "chainId": 7777,
+    "blockchainId": "unknown-need-to-determine",
+    "originalSize": "~350MB compressed",
+    "extractedAt": "2025-07-21T19:59:42Z",
+    "purpose": "Airdrop verification - token holders from 7777 network",
+    "token": "LUX",
+    "note": "This is the original 7777 network data for verifying airdrops to 96369"
+}
