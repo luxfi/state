@@ -28,13 +28,23 @@ genesis file generation for Lux Network.`,
 
 	// Add subcommands
 	rootCmd.AddCommand(
+		// Core archeology commands
 		commands.NewExtractCommand(),
 		commands.NewAnalyzeCommand(),
 		commands.NewScanCommand(),
 		commands.NewGenesisCommand(),
 		commands.NewListCommand(),
+		
+		// Import commands
 		commands.NewImportNFTCommand(),
 		commands.NewImportTokenCommand(),
+		
+		// Scanner commands (modular blockchain scanners)
+		commands.NewScanBurnsCommand(),
+		commands.NewScanHoldersCommand(),
+		commands.NewScanTransfersCommand(),
+		commands.NewScanCurrentHoldersCommand(),
+		commands.NewScanBurnsCachedCommand(),
 	)
 
 	// Execute

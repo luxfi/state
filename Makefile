@@ -12,9 +12,33 @@ install:
 	@go run scripts/install_deps.go
 	@echo "✅ Installation complete!"
 
-## Full genesis pipeline: extract then generate P-, C-, X-chain genesis files
-genesis: build-tools build-archeology build-genesis
-	@echo "👉  Running full genesis pipeline"
+## Genesis generation with network parameter
+genesis:
+	@if [ -z "$(network)" ]; then \
+		echo "Usage: make genesis network=<lux|zoo|spc|hanzo>"; \
+		echo "Example: make genesis network=lux"; \
+		echo "Example: make genesis network=zoo"; \
+		exit 1; \
+	fi
+	@echo "👉  Running genesis pipeline for $(network)"
+	@case $(network) in \
+		lux) \
+			$(MAKE) genesis-lux ;; \
+		zoo) \
+			$(MAKE) genesis-zoo ;; \
+		spc) \
+			$(MAKE) genesis-spc ;; \
+		hanzo) \
+			$(MAKE) genesis-hanzo ;; \
+		*) \
+			echo "Unknown network: $(network)"; \
+			echo "Valid networks: lux, zoo, spc, hanzo"; \
+			exit 1 ;; \
+	esac
+
+## Lux genesis pipeline: extract then generate P-, C-, X-chain genesis files
+genesis-lux: build-tools build-archeology build-genesis
+	@echo "👉  Running Lux genesis pipeline"
 	@bin/archeology extract --src chaindata/lux-genesis-7777/db/pebbledb --dst data/extracted/lux-genesis-7777 --chain-id 7777 --include-state
 	@bin/archeology extract --src chaindata/lux-mainnet-96369/db/pebbledb --dst data/extracted/lux-96369 --chain-id 96369 --include-state
 	@echo "👉  Generating P-Chain genesis"
@@ -23,7 +47,40 @@ genesis: build-tools build-archeology build-genesis
 	@bin/genesis generate --network c-chain --data data/extracted/lux-96369 --output configs/C/genesis.json
 	@echo "👉  Generating X-Chain genesis"
 	@bin/genesis generate --network x-chain --data data/extracted/lux-genesis-7777 --external data/external --output configs/xchain-genesis-complete.json
-	@echo "✅ Full genesis pipeline complete (configs/P, configs/C, configs/xchain-genesis-complete.json)"
+	@echo "✅ Lux genesis pipeline complete (configs/P, configs/C, configs/xchain-genesis-complete.json)"
+
+## Zoo genesis pipeline
+genesis-zoo: build-tools build-teleport zoo-analysis
+	@echo "👉  Running Zoo genesis pipeline"
+	@echo "First running Zoo analysis to gather external data..."
+	@$(MAKE) zoo-analysis
+	@echo "👉  Extracting Zoo mainnet data"
+	@bin/archeology extract --src chaindata/zoo-mainnet-200200/db/pebbledb --dst data/extracted/zoo-200200 --chain-id 200200 --include-state
+	@echo "👉  Generating Zoo genesis with external data"
+	@bin/genesis generate --network zoo-mainnet --chain-id 200200 \
+		--data data/extracted/zoo-200200 \
+		--external exports/zoo-analysis/ \
+		--output configs/zoo-mainnet-genesis.json
+	@echo "✅ Zoo genesis pipeline complete (configs/zoo-mainnet-genesis.json)"
+
+## SPC genesis pipeline
+genesis-spc: build-tools build-archeology build-genesis
+	@echo "👉  Running SPC genesis pipeline"
+	@bin/archeology extract --src chaindata/spc-mainnet-36911/db/pebbledb --dst data/extracted/spc-36911 --chain-id 36911 --include-state
+	@echo "👉  Generating SPC genesis"
+	@bin/genesis generate --network spc-mainnet --chain-id 36911 \
+		--data data/extracted/spc-36911 \
+		--output configs/spc-mainnet-genesis.json
+	@echo "✅ SPC genesis pipeline complete (configs/spc-mainnet-genesis.json)"
+
+## Hanzo genesis pipeline (placeholder - not deployed yet)
+genesis-hanzo:
+	@echo "👉  Hanzo network not deployed yet"
+	@echo "Chain ID 36963 reserved for future deployment"
+	@echo "To prepare Hanzo genesis when ready:"
+	@echo "  1. Deploy Hanzo subnet"
+	@echo "  2. Extract chaindata"
+	@echo "  3. Run: make genesis network=hanzo"
 
 snapshot: genesis
 	@echo "Building snapshot tarball..."
@@ -111,7 +168,7 @@ clean-chaindata:
 	@echo "✓ Cleaned raw chaindata"
 
 # Build targets
-build: build-tools build-genesis build-teleport
+build: build-tools build-archeology build-genesis build-teleport
 
 build-tools:
 	@echo "Building extraction tools..."
@@ -180,14 +237,13 @@ import-lux-nfts:
 	@echo "✅ Lux NFT import complete"
 
 import-zoo-nfts:
-	@echo "Importing Zoo NFTs from BSC..."
-	@echo "⚠️  Please add Zoo NFT contract address"
-	@# ./bin/archeology import-nft \
-	@#	--network bsc \
-	@#	--chain-id 56 \
-	@#	--contract 0xADD_ZOO_NFT_ADDRESS_HERE \
-	@#	--project zoo \
-	@#	--output exports/zoo-nfts-bsc.csv
+	@echo "Importing Zoo EGG NFTs from BSC..."
+	@./bin/teleport import-nft \
+		--network bsc \
+		--chain-id 56 \
+		--contract 0x5bb68cf06289d54efde25155c88003be685356a8 \
+		--project zoo \
+		--output exports/zoo-egg-nfts-bsc.csv
 
 # Import with custom parameters
 import-nft:
@@ -202,17 +258,82 @@ import-nft:
 		--contract $(contract) \
 		--project $(project)
 
+# Scan EGG NFT holders
+scan-egg-holders:
+	@echo "Scanning all EGG NFT holders on BSC..."
+	@echo "Contract: 0x5bb68cf06289d54efde25155c88003be685356a8"
+	@mkdir -p exports
+	@./bin/teleport scan-egg-holders --output exports/egg-holders.txt
+	@echo "✅ EGG holder scan complete!"
+
+# Zoo Migration (special handling for burns)
+migrate-zoo-complete:
+	@echo "Performing complete Zoo token migration from BSC..."
+	@echo "This includes:"
+	@echo "  - Current Zoo token holders"
+	@echo "  - Users who burned tokens to 0x000000000000000000000000000000000000dEaD"
+	@echo "  - EGG NFT holders"
+	@mkdir -p exports
+	@./bin/teleport zoo-migrate \
+		--include-burns \
+		--include-egg-nfts \
+		--output exports/zoo-migration-complete.json
+	@echo "✅ Zoo migration complete!"
+	@echo "Check exports/zoo-migration-complete.json for results"
+
+# Zoo Analysis (using archeology scanners)
+zoo-analysis: build-archeology
+	@echo "Performing comprehensive Zoo ecosystem analysis..."
+	@echo "This will scan:"
+	@echo "  - EGG NFT holders on BSC"
+	@echo "  - ZOO transfers for EGG purchases"
+	@echo "  - ZOO burns to dead address"
+	@./scripts/zoo-analysis.sh exports/zoo-analysis
+	@echo "✅ Zoo analysis complete!"
+	@echo "Check exports/zoo-analysis/ for all CSV files and report"
+
+# Scan token burns (reusable for any token)
+scan-burns: build-archeology
+	@if [ -z "$(token)" ]; then \
+		echo "Usage: make scan-burns token=<address> rpc=<rpc-url>"; \
+		echo "Example: make scan-burns token=0x09e2b83fe5485a7c8beaa5dffd1d324a2b2d5c13 rpc=https://bsc-dataseed.binance.org/"; \
+		exit 1; \
+	fi
+	@mkdir -p exports
+	@./bin/archeology scan-burns \
+		--rpc $(rpc) \
+		--token $(token) \
+		--burn-address 0x000000000000000000000000000000000000dEaD \
+		--summarize \
+		--output exports/$(shell echo $(token) | cut -c1-10)-burns.csv \
+		--output-json exports/$(shell echo $(token) | cut -c1-10)-burns-summary.json
+
+# Scan token/NFT holders (reusable)
+scan-holders: build-archeology
+	@if [ -z "$(contract)" ]; then \
+		echo "Usage: make scan-holders contract=<address> rpc=<rpc-url> [type=<nft|token>]"; \
+		echo "Example: make scan-holders contract=0x5bb68cf06289d54efde25155c88003be685356a8 rpc=https://bsc-dataseed.binance.org/ type=nft"; \
+		exit 1; \
+	fi
+	@mkdir -p exports
+	@./bin/archeology scan-holders \
+		--rpc $(rpc) \
+		--contract $(contract) \
+		--type $(if $(type),$(type),nft) \
+		--top 20 \
+		--show-distribution \
+		--output exports/$(shell echo $(contract) | cut -c1-10)-holders.csv
+
 # Import ERC20 tokens
 import-zoo-tokens-bsc:
 	@echo "Importing Zoo tokens from BSC..."
-	@echo "⚠️  Please add Zoo token contract address"
-	@# ./bin/archeology import-token \
-	@#	--network bsc \
-	@#	--chain-id 56 \
-	@#	--contract 0xADD_ZOO_TOKEN_ADDRESS_HERE \
-	@#	--project zoo \
-	@#	--symbol ZOO \
-	@#	--output exports/zoo-tokens-bsc.csv
+	@./bin/teleport import-token \
+		--network bsc \
+		--chain-id 56 \
+		--contract 0x09e2b83fe5485a7c8beaa5dffd1d324a2b2d5c13 \
+		--project zoo \
+		--symbol ZOO \
+		--output exports/zoo-tokens-bsc.csv
 
 import-lux-tokens-7777:
 	@echo "Importing LUX tokens from local 7777 chain..."

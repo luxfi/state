@@ -1,0 +1,138 @@
+{
+  "initialStakers": [
+    {
+      "address": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xEAbCC110fAcBfebabC66Ad6f9E7B67288e720B59",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0x8d5081153aE1cfb41f5c932fe0b6Beb7E159cF84",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xf8f12D0592e6d1bFe92ee16CaBCC4a6F26dAAe23",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xFb66808f708e1d4D7D43a8c75596e84f94e06806",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0x313CF291c069C58D6bd61B0D672673462B8951bD",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xf7f52257a6143cE6BbD12A98eF2B0a3d0C648079",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xCA92ad0C91bd8DE640B9dAFfEB338ac908725142",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xB5B325df519eB58B7223d85aaeac8b56aB05f3d6",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0xcf5288bEe8d8F63511C389D5015185FDEDe30e54",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    },
+    {
+      "address": "0x16204223fe4470f4B1F1dA19A368dC815736a3d7",
+      "stakeAmount": "1000000000000000000000000000",
+      "stakeStartTime": 1577836800,
+      "stakeEndTime": 4733510400,
+      "unlockSchedule": {
+        "percentPerYear": 1,
+        "startYear": 2020,
+        "endYear": 2120
+      }
+    }
+  ],
+  "bootstrapNodes": [
+    "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+    "0xEAbCC110fAcBfebabC66Ad6f9E7B67288e720B59",
+    "0x8d5081153aE1cfb41f5c932fe0b6Beb7E159cF84",
+    "0xf8f12D0592e6d1bFe92ee16CaBCC4a6F26dAAe23",
+    "0xFb66808f708e1d4D7D43a8c75596e84f94e06806",
+    "0x313CF291c069C58D6bd61B0D672673462B8951bD",
+    "0xf7f52257a6143cE6BbD12A98eF2B0a3d0C648079",
+    "0xCA92ad0C91bd8DE640B9dAFfEB338ac908725142",
+    "0xB5B325df519eB58B7223d85aaeac8b56aB05f3d6",
+    "0xcf5288bEe8d8F63511C389D5015185FDEDe30e54",
+    "0x16204223fe4470f4B1F1dA19A368dC815736a3d7"
+  ]
+}

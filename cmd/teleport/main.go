@@ -26,12 +26,23 @@ of discovering, validating, and formatting external assets for genesis inclusion
 
 	// Add commands
 	rootCmd.AddCommand(
+		// Original commands
 		commands.NewMigrateCommand(),
 		commands.NewScanNFTCommand(),
 		commands.NewScanTokenCommand(),
+		commands.NewZooMigrateCommand(),
+		commands.NewScanEggHoldersCommand(),
 		commands.NewExportCommand(),
 		commands.NewVerifyCommand(),
 		commands.NewListCommand(),
+		
+		// New modular scanner commands
+		commands.NewScanTokenBurnsCommand(),
+		commands.NewScanNFTHoldersCommand(),
+		commands.NewScanTokenTransfersCommand(),
+		commands.NewCheckCrossChainBalancesCommand(),
+		commands.NewZooCrossReferenceCommand(),
+		commands.NewZooCrossReferenceV2Command(),
 	)
 
 	if err := rootCmd.Execute(); err != nil {

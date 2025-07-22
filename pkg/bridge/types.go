@@ -21,7 +21,7 @@ type Project struct {
 type NFTScannerConfig struct {
 	Chain           string
 	ChainID         int64
-	RPCURL          string
+	RPC             string  // Changed from RPCURL to RPC
 	ContractAddress string
 	ProjectName     string
 	FromBlock       uint64
@@ -29,6 +29,7 @@ type NFTScannerConfig struct {
 	BatchSize       uint64
 	IncludeMetadata bool
 	CrossReference  string
+	ValidatorNFT    bool    // For NFTs that grant validator status
 }
 
 // NFTScanResult contains NFT scan results
@@ -40,18 +41,29 @@ type NFTScanResult struct {
 	UniqueHolders        int
 	FromBlock            uint64
 	ToBlock              uint64
+	BlockScanned         uint64
+	ChainID              uint64
 	TypeDistribution     map[string]int
 	TopHolders           []Holder
 	TotalNFTs            int
+	NFTs                 []ScannedNFT  // Add NFTs field for export
 	StakingInfo          *StakingInfo
 	CrossReferenceResult *CrossReferenceResult
+}
+
+// ScannedNFT represents a scanned NFT
+type ScannedNFT struct {
+	TokenID      string `json:"tokenId"`
+	Owner        string `json:"owner"`
+	URI          string `json:"uri"`
+	StakingPower string `json:"stakingPower,omitempty"`
 }
 
 // TokenScannerConfig holds configuration for token scanning
 type TokenScannerConfig struct {
 	Chain           string
 	ChainID         int64
-	RPCURL          string
+	RPC             string  // Changed from RPCURL to RPC
 	ContractAddress string
 	ProjectName     string
 	FromBlock       uint64
@@ -73,6 +85,7 @@ type TokenScanResult struct {
 	ToBlock              uint64
 	Distribution         []DistributionTier
 	TopHolders           []TokenHolder
+	Holders              []TokenHolder  // Add all holders for export
 	CrossReferenceResult *CrossReferenceResult
 	MigrationInfo        *MigrationInfo
 }
@@ -148,19 +161,25 @@ type VerifierConfig struct {
 	VerifyBalances bool
 	VerifyHolders  bool
 	VerifyMetadata bool
+	CrossReference bool   // Cross-reference with existing chain data
+	MinBalance     string // Minimum balance threshold
+	MaxSupply      string // Maximum supply cap
 }
 
 // VerificationResult contains verification results
 type VerificationResult struct {
-	Status           string
-	RecordsVerified  int
-	ChecksPerformed  int
-	ChecksPassed     int
-	ChecksFailed     int
-	Warnings         []string
-	Discrepancies    []Discrepancy
-	BalanceCheck     *BalanceCheckResult
-	HolderCheck      *HolderCheckResult
+	Valid            bool               `json:"valid"`
+	Summary          string             `json:"summary"`
+	Warnings         []string           `json:"warnings"`
+	Errors           []string           `json:"errors"`
+	Status           string             `json:"status,omitempty"`
+	RecordsVerified  int                `json:"recordsVerified,omitempty"`
+	ChecksPerformed  int                `json:"checksPerformed,omitempty"`
+	ChecksPassed     int                `json:"checksPassed,omitempty"`
+	ChecksFailed     int                `json:"checksFailed,omitempty"`
+	Discrepancies    []Discrepancy      `json:"discrepancies,omitempty"`
+	BalanceCheck     *BalanceCheckResult `json:"balanceCheck,omitempty"`
+	HolderCheck      *HolderCheckResult  `json:"holderCheck,omitempty"`
 }
 
 // Helper types
@@ -183,9 +202,15 @@ type StakingInfo struct {
 }
 
 type CrossReferenceResult struct {
-	FoundOnChain     int
-	NewAddresses     int
-	MissingFromChain int
+	Matched          int      `json:"matched"`
+	NotFound         int      `json:"notFound"`
+	Additional       int      `json:"additional"`
+	TotalSource      int      `json:"totalSource"`
+	TotalTarget      int      `json:"totalTarget"`
+	NotFoundIDs      []string `json:"notFoundIds,omitempty"`
+	FoundOnChain     int      `json:"foundOnChain,omitempty"`
+	NewAddresses     int      `json:"newAddresses,omitempty"`
+	MissingFromChain int      `json:"missingFromChain,omitempty"`
 }
 
 type DistributionTier struct {
@@ -256,12 +281,15 @@ func GetKnownProjects() []Project {
 			Name:   "zoo",
 			Symbol: "ZOO",
 			TokenContracts: map[string]string{
-				"bsc": "", // TODO: Add contract
+				"bsc": "0x0a6045b79151d0a54dbd5227082445750a023af2",
+			},
+			NFTContracts: map[string]string{
+				"bsc": "0x5bb68cf06289d54efde25155c88003be685356a8", // EGG NFT
 			},
 			StakingPowers: map[string]string{
-				"Animal":  "1000000",
-				"Habitat": "750000",
-				"Item":    "250000",
+				"EGG":     "1000000",
+				"Animal":  "750000",
+				"Habitat": "500000",
 			},
 		},
 	}

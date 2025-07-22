@@ -1,0 +1,17 @@
+{
+  "config": {
+    "version": 1,
+    "networkID": 1,
+    "codecVersion": 0,
+    "feeConfig": {
+      "txFee": 1000000,
+      "createAssetTxFee": 10000000,
+      "createSubnetTxFee": 1000000000,
+      "createBlockchainTxFee": 1000000000
+    }
+  },
+  "nonce": "0x0",
+  "timestamp": "0x5ff07b00",
+  "initialSupply": "720000000000000000",
+  "allocations": []
+}
