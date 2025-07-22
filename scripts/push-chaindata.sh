@@ -34,8 +34,12 @@ for dir in chaindata/*/; do
     if [[ -f "$dir/metadata.json" ]]; then
       echo "--> Adding metadata.json for $name"
       git add "$dir/metadata.json"
-      git commit -m "chore(genesis): add metadata.json for $name"
-      git push origin "$MAIN_BRANCH"
+      if git diff --cached --quiet; then
+        echo "--> No metadata.json changes for $name; skipping."
+      else
+        git commit -m "chore(genesis): add metadata.json for $name"
+        git push origin "$MAIN_BRANCH"
+      fi
     fi
 
     # Commit PebbleDB logs, manifests, options
@@ -43,8 +47,12 @@ for dir in chaindata/*/; do
     if compgen -G "$pdir"/*.log > /dev/null || compgen -G "$pdir"/MANIFEST-* > /dev/null || compgen -G "$pdir"/OPTIONS-* > /dev/null; then
       echo "--> Adding PebbleDB manifests/logs for $name"
       git add "${extras[@]}"
-      git commit -m "chore(genesis): add $name pebbledb manifests and logs"
-      git push origin "$MAIN_BRANCH"
+      if git diff --cached --quiet; then
+        echo "--> No pebbledb log/manifest changes for $name; skipping."
+      else
+        git commit -m "chore(genesis): add $name pebbledb manifests and logs"
+        git push origin "$MAIN_BRANCH"
+      fi
     fi
 
     # Split SST files into batches to keep each push <2GB
@@ -57,8 +65,12 @@ for dir in chaindata/*/; do
         (( j>total )) && j=$total
         echo "--> Adding SST files $((i+1))-$j of $total for $name"
         git add "${sst_files[@]:i:batch}"
-        git commit -m "chore(genesis): add $name SST files $((i+1))-$j of $total"
-        git push origin "$MAIN_BRANCH"
+        if git diff --cached --quiet; then
+          echo "--> No SST files $((i+1))-$j changes for $name; skipping."
+        else
+          git commit -m "chore(genesis): add $name SST files $((i+1))-$j of $total"
+          git push origin "$MAIN_BRANCH"
+        fi
       done
     fi
 
@@ -68,8 +80,12 @@ for dir in chaindata/*/; do
   # Fallback: commit entire directory for small chains
   echo "--> Adding & pushing entire chaindata/$name"
   git add "$dir"
-  git commit -m "chore(genesis): add chaindata for $name"
-  git push origin "$MAIN_BRANCH"
+  if git diff --cached --quiet; then
+    echo "--> No changes in $name; skipping."
+  else
+    git commit -m "chore(genesis): add chaindata for $name"
+    git push origin "$MAIN_BRANCH"
+  fi
 done
 
 echo "All chaindata subdirectories have been pushed."
