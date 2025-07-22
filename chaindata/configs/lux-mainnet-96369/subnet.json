@@ -1,0 +1,26 @@
+{
+  "ValidatorOnly": false,
+  "ConsensusParameters": {
+    "K": 20,
+    "AlphaPreference": 15,
+    "AlphaConfidence": 15,
+    "Beta": 20,
+    "ConcurrentRepolls": 4,
+    "OptimalProcessing": 10,
+    "MaxOutstandingItems": 256,
+    "MaxItemProcessingTime": 30000000000
+  },
+  "ProposerMinBlockDelay": 1000000000,
+  "ProposerNumHistoricalBlocks": 512,
+  "ValidatorManagement": {
+    "Threshold": 80,
+    "MinValidatorStake": 2000000000000,
+    "MaxValidatorStake": 3000000000000000,
+    "MinStakeDuration": 86400,
+    "MaxStakeDuration": 31536000,
+    "MinDelegationFee": 20000,
+    "MinDelegatorStake": 25000000000,
+    "MaxValidatorWeightFactor": 5,
+    "UptimeRequirement": 800000
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "network": "spc",
+  "updated": "2025-06-25T17:02:42.682426",
+  "chains": {
+    "mainnet": {
+      "chain_id": 36911,
+      "blockchain_id": "QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1",
+      "name": "SPC Mainnet",
+      "symbol": "SPC",
+      "latest_block": {
+        "height": 10,
+        "hash": "0x5423ed289d6319b4d60f97021d60cda47f9441209327e1a4f61cb33cbe9d864b",
+        "timestamp": 1741049733,
+        "timestamp_human": "2025-03-04 00:55:33 UTC"
+      },
+      "rpc_endpoint": "http://127.0.0.1:9630/ext/bc/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1/rpc"
+    }
+  }
+}

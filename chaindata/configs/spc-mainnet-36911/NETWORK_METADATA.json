@@ -1,0 +1,57 @@
+{
+  "network": "SPC Network",
+  "description": "Space Network - Infrastructure and DeFi focused blockchain",
+  "versions": [
+    {
+      "version": "1.0",
+      "era": "SPC Mainnet",
+      "chainId": 36911,
+      "timeline": {
+        "network_launch": "2024-11-13T19:04:24Z",
+        "current_status": "active",
+        "last_known_update": "2025-06-25T22:00:00Z"
+      },
+      "blocks": {
+        "genesis_block": 0,
+        "last_known_block": 10,
+        "blocks_per_day": "minimal_activity"
+      },
+      "subnet": {
+        "subnet_id": "2hMMhMFfVvpCFrA9LBGS3j5zr5XfARuXdLLYXKpJR3RpnrunH9",
+        "blockchain_id": "QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1",
+        "vm": "subnet-evm",
+        "vm_version": "v0.5.10"
+      },
+      "tokenomics": {
+        "symbol": "SPC",
+        "decimals": 18,
+        "initial_supply": "1000000000",
+        "max_supply": "1000000000"
+      },
+      "genesis_accounts": [
+        {
+          "address": "0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC",
+          "balance": "unknown",
+          "role": "Pre-funded account"
+        }
+      ],
+      "rpc_endpoint": "http://127.0.0.1:9630/ext/bc/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1/rpc",
+      "notes": "First deployment of SPC network, minimal on-chain activity to date"
+    }
+  ],
+  "testnet": {
+    "status": "not_deployed",
+    "planned_chain_id": 36912,
+    "notes": "Testnet configuration exists but not yet deployed"
+  },
+  "related_services": {
+    "blockscout_explorer": "http://localhost:4002",
+    "graph_node": "planned"
+  },
+  "migration": {
+    "target_type": "subnet",
+    "parent_network": "LUX C-Chain",
+    "maintains_chain_id": true,
+    "state_export": "full_mainnet_state"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "TeleporterVersion": "1.0.0",
+  "TeleporterMessengerAddress": "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+  "TeleporterRegistryAddress": "0x17aB05351fC94a1a67Bf3f56DdbB941aE6c63E25",
+  "Name": "spc-testnet",
+  "VM": "subnetevm",
+  "VMVersion": "v0.6.0",
+  "RPCVersion": 1,
+  "TokenName": "SparklePony Coin",
+  "TokenSymbol": "SPC",
+  "ChainID": 36912,
+  "NetworkID": 36912,
+  "SubnetID": "",
+  "BlockchainID": ""
+}

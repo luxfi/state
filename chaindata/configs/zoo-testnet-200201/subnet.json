@@ -1,0 +1,4 @@
+{
+  "eth-apis": ["eth","eth-filter","net","web3","internal-eth","internal-blockchain","internal-transaction","internal-debug","debug","debug-tracer","internal-tx-pool"],
+  "http-apis": ["web3", "eth", "net", "txpool"]
+}

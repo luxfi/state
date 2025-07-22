@@ -1,0 +1,11 @@
+{
+  "network": "local",
+  "luxdVersion": "v1.11.12",
+  "subnetEVMVersion": "v0.6.12",
+  "customVMPath": "",
+  "chainName": "lux2023",
+  "subnetID": "",
+  "blockchainID": "",
+  "vmID": "srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy",
+  "validatorManagement": "allowlist"
+}

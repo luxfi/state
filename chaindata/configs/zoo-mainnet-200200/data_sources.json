@@ -1,0 +1,58 @@
+{
+  "network": "Zoo Network",
+  "versions": {
+    "v1-200200": {
+      "chain_id": 200200,
+      "status": "active",
+      "description": "Current Zoo mainnet",
+      "blockchain_id": "bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM",
+      "data_sources": [
+        {
+          "type": "genesis",
+          "path": "v1-200200/genesis.json",
+          "source": "/home/z/blockchain-backups/genesis/zoo-mainnet_genesis.json",
+          "description": "Generated genesis file with 2T ZOO allocation to 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714"
+        },
+        {
+          "type": "chain_repo_genesis",
+          "path": "v1-200200/genesis-chainrepo.json",
+          "source": "/home/z/blockchain-backups/chain-repos/zoo-mainnet/genesis.json",
+          "description": "Genesis from chain repository"
+        },
+        {
+          "type": "config",
+          "path": "v1-200200/config.json",
+          "source": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/config.json",
+          "description": "Network configuration from November 13, 2024 snapshot"
+        },
+        {
+          "type": "snapshot",
+          "size": "12MB",
+          "date": "2024-11-13",
+          "source": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM",
+          "description": "Full blockchain state snapshot"
+        },
+        {
+          "type": "postgres_dump",
+          "path": "postgres_dump.sql",
+          "source": "/home/z/blockchain-backups/blockscout_full_dump_20250624_213119.sql",
+          "description": "PostgreSQL dump from blockscout (may be empty)"
+        }
+      ]
+    }
+  },
+  "genesis_allocation": {
+    "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714": {
+      "balance": "0x193e5939a08ce9dbd480000000",
+      "balance_readable": "2,000,000,000,000,000,000,000,000,000,000",
+      "balance_formatted": "2T ZOO"
+    }
+  },
+  "metadata": {
+    "generated": "2025-06-24",
+    "symbol": "ZOO",
+    "decimals": 18,
+    "total_supply": "2,000,000,000,000,000,000,000,000,000,000",
+    "description": "Gaming and NFT ecosystem"
+  }
+}

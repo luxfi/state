@@ -1,0 +1,59 @@
+{
+  "network": "Sparkle Pony Club Network",
+  "versions": {
+    "v1-36911": {
+      "chain_id": 36911,
+      "status": "active",
+      "description": "Current SPC mainnet",
+      "blockchain_id": "F7PVhxVvM4RurEi2iCUcNsFcTjSGq9mnBqcWKFsgS7tfciKRu",
+      "data_sources": [
+        {
+          "type": "genesis",
+          "path": "v1-36911/genesis.json",
+          "source": "/home/z/blockchain-backups/genesis/spc-mainnet_genesis.json",
+          "description": "Generated genesis file with 1B SPC allocation to 0x12c6EE1d226225756F57B75957d2BF3Ab2e8597e"
+        },
+        {
+          "type": "chain_repo_genesis",
+          "path": "v1-36911/genesis-chainrepo.json",
+          "source": "/home/z/blockchain-backups/chain-repos/spc-mainnet/genesis.json",
+          "description": "Genesis from chain repository"
+        },
+        {
+          "type": "config",
+          "path": "v1-36911/config.json",
+          "source": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1/config.json",
+          "description": "Network configuration from November 13, 2024 snapshot"
+        },
+        {
+          "type": "snapshot",
+          "size": "5.1MB",
+          "date": "2024-11-13",
+          "source": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1",
+          "description": "Full blockchain state snapshot"
+        },
+        {
+          "type": "postgres_dump",
+          "path": "postgres_dump.sql",
+          "source": "/home/z/blockchain-backups/blockscout_full_dump_20250624_213119.sql",
+          "description": "PostgreSQL dump from blockscout (may be empty)"
+        }
+      ],
+      "note": "SPC blockchain ID in snapshot differs from current genesis (QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1 vs F7PVhxVvM4RurEi2iCUcNsFcTjSGq9mnBqcWKFsgS7tfciKRu)"
+    }
+  },
+  "genesis_allocation": {
+    "0x12c6EE1d226225756F57B75957d2BF3Ab2e8597e": {
+      "balance": "0x33b2e3c9fd0803ce8000000",
+      "balance_readable": "1,000,000,000,000,000,000,000,000,000",
+      "balance_formatted": "1B SPC"
+    }
+  },
+  "metadata": {
+    "generated": "2025-06-24",
+    "symbol": "SPC",
+    "decimals": 18,
+    "total_supply": "1,000,000,000,000,000,000,000,000,000",
+    "description": "Community-driven network"
+  }
+}

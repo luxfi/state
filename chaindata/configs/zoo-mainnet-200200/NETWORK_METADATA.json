@@ -1,0 +1,71 @@
+{
+  "network": "ZOO Network",
+  "description": "ZOO Network - Gaming and NFT focused blockchain with BSC airdrop preservation",
+  "versions": [
+    {
+      "version": "1.0",
+      "era": "ZOO Mainnet",
+      "chainId": 200200,
+      "timeline": {
+        "network_launch": "2024-11-13T19:04:24Z",
+        "current_status": "active",
+        "last_known_update": "2025-06-25T22:00:00Z"
+      },
+      "blocks": {
+        "genesis_block": 0,
+        "last_known_block": 799,
+        "blocks_per_day": "~3"
+      },
+      "subnet": {
+        "subnet_id": "xJzemKCLvBNgzYHoBHzXQr9uesR3S3kf3YtZ5mPHTA9LafK6L",
+        "blockchain_id": "bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM",
+        "vm": "subnet-evm",
+        "vm_version": "v0.5.10"
+      },
+      "tokenomics": {
+        "symbol": "ZOO",
+        "decimals": 18,
+        "initial_supply": "1000000000",
+        "max_supply": "1000000000",
+        "distribution": {
+          "genesis_allocation": "unknown",
+          "bsc_airdrop": "TBD"
+        }
+      },
+      "genesis_accounts": [
+        {
+          "address": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+          "balance": "unknown",
+          "role": "Genesis allocator"
+        }
+      ],
+      "rpc_endpoint": "http://127.0.0.1:9630/ext/bc/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/rpc",
+      "notes": "First deployment of ZOO network, no previous versions existed"
+    }
+  ],
+  "airdrop": {
+    "source": "Binance Smart Chain",
+    "type": "snapshot_airdrop",
+    "snapshot_date": "TBD",
+    "total_recipients": "TBD",
+    "total_amount": "TBD",
+    "preservation_status": "pending_data",
+    "notes": "BSC airdrop data to be merged with mainnet balances"
+  },
+  "testnet": {
+    "chainId": 200201,
+    "subnet_id": "c1CbCiL4VMWeHWMkPFvsfnh9e5STgqKzUUPrqEtpBUc4qwnie",
+    "blockchain_id": "2usKC5aApgWQWwanB4LL6QPoqxR1bWWjPCtemBYbZvxkNfcnbj",
+    "rpc_endpoint": "http://127.0.0.1:9630/ext/bc/2usKC5aApgWQWwanB4LL6QPoqxR1bWWjPCtemBYbZvxkNfcnbj/rpc"
+  },
+  "related_services": {
+    "blockscout_explorer": "http://localhost:4001",
+    "graph_node": "http://localhost:8001"
+  },
+  "migration": {
+    "target_type": "subnet",
+    "parent_network": "LUX C-Chain",
+    "maintains_chain_id": true,
+    "preserves_airdrop": true
+  }
+}

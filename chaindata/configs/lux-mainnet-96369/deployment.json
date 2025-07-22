@@ -1,0 +1,14 @@
+{
+  "network": "local",
+  "luxdVersion": "v1.11.12",
+  "subnetEVMVersion": "v0.6.12",
+  "customVMPath": "",
+  "chainName": "luxnet",
+  "subnetID": "tJqmx13PV8UPQJBbuumANQCKnfPUHCxfahdG29nJa6BHkumCK",
+  "blockchainID": "dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ",
+  "vmID": "srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy",
+  "validatorManagement": "proof-of-stake",
+  "subnetAuthKeys": [],
+  "subnetControlKeys": [],
+  "subnetThreshold": 1
+}

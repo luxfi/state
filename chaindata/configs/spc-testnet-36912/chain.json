@@ -1,0 +1,7 @@
+{
+  "chainId": 36912,
+  "minGasPrice": 25000000000,
+  "maxGasPrice": 100000000000,
+  "airdrop": "",
+  "customPrecompiles": []
+}

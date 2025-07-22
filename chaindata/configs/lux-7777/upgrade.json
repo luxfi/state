@@ -1,0 +1,16 @@
+{
+  "precompileUpgrades": [
+    {
+      "warpConfig": {
+        "blockTimestamp": 0,
+        "quorumNumerator": 67
+      }
+    }
+  ],
+  "stateUpgrades": [],
+  "networkUpgrades": {
+    "subnetEVMTimestamp": 0,
+    "durangoTimestamp": 0,
+    "etnaTimestamp": null
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": "v1.0.6",
+  "messagingContractAddress": "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+  "registryAddress": "0x33De8749C11C380662a29f1bC926622bA56ef47e",
+  "relayerRewardAddress": "0x9011e888251ab053b7bd1cdb598db4f9ded94714",
+  "relayerConfig": {
+    "logLevel": "info",
+    "storageBackend": "boltdb",
+    "apiPort": 8090,
+    "metricsPort": 9092
+  }
+}

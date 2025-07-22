@@ -1,0 +1,30 @@
+{
+  "Name": "luxtest",
+  "VM": "Subnet-EVM",
+  "VMVersion": "v0.6.11",
+  "RPCVersion": 37,
+  "Subnet": "luxtest",
+  "ExternalToken": false,
+  "TokenName": "LUX Token",
+  "TokenSymbol": "LUX",
+  "ChainID": "96368",
+  "Version": "1.4.0",
+  "Networks": {
+    "luxtest": {
+      "SubnetID": "26eqgD4Kt1MvTKXC9BDjEwBAfhcBcHCKj2EXjR2UuFpSWoAHhw",
+      "BlockchainID": "2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG",
+      "RPCEndpoint": "http://127.0.0.1:9630/ext/bc/2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG/rpc",
+      "WSEndpoint": "ws://127.0.0.1:9630/ext/bc/2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG/ws"
+    }
+  },
+  "ImportedFromAPM": false,
+  "ImportedVMID": "",
+  "CustomVMRepoURL": "",
+  "CustomVMBranch": "",
+  "CustomVMBuildScript": "",
+  "TeleporterReady": false,
+  "TeleporterKey": "",
+  "TeleporterVersion": "",
+  "RunRelayer": false,
+  "SubnetEVMMainnetChainID": 96368
+}

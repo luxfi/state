@@ -1,0 +1,12 @@
+{
+  "snowman-api-enabled": false,
+  "coreth-admin-api-enabled": false,
+  "eth-apis": ["eth", "eth-filter", "net", "web3", "internal-eth", "internal-blockchain", "internal-transaction-pool"],
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 100,
+  "api-max-duration": 30000000000,
+  "api-max-blocks-per-request": 30,
+  "allow-unfinalized-queries": true,
+  "allow-unprotected-txs": true,
+  "log-level": "info"
+}

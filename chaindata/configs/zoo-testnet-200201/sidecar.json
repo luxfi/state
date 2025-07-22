@@ -1,0 +1,23 @@
+{
+  "Name": "zootest",
+  "VM": "Subnet-EVM",
+  "VMVersion": "v0.6.11",
+  "RPCVersion": 37,
+  "Subnet": "zootest",
+  "ExternalToken": false,
+  "TokenName": "ZOO Token",
+  "TokenSymbol": "ZOO",
+  "ChainID": "",
+  "Version": "1.4.0",
+  "Networks": null,
+  "ImportedFromAPM": false,
+  "ImportedVMID": "",
+  "CustomVMRepoURL": "",
+  "CustomVMBranch": "",
+  "CustomVMBuildScript": "",
+  "TeleporterReady": false,
+  "TeleporterKey": "",
+  "TeleporterVersion": "",
+  "RunRelayer": true,
+  "SubnetEVMMainnetChainID": 0
+}

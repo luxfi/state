@@ -1,0 +1,13 @@
+{
+  "validators": [
+    {
+      "nodeID": "NodeID-JrL8TM7UKVfynNBcrUkvpEFaTfsyK93ya",
+      "weight": 20,
+      "balance": 1000000000000000,
+      "signer": {
+        "publicKey": "0x8bdd0820ca9cf069eea0b2c0b4741d9a7347a30dd7e8913e66144e09fbc2696b2899c3cbe41ae5c104dd16ce912be3e6",
+        "proofOfPossession": "0x985a9e529b740ff3e9af28a315c90c06fb929f2d55110631417d262dd8d3fc19990c41dc59fd422e34a1b7b6208acf72033f9a08a6d5a1a42c776900e2764dec6047d5019835dd842049ff61012e461810ac53fcb608ea711ebda3a43f515b58"
+      }
+    }
+  ]
+}

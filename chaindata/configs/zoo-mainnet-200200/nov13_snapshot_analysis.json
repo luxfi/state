@@ -1,0 +1,71 @@
+{
+  "snapshot_date": "2024-11-13",
+  "snapshot_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata",
+  "networks": {
+    "Lux Mainnet": {
+      "name": "Lux Mainnet",
+      "chain_id": 96369,
+      "blockchain_id": "dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ",
+      "data_size": "8.1GB",
+      "data_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ",
+      "config_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/config.json",
+      "last_known_state": {
+        "date": "2024-11-13",
+        "description": "Full blockchain state including all transactions, blocks, and smart contracts"
+      },
+      "data_available": true
+    },
+    "Lux Testnet": {
+      "name": "Lux Testnet",
+      "chain_id": 96368,
+      "blockchain_id": "2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG",
+      "data_size": "7.1MB",
+      "data_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG",
+      "config_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/2sdADEgBC3NjLM4inKc1hY1PQpCT3JVyGVJxdmcq6sqrDndjFG/config.json",
+      "last_known_state": {
+        "date": "2024-11-13",
+        "description": "Full blockchain state including all transactions, blocks, and smart contracts"
+      },
+      "data_available": true
+    },
+    "Zoo Mainnet": {
+      "name": "Zoo Mainnet",
+      "chain_id": 200200,
+      "blockchain_id": "bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM",
+      "data_size": "12MB",
+      "data_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM",
+      "config_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/config.json",
+      "last_known_state": {
+        "date": "2024-11-13",
+        "description": "Full blockchain state including all transactions, blocks, and smart contracts"
+      },
+      "data_available": true
+    },
+    "Zoo Testnet": {
+      "name": "Zoo Testnet",
+      "chain_id": 200201,
+      "blockchain_id": "2usKC5aApgWQWwanB4LL6QPoqxR1bWWjPCtemBYbZvxkNfcnbj",
+      "data_size": "5.5MB",
+      "data_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/2usKC5aApgWQWwanB4LL6QPoqxR1bWWjPCtemBYbZvxkNfcnbj",
+      "config_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/2usKC5aApgWQWwanB4LL6QPoqxR1bWWjPCtemBYbZvxkNfcnbj/config.json",
+      "last_known_state": {
+        "date": "2024-11-13",
+        "description": "Full blockchain state including all transactions, blocks, and smart contracts"
+      },
+      "data_available": true
+    },
+    "SPC Mainnet": {
+      "name": "SPC Mainnet",
+      "chain_id": 36911,
+      "blockchain_id": "QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1",
+      "data_size": "5.1MB",
+      "data_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainData/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1",
+      "config_path": "/home/z/.avalanche-cli/snapshots/anr-snapshot-nov13-withdata/node1/chainConfigs/QFAFyn1hh59mh7kokA55dJq5ywskF5A1yn8dDpLhmKApS6FP1/config.json",
+      "last_known_state": {
+        "date": "2024-11-13",
+        "description": "Full blockchain state including all transactions, blocks, and smart contracts"
+      },
+      "data_available": true
+    }
+  }
+}
