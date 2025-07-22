@@ -1,1 +1,62 @@
+# Binaries
 bin/
+*.exe
+
+# Test outputs
+test-*.json
+test-*.txt
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Cache
+cache/
+.cache/
+
+# Generated outputs
+genesis_*.json
+allocations-*.json
+extracted-*.json
+output/
+data/
+
+# Validator keys (sensitive)
+validator-keys/
+*.key
+*.crt
+
+# Node data
+.luxd*/
+.lux-cli/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Go vendor (if used)
+vendor/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Plugin files (installed separately)
+lux-cli-archaeology
+lux-cli-genesis
+archaeology-plugin.json

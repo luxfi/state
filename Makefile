@@ -5,7 +5,31 @@ LUX_CLI=bin/lux
 LUXD=bin/luxd
 GINKGO=bin/ginkgo
 
-.PHONY: install genesis snapshot docker push test convert-7777 convert-96369 run-7777-dev run-96369-dev import-7777-cchain import-96369-cchain analyze-chaindata build build-tools build-archaeology clean-bin test-unit test-integration test-all install-test-deps
+.PHONY: install genesis snapshot docker push test convert-7777 convert-96369 run-7777-dev run-96369-dev import-7777-cchain import-96369-cchain analyze-chaindata build build-tools build-archaeology clean-bin test-unit test-integration test-all install-test-deps quickstart
+
+quickstart: ## Quick guide to get started
+	@echo "🚀 Lux Network Genesis - Quick Start Guide"
+	@echo ""
+	@echo "1️⃣  Development Mode (Single Node, Network 7777):"
+	@echo "   make launch-dev"
+	@echo ""
+	@echo "2️⃣  Local Test Network (5 Nodes, Network 96369):"
+	@echo "   MNEMONIC='your seed phrase' make launch-5-nodes"
+	@echo ""
+	@echo "3️⃣  Full Network (11 Nodes, Network 96369):"
+	@echo "   MNEMONIC='your seed phrase' make launch-11-nodes"
+	@echo ""
+	@echo "📊 Test Network:"
+	@echo "   make test-rpc        # Test RPC endpoints"
+	@echo "   make test-c-chain    # Test C-Chain"
+	@echo ""
+	@echo "🛑 Stop Network:"
+	@echo "   make stop-network"
+	@echo ""
+	@echo "📝 Other Commands:"
+	@echo "   make help           # Show all commands"
+	@echo "   make generate-validators  # Generate validator keys"
+	@echo "   make generate-all-genesis # Generate genesis files"
 
 install:
 	@echo "Installing LUX binaries from GitHub..."
@@ -626,18 +650,16 @@ genesis-full-pipeline: check-luxd check-lux-cli extract-chaindata generate-valid
 
 # Check dependencies
 check-luxd: ## Verify luxd is built
-	@if [ ! -f ../node/build/luxd ]; then \
-		echo "Building luxd..."; \
-		cd ../node && ./scripts/build.sh; \
-	fi
-	@echo "✅ luxd ready"
+	@echo "Building latest luxd..."
+	@cd ../node && git pull && ./scripts/build.sh
+	@echo "✅ luxd built"
+	@../node/build/luxd --version
 
 check-lux-cli: ## Verify lux-cli is available
-	@if [ ! -f ./bin/lux-cli ]; then \
-		echo "Installing lux-cli..."; \
-		$(MAKE) install; \
-	fi
-	@echo "✅ lux-cli ready"
+	@echo "Building latest lux-cli..."
+	@cd ../cli && git pull && go build -o ../genesis/bin/lux-cli ./main.go
+	@echo "✅ lux-cli built"
+	@./bin/lux-cli --version || ./bin/lux-cli version
 
 # Extract chaindata from all networks
 extract-chaindata: build-tools ## Extract blockchain data from all networks
@@ -676,27 +698,23 @@ generate-all-genesis: generate-mainnet-genesis generate-testnet-genesis generate
 
 generate-mainnet-genesis: build-genesis-pkg ## Generate mainnet genesis
 	@echo "Generating mainnet genesis..."
+	@echo "Importing C-Chain allocations from 7777 airdrop..."
 	@./bin/genesis-builder \
 		--network mainnet \
+		--import-allocations chaindata/lux-genesis-7777/7777-airdrop-96369-mainnet.csv \
 		--validators configs/mainnet-validators.json \
 		--output genesis_mainnet_96369.json
-	@if [ -f "data/extracted/lux-mainnet-96369/genesis.json" ]; then \
-		echo "Importing C-Chain data..."; \
-		./bin/genesis-builder \
-			--network mainnet \
-			--import-cchain data/extracted/lux-mainnet-96369/genesis.json \
-			--validators configs/mainnet-validators.json \
-			--output genesis_mainnet_96369.json; \
-	fi
 
 generate-testnet-genesis: build-genesis-pkg ## Generate testnet genesis
 	@./bin/genesis-builder \
 		--network testnet \
+		--treasury-amount 2000000000000000000000 \
 		--output genesis_testnet_96368.json
 
 generate-local-genesis: build-genesis-pkg ## Generate local test genesis
 	@./bin/genesis-builder \
 		--network local \
+		--treasury-amount 2000000000000000000000 \
 		--output genesis_local.json
 
 # Build tools
@@ -706,33 +724,60 @@ build-genesis-pkg: ## Build genesis builder
 	@echo "✅ Genesis builder built"
 
 # Network operations using lux-cli
-network-clean: ## Clean existing network
-	@if [ -d "/home/z/.lux-cli/runs" ]; then \
-		echo "Cleaning existing network..."; \
-		./bin/lux-cli network clean; \
-	fi
+cli-network-clean: ## Clean lux-cli network
+	@echo "Cleaning lux-cli network..."
+	@lux-cli network stop --force 2>/dev/null || true
+	@lux-cli network clean --hard 2>/dev/null || true
 
-network-create: genesis-full-pipeline ## Create new network with generated genesis
-	@echo "Creating Lux network..."
-	@./bin/lux-cli network create lux-mainnet \
-		--custom-luxd-version ../node/build/luxd \
-		--num-nodes 5 \
-		--genesis genesis_mainnet_96369.json
+cli-network-start: ## Start network with lux-cli
+	@echo "Starting network with lux-cli..."
+	@lux-cli network start --lux-path $(LUXD_PATH)
 
-network-start: ## Start the network
-	@echo "Starting network..."
-	@./bin/lux-cli network start
+cli-network-stop: ## Stop lux-cli network
+	@lux-cli network stop
 
-network-stop: ## Stop the network
-	@./bin/lux-cli network stop
+cli-network-status: ## Check lux-cli network status
+	@lux-cli network status
 
-network-status: ## Check network status
-	@./bin/lux-cli network status
+cli-local-start: ## Start local POA network
+	@echo "Starting local POA network..."
+	@lux-cli local start
 
-# Launch local validators (first 5)
-launch-local-validators: network-clean network-create ## Launch first 5 validators locally
-	@echo "Launching local validators..."
-	@$(MAKE) network-start
+# Direct luxd operations
+luxd-start-single: ## Start single luxd node with genesis
+	@echo "Starting single luxd node..."
+	@mkdir -p ~/.luxd/staking
+	@cp validator-keys/validator-1/staking/staker.crt ~/.luxd/staking/
+	@cp validator-keys/validator-1/staking/staker.key ~/.luxd/staking/
+	@cp validator-keys/validator-1/bls.key ~/.luxd/staking/signer.key
+	@$(LUXD_PATH) \
+		--network-id=96369 \
+		--genesis-file=genesis_mainnet_96369.json \
+		--http-host=0.0.0.0 \
+		--http-port=9630 \
+		--staking-enabled=false \
+		--snow-sample-size=1 \
+		--snow-quorum-size=1 \
+		--log-level=info
+
+# Network launch targets
+launch-dev: ## Launch single node in dev mode (network 7777)
+	@echo "Launching dev node..."
+	@./scripts/launch-dev-7777.sh
+
+launch-5-nodes: generate-validators generate-all-genesis ## Launch 5-node network
+	@echo "Launching 5-node network..."
+	@./scripts/launch-5-nodes.sh
+
+launch-11-nodes: generate-validators generate-all-genesis ## Launch full 11-node network
+	@echo "Launching 11-node network..."
+	@./scripts/launch-11-nodes.sh
+
+stop-network: ## Stop all running luxd nodes
+	@echo "Stopping network..."
+	@pkill -f "luxd.*network-id=96369" || true
+	@pkill -f "luxd.*network-id=7777" || true
+	@echo "✅ Network stopped"
 	@echo ""
 	@echo "✅ Local validators running!"
 	@echo "RPC endpoints:"
@@ -795,7 +840,31 @@ test-network: launch-local-validators ## Test network bootstrap
 	@curl -s -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNetworkID","params":{}}' \
 		-H 'content-type:application/json' http://localhost:9650/ext/info | jq .
 
-test-all: test-genesis test-validators ## Run all tests
+test-rpc: ## Test RPC endpoints
+	@echo "Testing RPC endpoints..."
+	@echo "Network ID:"
+	@curl -s -X POST -H 'Content-Type: application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"info.getNetworkID","params":{}}' \
+		http://localhost:9630/ext/info | jq .
+	@echo ""
+	@echo "Chain ID (C-Chain):"
+	@curl -s -X POST -H 'Content-Type: application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' \
+		http://localhost:9630/ext/bc/C/rpc | jq .
+	@echo ""
+	@echo "Latest block:"
+	@curl -s -X POST -H 'Content-Type: application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+		http://localhost:9630/ext/bc/C/rpc | jq .
+
+test-c-chain: ## Test C-Chain specific endpoints
+	@echo "Testing C-Chain..."
+	@echo "Treasury balance:"
+	@curl -s -X POST -H 'Content-Type: application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x9011E888251AB053B7bD1cdB598Db4f9DEd94714","latest"]}' \
+		http://localhost:9630/ext/bc/C/rpc | jq .
+
+test-all: test-genesis test-validators test-rpc ## Run all tests
 
 # Full launch sequence
 launch-mainnet: genesis-full-pipeline launch-local-validators ## Complete mainnet launch
@@ -819,7 +888,43 @@ clean-all: clean network-clean ## Clean all generated files and networks
 .PHONY: genesis-full-pipeline check-luxd check-lux-cli extract-chaindata
 .PHONY: generate-validators generate-all-genesis generate-mainnet-genesis
 .PHONY: generate-testnet-genesis generate-local-genesis build-genesis-pkg
-.PHONY: network-clean network-create network-start network-stop network-status
+.PHONY: cli-network-clean cli-network-start cli-network-stop cli-network-status cli-local-start
+.PHONY: luxd-start-single launch-dev launch-5-nodes launch-11-nodes stop-network
 .PHONY: launch-local-validators deploy-remote-validators
 .PHONY: deploy-zoo-l2 deploy-spc-l2 test-genesis test-validators test-network
-.PHONY: test-all launch-mainnet clean-all
+.PHONY: test-all launch-mainnet clean-all test-rpc test-c-chain
+
+# Network deployment operations
+deploy: deploy-local ## Deploy local test network (alias for deploy-local)
+
+deploy-local: build-genesis ## Deploy local test network with 5 nodes
+	@echo "=== Deploying local test network (5 nodes) ==="
+	@./scripts/launch-5-nodes.sh
+
+deploy-mainnet: build-genesis ## Deploy mainnet with all historical data and L2s
+	@echo "=== Deploying Lux Mainnet ==="
+	@chmod +x scripts/launch-mainnet.sh scripts/deploy-zoo-subnet.sh scripts/deploy-spc-subnet.sh
+	@./scripts/launch-mainnet.sh
+
+deploy-testnet: build-genesis ## Deploy testnet with historical data
+	@echo "=== Deploying Lux Testnet ==="
+	@chmod +x scripts/deploy-testnet.sh
+	@./scripts/deploy-testnet.sh
+
+install-plugin: build-genesis build-archeology ## Install genesis and archaeology as lux-cli plugins
+	@echo "Installing lux-cli plugins..."
+	@# Install genesis plugin
+	@mkdir -p ~/.lux-cli/plugins/genesis
+	@cp bin/genesis plugin.json lux-cli-genesis ~/.lux-cli/plugins/genesis/
+	@chmod +x ~/.lux-cli/plugins/genesis/lux-cli-genesis
+	@echo "✅ Genesis plugin installed"
+	@# Install archaeology plugin
+	@mkdir -p ~/.lux-cli/plugins/archaeology
+	@cp bin/archeology archaeology-plugin.json lux-cli-archaeology ~/.lux-cli/plugins/archaeology/
+	@mv ~/.lux-cli/plugins/archaeology/archaeology-plugin.json ~/.lux-cli/plugins/archaeology/plugin.json
+	@chmod +x ~/.lux-cli/plugins/archaeology/lux-cli-archaeology
+	@echo "✅ Archaeology plugin installed"
+	@echo ""
+	@echo "Plugins installed successfully! Use with:"
+	@echo "  lux-cli genesis <command>"
+	@echo "  lux-cli archaeology <command>"

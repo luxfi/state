@@ -113,6 +113,57 @@ func (b *Builder) ImportCChainAllocations(allocPath string) error {
 	return nil
 }
 
+// ImportCSVAllocations imports allocations from CSV file
+func (b *Builder) ImportCSVAllocations(csvPath string) error {
+	data, err := ioutil.ReadFile(csvPath)
+	if err != nil {
+		return fmt.Errorf("failed to read CSV file: %w", err)
+	}
+
+	lines := strings.Split(string(data), "\n")
+	
+	// Skip header lines (lines starting with #) and column headers
+	dataStartIdx := 0
+	for i, line := range lines {
+		if line != "" && !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, "rank,") {
+			dataStartIdx = i
+			break
+		}
+	}
+
+	// Process allocations
+	for i := dataStartIdx; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+
+		parts := strings.Split(line, ",")
+		if len(parts) < 4 {
+			continue
+		}
+
+		// rank,address,balance_lux,balance_wei,balance_hex,percentage
+		address := parts[1]
+		balanceLux := parts[2] // Use LUX amount instead of wei
+
+		// Parse LUX amount (with decimals)
+		luxAmount, err := parseDecimalAmount(balanceLux)
+		if err != nil {
+			return fmt.Errorf("invalid balance for address %s: %s - %w", address, balanceLux, err)
+		}
+
+		// Convert to wei (9 decimals for Lux)
+		weiAmount := new(big.Int).Mul(luxAmount, big.NewInt(1000000000))
+
+		if err := b.AddAllocation(address, weiAmount); err != nil {
+			return fmt.Errorf("failed to add allocation for %s: %w", address, err)
+		}
+	}
+
+	return nil
+}
+
 // Build creates the final genesis configuration
 func (b *Builder) Build() (*MainGenesis, error) {
 	// Convert allocations to unparsed format
@@ -139,6 +190,15 @@ func (b *Builder) Build() (*MainGenesis, error) {
 		// Track staked funds if has locked amounts
 		if len(lockedAmounts) > 0 {
 			stakedFunds = append(stakedFunds, alloc.LuxAddr)
+		}
+	}
+	
+	// For networks with initial stakers, ensure staked funds are set
+	if len(b.stakers) > 0 && len(stakedFunds) == 0 {
+		// Use treasury address for staked funds if no locked allocations
+		if len(unparsedAllocs) > 0 {
+			// Use first allocation (treasury) for staked funds
+			stakedFunds = append(stakedFunds, unparsedAllocs[0].LUXAddr)
 		}
 	}
 
@@ -242,4 +302,36 @@ func (b *Builder) GetTotalSupply() *big.Int {
 // GetAllocationCount returns the number of allocations
 func (b *Builder) GetAllocationCount() int {
 	return b.allocations.Count()
+}
+
+// parseDecimalAmount parses a decimal string (e.g., "1234.567890123") and returns it as a big.Int
+// without the decimal point, preserving all digits
+func parseDecimalAmount(amount string) (*big.Int, error) {
+	// Remove any spaces
+	amount = strings.TrimSpace(amount)
+	
+	// Split by decimal point
+	parts := strings.Split(amount, ".")
+	
+	// Parse integer part
+	intPart := new(big.Int)
+	if parts[0] != "" {
+		if _, ok := intPart.SetString(parts[0], 10); !ok {
+			return nil, fmt.Errorf("invalid integer part: %s", parts[0])
+		}
+	}
+	
+	// If no decimal part, return integer part
+	if len(parts) == 1 {
+		return intPart, nil
+	}
+	
+	// If there's a decimal part, we need to handle it
+	if len(parts) > 2 {
+		return nil, fmt.Errorf("invalid amount format: multiple decimal points")
+	}
+	
+	// For the decimal part, we'll just parse the integer value
+	// The caller will multiply by 10^9 for Lux's 9 decimal places
+	return intPart, nil
 }

@@ -266,8 +266,15 @@ func SaveKeys(keys *ValidatorKeys, outputDir string) error {
 	
 	// If private key is available, save it separately with restricted permissions
 	if keys.PrivateKey != "" {
+		// Convert hex string to binary
+		privKeyHex := strings.TrimPrefix(keys.PrivateKey, "0x")
+		privKeyBytes, err := hex.DecodeString(privKeyHex)
+		if err != nil {
+			return fmt.Errorf("failed to decode private key hex: %w", err)
+		}
+		
 		privKeyPath := filepath.Join(outputDir, "bls.key")
-		if err := os.WriteFile(privKeyPath, []byte(keys.PrivateKey), 0600); err != nil {
+		if err := os.WriteFile(privKeyPath, privKeyBytes, 0600); err != nil {
 			return fmt.Errorf("failed to write private key: %w", err)
 		}
 	}

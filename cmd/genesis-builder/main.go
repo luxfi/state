@@ -84,15 +84,24 @@ func main() {
 	}
 
 	// Import C-Chain allocations if specified
+	importedFromCSV := false
 	if *importAllocsFlag != "" {
-		fmt.Printf("Importing C-Chain allocations from %s...\n", *importAllocsFlag)
-		if err := builder.ImportCChainAllocations(*importAllocsFlag); err != nil {
-			log.Fatalf("Failed to import allocations: %v", err)
+		fmt.Printf("Importing allocations from %s...\n", *importAllocsFlag)
+		// Check if it's a CSV file
+		if strings.HasSuffix(*importAllocsFlag, ".csv") {
+			if err := builder.ImportCSVAllocations(*importAllocsFlag); err != nil {
+				log.Fatalf("Failed to import CSV allocations: %v", err)
+			}
+			importedFromCSV = true
+		} else {
+			if err := builder.ImportCChainAllocations(*importAllocsFlag); err != nil {
+				log.Fatalf("Failed to import allocations: %v", err)
+			}
 		}
 	}
 
-	// Add treasury allocation
-	if *treasuryAddrFlag != "" && *treasuryAmountFlag != "" {
+	// Add treasury allocation only if not importing from CSV (CSV already includes treasury)
+	if !importedFromCSV && *treasuryAddrFlag != "" && *treasuryAmountFlag != "" {
 		treasuryAmount := new(big.Int)
 		if _, ok := treasuryAmount.SetString(*treasuryAmountFlag, 10); !ok {
 			log.Fatalf("Invalid treasury amount: %s", *treasuryAmountFlag)
@@ -115,7 +124,15 @@ func main() {
 		}
 
 		fmt.Printf("Adding %d validators from %s...\n", len(validators), *validatorsFileFlag)
+		
+		// For networks with validators, we need to add locked allocations for them
+		networkCfg, err := config.GetNetwork(*networkFlag)
+		if err != nil {
+			log.Fatalf("Failed to get network config: %v", err)
+		}
+		
 		for _, v := range validators {
+			// Add staker
 			builder.AddStaker(genesis.StakerConfig{
 				NodeID:            v.NodeID,
 				ETHAddress:        v.ETHAddress,
@@ -124,6 +141,26 @@ func main() {
 				Weight:            v.Weight,
 				DelegationFee:     v.DelegationFee,
 			})
+			
+			// Add locked allocation for validator (staking amount)
+			if v.Weight > 0 {
+				stakingAmount := new(big.Int).SetUint64(v.Weight)
+				vestingYears := int(networkCfg.InitialStakeDuration.Hours() / 24 / 365)
+				if vestingYears < 1 {
+					vestingYears = 1
+				}
+				
+				err := builder.AddVestedAllocation(v.ETHAddress, &allocation.UnlockScheduleConfig{
+					TotalAmount:  stakingAmount,
+					StartDate:    networkCfg.StartTime,
+					Duration:     networkCfg.InitialStakeDuration,
+					Periods:      1, // Single unlock at end
+					CliffPeriods: 0,
+				})
+				if err != nil {
+					log.Fatalf("Failed to add validator allocation: %v", err)
+				}
+			}
 		}
 	}
 

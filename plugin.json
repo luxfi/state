@@ -1,0 +1,35 @@
+{
+  "name": "genesis",
+  "description": "Genesis generation and blockchain data import tools for Lux Network",
+  "executable": "./lux-cli-genesis",
+  "commands": [
+    {
+      "name": "generate",
+      "description": "Generate genesis files for Lux networks",
+      "flags": [
+        "--network",
+        "--output-dir",
+        "--validators-file",
+        "--with-xchain",
+        "--with-subnets"
+      ]
+    },
+    {
+      "name": "import",
+      "description": "Import historical blockchain data",
+      "flags": [
+        "--chain-data",
+        "--network-id"
+      ]
+    },
+    {
+      "name": "migrate",
+      "description": "Migrate subnet data to C-Chain format",
+      "flags": [
+        "--source-db",
+        "--dest-db",
+        "--network-id"
+      ]
+    }
+  ]
+}
