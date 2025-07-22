@@ -1,0 +1,54 @@
+# Docker image for running LUX testnet (96368)
+FROM ghcr.io/luxfi/node:latest
+
+# Install additional tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    jq \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create directories
+RUN mkdir -p /genesis/configs /genesis/chaindata
+
+# Copy testnet configs
+COPY configs/lux-testnet-96368 /genesis/configs/lux-testnet-96368/
+
+# Create testnet config
+RUN cat > /genesis/configs/testnet.json << 'EOF'
+{
+  "network-id": 96368,
+  "staking-enabled": false,
+  "sybil-protection-enabled": false,
+  "health-check-frequency": "5s",
+  "snow-sample-size": 1,
+  "snow-quorum-size": 1,
+  "consensus-shutdown-timeout": "1s",
+  "chain-config-dir": "/genesis/configs/lux-testnet-96368",
+  "data-dir": "/data",
+  "log-level": "info",
+  "http-host": "0.0.0.0",
+  "http-port": 9630,
+  "staking-port": 9631,
+  "api-admin-enabled": true,
+  "coreth-config": {
+    "snowman-api-enabled": true,
+    "eth-apis": ["eth", "web3", "net", "debug", "admin", "personal", "txpool", "miner"],
+    "rpc-gas-cap": 100000000,
+    "rpc-tx-fee-cap": 100
+  }
+}
+EOF
+
+# Expose ports
+EXPOSE 9630 9631
+
+# Volume for persistent data
+VOLUME ["/data"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:9630/ext/health || exit 1
+
+# Run with testnet config
+CMD ["luxd", "--dev", "--network-id=96368", "--chain-config-dir=/genesis/configs/lux-testnet-96368", "--data-dir=/data", "--http-port=9630", "--staking-port=9631"]

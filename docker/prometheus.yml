@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'lux-primary'
+    static_configs:
+      - targets: ['lux-primary:9630']
+    metrics_path: '/ext/metrics'
+    params:
+      module: ['prometheus']
+
+  - job_name: 'lux-7777'
+    static_configs:
+      - targets: ['lux-7777:9630']
+    metrics_path: '/ext/metrics'
+    params:
+      module: ['prometheus']

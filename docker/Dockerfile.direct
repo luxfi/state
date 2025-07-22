@@ -1,0 +1,33 @@
+FROM ubuntu:22.04 AS base
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    jq \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pre-built luxd binary (must be in build context)
+COPY luxd /usr/local/bin/luxd
+RUN chmod +x /usr/local/bin/luxd
+
+# Copy entrypoint
+COPY scripts/entrypoint-direct.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set labels
+LABEL org.opencontainers.image.source="https://github.com/luxfi/node"
+LABEL org.opencontainers.image.description="Lux Node with historical C-Chain data import"
+LABEL org.opencontainers.image.licenses="BSD-3-Clause"
+
+WORKDIR /luxd
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9630/ext/health || exit 1
+
+EXPOSE 9630 9631 8546
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--http-allowed-hosts=*"]

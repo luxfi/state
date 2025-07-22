@@ -1,0 +1,77 @@
+Lux Genesis License v1.0
+Copyright © 2025 Lux Industries Inc. All rights reserved.
+=========================================================
+
+0.  Definitions
+    ------------
+    “Repository” means the Lux Network genesis GitHub repository, including all
+    files it contains.
+    “Software” means every source‑code file in the Repository **except**
+    Genesis Data.
+    “Genesis Data” means the historical Lux Network blockchain state, snapshot,
+    block history, chain parameters, configuration files, and any artefacts
+    located under directories such as */genesis/* or */chain‑data/* that
+    represent Lux.Network ledger activity from **1 Jan 2023 – 31 Dec 2024**.
+
+1.  License Grant for *Software*
+    ----------------------------
+    Lux Industries Inc. grants you a perpetual, worldwide, royalty‑free,
+    non‑exclusive license to **use, copy, modify, publish, distribute, or
+    sublicense the Software** for any purpose—including operating other
+    blockchains—subject to the following conditions:
+
+    a.  You **must** retain the entire text of Section 1 (“License Grant for
+        Software”) and Section 4 (“Prohibited Uses”) in all copies or
+        substantial portions of the Software.
+
+    b.  You **may not** use the Software to create or operate any blockchain,
+        fork, sidechain, or testnet that **claims continuity with, derives
+        from, interoperates with, or is marketed as related to Lux Network**
+        without the prior written consent of Lux Industries Inc.
+
+    THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+    DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OF THE SOFTWARE.
+
+2.  License Grant for *Genesis Data*
+    --------------------------------
+    The Genesis Data is released **solely for historical reference.**
+    **All rights are reserved.**
+    You receive **no** license or permission to copy, modify, distribute,
+    publicly display, create derivative works of, or otherwise exploit the
+    Genesis Data, in whole or in part, for any purpose except personal
+    inspection within this Repository.
+
+3.  Trademark
+    ----------
+    “Lux Network”, its chain ID, ticker symbols, logos, domain names, and other
+    brand identifiers are trademarks of Lux Industries Inc. This License
+    confers **no** trademark or branding rights.
+
+4.  Prohibited Uses
+    ----------------
+    • Using any portion of the Genesis Data to bootstrap, seed, or verify any
+      blockchain, fork, sidechain, testnet, or other distributed ledger.
+    • Creating derivative works or modified copies of the Genesis Data.
+    • Employing the Lux.Network name or identifiers in a manner that implies
+      affiliation, endorsement, or continuity without written permission.
+    • Removing, obscuring, or altering any copyright or license notices in the
+      Repository.
+
+5.  Termination
+    ------------
+    Any breach of this License automatically terminates the rights granted
+    herein. Upon termination you must delete all copies of both Software and
+    Genesis Data in your possession that are covered by this License.
+
+6.  Governing Law
+    --------------
+    This License shall be governed by and construed in accordance with the laws
+    of the State of Delaware, USA, without regard to its conflict‑of‑laws
+    provisions.
+
+7.  Contact
+    --------
+    Legal Department – Lux Industries Inc.
+    Email: legal@lux.network

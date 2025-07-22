@@ -1,0 +1,16 @@
+{
+  "network-id": 96369,
+  "sybil-protection-enabled": false,
+  "health-check-frequency": "5s",
+  "log-level": "info",
+  "log-format": "auto",
+  "http-host": "0.0.0.0",
+  "api-admin-enabled": true,
+  "api-auth-required": false,
+  "api-metrics-enabled": true,
+  "http-port": 9630,
+  "staking-enabled": false,
+  "indexer-allow-incomplete": true,
+  "chain-config-dir": "/home/z/work/lux/genesis/configs/chains",
+  "db-dir": "/home/z/work/lux/genesis/pebbledb/2024-96369"
+}

@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # Primary network node
+  lux-primary:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: lux-primary
+    ports:
+      - "9630:9630"
+      - "9631:9631"
+    volumes:
+      - lux-data:/data
+      - ../configs:/genesis/configs:ro
+      - ../chaindata:/genesis/chaindata:ro
+    environment:
+      - NETWORK_ID=96369
+      - ENABLE_POA=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9630/ext/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - lux-network
+
+  # Subnet deployer - runs after primary is healthy
+  subnet-deployer:
+    image: ghcr.io/luxfi/cli:latest
+    container_name: lux-subnet-deployer
+    depends_on:
+      lux-primary:
+        condition: service_healthy
+    volumes:
+      - ../configs:/genesis/configs:ro
+      - subnet-data:/data
+    environment:
+      - LUX_RPC=http://lux-primary:9630
+    command: |
+      sh -c "
+        echo 'Waiting for primary network to be fully ready...'
+        sleep 10
+        
+        echo 'Deploying ZOO subnet (200200)...'
+        lux subnet deploy zoo \
+          --genesis-file /genesis/configs/zoo-mainnet-200200/genesis.json \
+          --config-file /genesis/configs/zoo-mainnet-200200/chain.json \
+          --endpoint http://lux-primary:9630
+        
+        echo 'Deploying SPC subnet (36911)...'
+        lux subnet deploy spc \
+          --genesis-file /genesis/configs/spc-mainnet-36911/genesis.json \
+          --config-file /genesis/configs/spc-mainnet-36911/chain.json \
+          --endpoint http://lux-primary:9630
+        
+        echo 'Deploying Hanzo subnet (36963)...'
+        lux subnet deploy hanzo \
+          --genesis-file /genesis/configs/hanzo-mainnet-36963/genesis.json \
+          --config-file /genesis/configs/hanzo-mainnet-36963/chain.json \
+          --endpoint http://lux-primary:9630
+        
+        echo '✅ All subnets deployed!'
+        echo 'Subnet deployment complete. Container will exit now.'
+      "
+    networks:
+      - lux-network
+
+  # Optional: Historic 7777 network (runs separately)
+  lux-7777:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.7777
+    container_name: lux-7777
+    ports:
+      - "9730:9630"  # Different port to avoid conflict
+      - "9731:9631"
+    volumes:
+      - lux-7777-data:/data
+    environment:
+      - NETWORK_ID=7777
+    profiles:
+      - historic
+    networks:
+      - lux-network
+
+  # Optional: Monitoring dashboard
+  monitor:
+    image: prom/prometheus:latest
+    container_name: lux-monitor
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    profiles:
+      - monitoring
+    networks:
+      - lux-network
+
+volumes:
+  lux-data:
+    name: lux-primary-data
+  subnet-data:
+    name: lux-subnet-data
+  lux-7777-data:
+    name: lux-7777-data
+  prometheus-data:
+    name: lux-prometheus-data
+
+networks:
+  lux-network:
+    name: lux-genesis-network
+    driver: bridge
