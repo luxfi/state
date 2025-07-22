@@ -1,6 +1,5 @@
 package archeology
 
-import "time"
 
 // Network represents a known blockchain network
 type Network struct {
