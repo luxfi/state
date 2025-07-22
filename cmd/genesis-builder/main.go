@@ -9,10 +9,13 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/luxfi/genesis/pkg/genesis"
 	"github.com/luxfi/genesis/pkg/genesis/allocation"
 	"github.com/luxfi/genesis/pkg/genesis/config"
+	"github.com/luxfi/genesis/pkg/genesis/validator"
 )
 
 // Command-line flags
@@ -26,6 +29,19 @@ var (
 	validatorsFileFlag  = flag.String("validators", "", "Path to JSON file with validator configurations")
 	dryRunFlag          = flag.Bool("dry-run", false, "Print genesis without saving to file")
 	listNetworksFlag    = flag.Bool("list-networks", false, "List available networks")
+	
+	// Validator key generation flags
+	generateKeysFlag    = flag.Bool("generate-keys", false, "Generate validator keys")
+	mnemonicFlag        = flag.String("mnemonic", "", "Mnemonic phrase for deterministic key generation")
+	seedPhraseFlag      = flag.String("seed", "", "Alternative to mnemonic")
+	privateKeysFlag     = flag.String("private-keys", "", "Comma-separated BLS private keys in hex")
+	accountStartFlag    = flag.Int("account-start", 0, "Starting account number")
+	accountCountFlag    = flag.Int("account-count", 1, "Number of accounts to generate")
+	accountListFlag     = flag.String("accounts", "", "Comma-separated list of account numbers (e.g., 0,5,10)")
+	offsetsFlag         = flag.String("offsets", "", "Comma-separated list of account offsets for mnemonic")
+	luxdPathFlag        = flag.String("luxd-path", "../node/build/luxd", "Path to luxd binary")
+	saveKeysFlag        = flag.String("save-keys", "", "Save generated validator configs to file")
+	saveKeysDirFlag     = flag.String("save-keys-dir", "", "Save individual validator keys to separate directories")
 )
 
 // ValidatorConfig represents a validator in the config file
@@ -44,6 +60,12 @@ func main() {
 	// List networks if requested
 	if *listNetworksFlag {
 		listNetworks()
+		return
+	}
+	
+	// Generate validator keys if requested
+	if *generateKeysFlag {
+		generateValidatorKeys()
 		return
 	}
 
@@ -179,6 +201,165 @@ func listNetworks() {
 	}
 }
 
+// generateValidatorKeys generates validator keys
+func generateValidatorKeys() {
+	// Create key generator
+	keygen := validator.NewKeyGenerator(*luxdPathFlag)
+	
+	// Parse private keys if provided
+	var privateKeys []string
+	if *privateKeysFlag != "" {
+		parts := strings.Split(*privateKeysFlag, ",")
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				// Remove 0x prefix if present
+				p = strings.TrimPrefix(p, "0x")
+				privateKeys = append(privateKeys, p)
+			}
+		}
+	}
+	
+	// Determine which accounts/offsets to use
+	var accounts []int
+	
+	// Check for offsets flag (used with mnemonic)
+	if *offsetsFlag != "" {
+		parts := strings.Split(*offsetsFlag, ",")
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p == "" {
+				continue
+			}
+			n, err := strconv.Atoi(p)
+			if err != nil {
+				log.Fatalf("Invalid offset: %s", p)
+			}
+			accounts = append(accounts, n)
+		}
+	} else if *accountListFlag != "" {
+		// Parse comma-separated account numbers
+		parts := strings.Split(*accountListFlag, ",")
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p == "" {
+				continue
+			}
+			n, err := strconv.Atoi(p)
+			if err != nil {
+				log.Fatalf("Invalid account number: %s", p)
+			}
+			accounts = append(accounts, n)
+		}
+	} else if len(privateKeys) > 0 {
+		// If using private keys, create sequential indices
+		for i := 0; i < len(privateKeys); i++ {
+			accounts = append(accounts, i)
+		}
+	} else {
+		// Use sequential accounts
+		for i := 0; i < *accountCountFlag; i++ {
+			accounts = append(accounts, *accountStartFlag+i)
+		}
+	}
+	
+	// Validate we have accounts to generate
+	if len(accounts) == 0 {
+		log.Fatal("No accounts specified")
+	}
+	
+	// Get mnemonic or seed phrase
+	mnemonic := *mnemonicFlag
+	if mnemonic == "" && *seedPhraseFlag != "" {
+		mnemonic = *seedPhraseFlag
+	}
+	
+	// Validate inputs
+	if privateKeys != nil && len(privateKeys) > 0 {
+		if len(privateKeys) != len(accounts) {
+			log.Fatalf("Number of private keys (%d) must match number of accounts (%d)", len(privateKeys), len(accounts))
+		}
+		if mnemonic != "" {
+			log.Fatal("Cannot use both private keys and mnemonic")
+		}
+	}
+	
+	// Create validator configurations
+	validators := make([]*validator.ValidatorInfo, 0, len(accounts))
+	
+	fmt.Printf("Generating %d validator keys...\n", len(accounts))
+	
+	for idx, accountNum := range accounts {
+		var keys *validator.ValidatorKeys
+		var keysWithTLS *validator.ValidatorKeysWithTLS
+		var err error
+		
+		if privateKeys != nil && idx < len(privateKeys) {
+			// Use provided private key
+			keysWithTLS, err = keygen.GenerateFromPrivateKey(privateKeys[idx])
+			if err != nil {
+				log.Fatalf("Failed to generate keys from private key %d: %v", idx+1, err)
+			}
+			keys = keysWithTLS.ValidatorKeys
+		} else if mnemonic != "" {
+			// Deterministic generation from mnemonic
+			keysWithTLS, err = keygen.GenerateFromSeedWithTLS(mnemonic, accountNum)
+			if err != nil {
+				log.Fatalf("Failed to generate keys for account %d: %v", accountNum, err)
+			}
+			keys = keysWithTLS.ValidatorKeys
+		} else {
+			// Random generation
+			keysWithTLS, err = keygen.GenerateCompatibleKeys()
+			if err != nil {
+				log.Fatalf("Failed to generate keys for validator %d: %v", idx+1, err)
+			}
+			keys = keysWithTLS.ValidatorKeys
+		}
+		
+		// Use account number as part of ETH address derivation
+		ethAddr := fmt.Sprintf("0x%040x", accountNum)
+		
+		validatorConfig := validator.GenerateValidatorConfig(
+			keys,
+			ethAddr,
+			1000000000000000000, // 1B LUX default weight
+			20000,               // 2% delegation fee
+		)
+		
+		validators = append(validators, validatorConfig)
+		
+		fmt.Printf("\nValidator %d (Account %d):\n", idx+1, accountNum)
+		fmt.Printf("  NodeID: %s\n", keys.NodeID)
+		fmt.Printf("  Public Key: %s\n", keys.PublicKey)
+		fmt.Printf("  Proof of Possession: %s\n", keys.ProofOfPossession)
+		
+		// Save individual keys if directory specified
+		if *saveKeysDirFlag != "" {
+			keyDir := filepath.Join(*saveKeysDirFlag, fmt.Sprintf("validator-%d", idx+1))
+			if err := validator.SaveKeys(keys, keyDir); err != nil {
+				log.Fatalf("Failed to save keys for validator %d: %v", idx+1, err)
+			}
+			
+			// If we have TLS data, save it too
+			if keysWithTLS != nil {
+				if err := validator.SaveStakingFiles(keysWithTLS.TLSKeyBytes, keysWithTLS.TLSCertBytes, keyDir); err != nil {
+					log.Fatalf("Failed to save staking files for validator %d: %v", idx+1, err)
+				}
+			}
+		}
+	}
+	
+	// Save validator configs to file if requested
+	if *saveKeysFlag != "" {
+		if err := validator.SaveValidatorConfigs(validators, *saveKeysFlag); err != nil {
+			log.Fatalf("Failed to save validator configs: %v", err)
+		}
+		fmt.Printf("\nValidator configurations saved to: %s\n", *saveKeysFlag)
+	}
+}
+
+
 // Example usage function for documentation
 func printUsageExamples() {
 	examples := `
@@ -212,6 +393,25 @@ Examples:
 
 # List all available networks
 ./genesis-builder -list-networks
+
+# Generate validator keys from mnemonic with sequential accounts
+./genesis-builder -generate-keys \
+  -mnemonic "your twelve word mnemonic phrase here" \
+  -account-start 0 \
+  -account-count 11 \
+  -save-keys validators.json \
+  -save-keys-dir validator-keys/
+
+# Generate validator keys with specific account numbers
+./genesis-builder -generate-keys \
+  -mnemonic "your twelve word mnemonic phrase here" \
+  -accounts "0,1,2,3,4,5,6,7,8,9,10" \
+  -save-keys validators.json
+
+# Generate random validator keys (no mnemonic)
+./genesis-builder -generate-keys \
+  -account-count 5 \
+  -save-keys validators-random.json
 
 Validator file format:
 [

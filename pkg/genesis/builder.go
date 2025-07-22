@@ -1,11 +1,12 @@
 package genesis
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"time"
+	"strings"
 
 	"github.com/luxfi/node/genesis"
 	"github.com/luxfi/node/ids"
@@ -120,9 +121,9 @@ func (b *Builder) Build() (*MainGenesis, error) {
 
 	for _, alloc := range b.allocations.GetAll() {
 		// Convert locked amounts
-		lockedAmounts := make([]genesis.UnparsedLockedAmount, len(alloc.UnlockSchedule))
+		lockedAmounts := make([]genesis.LockedAmount, len(alloc.UnlockSchedule))
 		for i, locked := range alloc.UnlockSchedule {
-			lockedAmounts[i] = genesis.UnparsedLockedAmount{
+			lockedAmounts[i] = genesis.LockedAmount{
 				Amount:   locked.Amount.Uint64(),
 				Locktime: locked.Locktime,
 			}
@@ -164,9 +165,27 @@ func (b *Builder) Build() (*MainGenesis, error) {
 
 		// Add signer info if provided
 		if staker.PublicKey != "" && staker.ProofOfPossession != "" {
+			// Decode hex public key (48 bytes)
+			pubKeyHex := strings.TrimPrefix(staker.PublicKey, "0x")
+			pubKeyBytes, err := hex.DecodeString(pubKeyHex)
+			if err != nil || len(pubKeyBytes) != 48 {
+				return nil, fmt.Errorf("invalid public key for staker %s: %w", staker.NodeID, err)
+			}
+			var pubKey [48]byte
+			copy(pubKey[:], pubKeyBytes)
+			
+			// Decode hex proof of possession (96 bytes)
+			popHex := strings.TrimPrefix(staker.ProofOfPossession, "0x")
+			popBytes, err := hex.DecodeString(popHex)
+			if err != nil || len(popBytes) != 96 {
+				return nil, fmt.Errorf("invalid proof of possession for staker %s: %w", staker.NodeID, err)
+			}
+			var pop [96]byte
+			copy(pop[:], popBytes)
+			
 			unparsedStaker.Signer = &signer.ProofOfPossession{
-				PublicKey:         staker.PublicKey,
-				ProofOfPossession: staker.ProofOfPossession,
+				PublicKey:         pubKey,
+				ProofOfPossession: pop,
 			}
 		}
 

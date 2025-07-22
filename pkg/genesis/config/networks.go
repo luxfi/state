@@ -46,8 +46,8 @@ var Networks = map[string]*NetworkConfig{
 		Name:                "Lux Mainnet",
 		HRP:                 "lux",
 		ChainID:             96369,
-		StartTime:           time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
-		InitialStakeDuration: 365 * 24 * time.Hour,
+		StartTime:           time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), // Jan 1, 2020
+		InitialStakeDuration: 100 * 365 * 24 * time.Hour, // 100 years
 		MinValidatorStake:   2000000000000000, // 2M LUX (with 9 decimals)
 		MinDelegatorStake:   25000000000,      // 25 LUX (with 9 decimals)
 		IsL2:                false,

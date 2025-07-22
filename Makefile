@@ -619,3 +619,207 @@ help:
 	@echo ""
 	@echo "Analysis:"
 	@echo "  make analyze-chaindata - Show chain data statistics"
+
+# Full genesis pipeline
+genesis-full-pipeline: check-luxd check-lux-cli extract-chaindata generate-validators generate-all-genesis ## Complete genesis generation pipeline
+	@echo "✅ Full genesis pipeline complete!"
+
+# Check dependencies
+check-luxd: ## Verify luxd is built
+	@if [ ! -f ../node/build/luxd ]; then \
+		echo "Building luxd..."; \
+		cd ../node && ./scripts/build.sh; \
+	fi
+	@echo "✅ luxd ready"
+
+check-lux-cli: ## Verify lux-cli is available
+	@if [ ! -f ./bin/lux-cli ]; then \
+		echo "Installing lux-cli..."; \
+		$(MAKE) install; \
+	fi
+	@echo "✅ lux-cli ready"
+
+# Extract chaindata from all networks
+extract-chaindata: build-tools ## Extract blockchain data from all networks
+	@echo "Extracting chaindata from all networks..."
+	@mkdir -p data/extracted
+	@if [ -d "/home/z/.lux-cli/runs/network_96369_1/node1/db/pebbledb" ]; then \
+		echo "Extracting Lux mainnet (96369)..."; \
+		./bin/denamespace \
+			-src /home/z/.lux-cli/runs/network_96369_1/node1/db/pebbledb \
+			-dst data/extracted/lux-mainnet-96369 \
+			-network 96369 \
+			-state; \
+	fi
+	@echo "✅ Chaindata extraction complete"
+
+# Generate validators deterministically
+generate-validators: build-genesis-pkg ## Generate 11 validators from mnemonic
+	@if [ -z "$$MNEMONIC" ]; then \
+		echo "Error: MNEMONIC not set."; \
+		echo "Please set MNEMONIC environment variable:"; \
+		echo "  export MNEMONIC='your twelve word mnemonic phrase'"; \
+		exit 1; \
+	fi
+	@echo "Generating 11 validators from MNEMONIC..."
+	@mkdir -p configs
+	@./bin/genesis-builder \
+		-generate-keys \
+		-mnemonic "$$MNEMONIC" \
+		-offsets "0,1,2,3,4,5,6,7,8,9,10" \
+		-save-keys configs/mainnet-validators.json \
+		-save-keys-dir validator-keys
+	@echo "✅ Validators generated with proper P-Chain addresses"
+
+# Generate all genesis files
+generate-all-genesis: generate-mainnet-genesis generate-testnet-genesis generate-local-genesis ## Generate genesis for all networks
+
+generate-mainnet-genesis: build-genesis-pkg ## Generate mainnet genesis
+	@echo "Generating mainnet genesis..."
+	@./bin/genesis-builder \
+		--network mainnet \
+		--validators configs/mainnet-validators.json \
+		--output genesis_mainnet_96369.json
+	@if [ -f "data/extracted/lux-mainnet-96369/genesis.json" ]; then \
+		echo "Importing C-Chain data..."; \
+		./bin/genesis-builder \
+			--network mainnet \
+			--import-cchain data/extracted/lux-mainnet-96369/genesis.json \
+			--validators configs/mainnet-validators.json \
+			--output genesis_mainnet_96369.json; \
+	fi
+
+generate-testnet-genesis: build-genesis-pkg ## Generate testnet genesis
+	@./bin/genesis-builder \
+		--network testnet \
+		--output genesis_testnet_96368.json
+
+generate-local-genesis: build-genesis-pkg ## Generate local test genesis
+	@./bin/genesis-builder \
+		--network local \
+		--output genesis_local.json
+
+# Build tools
+build-genesis-pkg: ## Build genesis builder
+	@echo "Building genesis builder..."
+	@go build -o bin/genesis-builder ./cmd/genesis-builder/
+	@echo "✅ Genesis builder built"
+
+# Network operations using lux-cli
+network-clean: ## Clean existing network
+	@if [ -d "/home/z/.lux-cli/runs" ]; then \
+		echo "Cleaning existing network..."; \
+		./bin/lux-cli network clean; \
+	fi
+
+network-create: genesis-full-pipeline ## Create new network with generated genesis
+	@echo "Creating Lux network..."
+	@./bin/lux-cli network create lux-mainnet \
+		--custom-luxd-version ../node/build/luxd \
+		--num-nodes 5 \
+		--genesis genesis_mainnet_96369.json
+
+network-start: ## Start the network
+	@echo "Starting network..."
+	@./bin/lux-cli network start
+
+network-stop: ## Stop the network
+	@./bin/lux-cli network stop
+
+network-status: ## Check network status
+	@./bin/lux-cli network status
+
+# Launch local validators (first 5)
+launch-local-validators: network-clean network-create ## Launch first 5 validators locally
+	@echo "Launching local validators..."
+	@$(MAKE) network-start
+	@echo ""
+	@echo "✅ Local validators running!"
+	@echo "RPC endpoints:"
+	@for i in 1 2 3 4 5; do \
+		echo "  Node $$i: http://localhost:$$((9650 + (i-1)*2))"; \
+	done
+
+# Deploy remote validators (last 6)
+deploy-remote-validators: ## Package remote validator configs
+	@echo "Packaging remote validators..."
+	@mkdir -p remote-validators
+	@for i in 6 7 8 9 10 11; do \
+		cp -r validator-keys/validator-$$i remote-validators/; \
+	done
+	@tar -czf remote-validators.tar.gz remote-validators/
+	@echo "✅ Remote validators packaged: remote-validators.tar.gz"
+
+# L2 operations
+deploy-zoo-l2: ## Deploy Zoo L2 subnet
+	@./bin/lux-cli l2 create zoo \
+		--evm \
+		--chain-id 200200 \
+		--custom-subnet-evm-genesis data/unified-genesis/zoo-mainnet-200200/genesis.json
+	@./bin/lux-cli l2 deploy zoo --local
+
+deploy-spc-l2: ## Deploy SPC L2 subnet  
+	@./bin/lux-cli l2 create spc \
+		--evm \
+		--chain-id 36911 \
+		--custom-subnet-evm-genesis data/unified-genesis/spc-mainnet-36911/genesis.json
+	@./bin/lux-cli l2 deploy spc --local
+
+# Testing
+test-genesis: build-genesis-pkg ## Test genesis generation
+	@echo "Testing genesis generation..."
+	@go test ./pkg/genesis/... -v
+
+test-validators: ## Test validator key generation
+	@echo "Testing validator generation..."
+	@MNEMONIC="test test test test test test test test test test test junk" \
+		./bin/genesis-builder \
+		-generate-keys \
+		-mnemonic "$$MNEMONIC" \
+		-offsets "0,1,2,3,4,5,6,7,8,9,10" \
+		-save-keys test-validators.json
+	@echo "Checking deterministic generation..."
+	@if [ -f "test-validators.json" ]; then \
+		echo "✅ Validator generation test passed"; \
+		rm test-validators.json; \
+	else \
+		echo "❌ Validator generation test failed"; \
+		exit 1; \
+	fi
+
+test-network: launch-local-validators ## Test network bootstrap
+	@echo "Testing network bootstrap..."
+	@sleep 10
+	@./bin/lux-cli network status
+	@echo "Testing RPC endpoints..."
+	@curl -s -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNetworkID","params":{}}' \
+		-H 'content-type:application/json' http://localhost:9650/ext/info | jq .
+
+test-all: test-genesis test-validators ## Run all tests
+
+# Full launch sequence
+launch-mainnet: genesis-full-pipeline launch-local-validators ## Complete mainnet launch
+	@echo ""
+	@echo "🚀 Lux Mainnet launched!"
+	@echo ""
+	@echo "Local validators (1-5) are running"
+	@echo "Remote validator packages: remote-validators.tar.gz"
+	@echo ""
+	@echo "Next steps:"
+	@echo "1. Deploy remote validators to data center"
+	@echo "2. Deploy L2 subnets: make deploy-zoo-l2 deploy-spc-l2"
+
+# Clean everything
+clean-all: clean network-clean ## Clean all generated files and networks
+	@rm -rf validator-keys/ configs/mainnet-validators.json
+	@rm -f genesis_*.json test-validators.json
+	@rm -rf remote-validators/ remote-validators.tar.gz
+	@echo "✅ All cleaned"
+
+.PHONY: genesis-full-pipeline check-luxd check-lux-cli extract-chaindata
+.PHONY: generate-validators generate-all-genesis generate-mainnet-genesis
+.PHONY: generate-testnet-genesis generate-local-genesis build-genesis-pkg
+.PHONY: network-clean network-create network-start network-stop network-status
+.PHONY: launch-local-validators deploy-remote-validators
+.PHONY: deploy-zoo-l2 deploy-spc-l2 test-genesis test-validators test-network
+.PHONY: test-all launch-mainnet clean-all

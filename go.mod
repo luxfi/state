@@ -5,15 +5,13 @@ go 1.24.5
 require (
 	github.com/cockroachdb/pebble v1.1.5
 	github.com/ethereum/go-ethereum v1.16.1
-	github.com/luxfi/node v1.13.8
+	github.com/luxfi/node v1.13.19
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a
 )
-
-replace github.com/luxfi/node => ../node
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect

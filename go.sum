@@ -201,6 +201,8 @@ github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzW
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
 github.com/luxfi/geth v0.15.41 h1:A7qaWf39X1m7iwVNgNIg7/u7dm6Uo6rqwAAOYhMEq9o=
 github.com/luxfi/geth v0.15.41/go.mod h1:IqfzUTLCcQjyeAqaBOPfqLaMknAOeCMsVvQHdXq9b/w=
+github.com/luxfi/node v1.13.19 h1:RrOUWzYEtm4FQXfRnjnGiteNKpjhc71PCJZ0D/OCBaE=
+github.com/luxfi/node v1.13.19/go.mod h1:18mrS7CFT/4rpPkNE2kgtCETuYeZIcPXVc1sdwEitdE=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
