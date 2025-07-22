@@ -40,10 +40,10 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 
 ## Tools You Should Know
 
-### 1. denamespace-universal
+### 1. denamespace
 ```bash
 # Extract blockchain data
-./bin/denamespace-universal -src <pebbledb> -dst <output> -network <chain-id> -state
+./bin/denamespace -src <pebbledb> -dst <output> -network <chain-id> -state
 ```
 - Use this for any network extraction
 - Always include `-state` for account balances
@@ -67,7 +67,7 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 ### Extracting a Network
 ```bash
 # Example: Extract ZOO mainnet
-./bin/denamespace-universal \
+./bin/denamespace \
     -src /path/to/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/db/pebbledb \
     -dst ./extracted-zoo \
     -network 200200 \
@@ -116,18 +116,11 @@ luxd --network-id=96369 --data-dir=./data/unified-genesis/lux-mainnet-96369/db
 - `0xa3`: storage
 - `0x73`: state
 
-## Common Pitfalls to Avoid
-
-1. **Wrong Testnet**: The 142MB testnet is wrong. Use the 1.1MB one (2sdADE...)
-2. **Hardcoded Tools**: denamespace-selective is hardcoded for 96369, use universal
-3. **Lock Files**: Remove LOCK files before accessing databases
-4. **Chain ID Confusion**: 2usKC5... is ZOO testnet (200201), not something else
-
 ## Decision Rationale
 
 ### Why 96369 as C-Chain?
 - Fresh architecture without 7777's technical debt
-- Better performance and features
+- Better performance and features as we migrated from leveldb to pebbledb
 - Clean start with proper airdrops
 
 ### Why Keep 7777?
@@ -147,14 +140,15 @@ When asked about:
 - **"Why transition?"** - Evolution from single to multi-chain, better architecture
 - **"What's the real testnet?"** - 1.1MB one with actual usage, not 142MB
 - **"Can I verify?"** - Yes, all data and tools provided for transparency
-- **"What about 7777?"** - Preserved like Ethereum Classic, can still run it
+- **"What about 7777?"** - Preserved for historical records, and to ensure
+  proper mainnet genesis including all users of the original genesis network.
 
 ## Testing Commands
 
 Always test extraction before full operations:
 ```bash
 # Test extraction (small dataset)
-./bin/denamespace-universal \
+./bin/denamespace \
     -src /path/to/data \
     -dst /tmp/test \
     -network <id> \
