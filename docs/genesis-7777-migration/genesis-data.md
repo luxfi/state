@@ -1,18 +1,8 @@
-# 7777 Chain Airdrop Data
+# Lux Geneesis Chain ID 7777 Data
 
 ## Overview
 
-Account balances extracted from the original 7777 chain at block height 888,834.
-
-## Files
-
-### CSV Exports
-- `data/2023-7777/7777-airdrop-96369-mainnet.csv` - All 151 accounts
-- `data/2023-7777/7777-airdrop-96369-mainnet-no-treasury.csv` - 150 accounts (excluding treasury)
-
-### Supporting Data
-- `data/2023-7777/7777-airdrop-summary.json` - Distribution statistics
-- `data/2023-7777/genesis-7777-evm.json` - Original genesis configuration
+Account balances extracted from the original chain ID 7777 genesis EVM at block height 888,834.
 
 ## Key Statistics
 

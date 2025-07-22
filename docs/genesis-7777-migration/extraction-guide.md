@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- December 2023 Avalanche v1.10.17 database backup
-- Go 1.21+ 
+- Lux genesis database backup
+- Go 1.21+
 - 20GB free disk space
 
 ## Extraction Process
@@ -42,7 +42,6 @@ du -sh ../../data/2023-7777/pebble-clean/
 
 ## Output
 
-- **Location**: `data/2023-7777/pebble-clean/`
 - **Format**: PebbleDB (ready for import)
 - **Keys**: 6,035,270
 - **Size**: ~441MB
