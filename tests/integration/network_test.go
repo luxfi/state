@@ -137,7 +137,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 			By("Exporting 7777 accounts to CSV")
 			cmd := exec.Command("go", "run",
 				filepath.Join(genesisDir, "scripts/export_7777_accounts.go"),
-				"--db-path", filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db"),
+			"--db-path", filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db"),
 				"--output", filepath.Join(baseDir, "7777-accounts.csv"),
 				"--exclude-treasury", "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
 			)
@@ -239,7 +239,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should run 7777 chain in dev mode", func() {
 			By("Converting 7777 data if needed")
-			pebbleDBPath := filepath.Join(genesisDir, "pebbledb/lux-genesis-7777")
+    pebbleDBPath := filepath.Join(genesisDir, "pebbledb/lux-genesis-7777")
 			if _, err := os.Stat(pebbleDBPath); os.IsNotExist(err) {
 				cmd := exec.Command("go", "run",
 					filepath.Join(genesisDir, "scripts/convert.go"),

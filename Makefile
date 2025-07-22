@@ -15,14 +15,14 @@ install:
 ## Full genesis pipeline: extract then generate P-, C-, X-chain genesis files
 genesis: build-tools build-archeology build-genesis
 	@echo "👉  Running full genesis pipeline"
-	@bin/archeology extract --src chaindata/lux-7777/db/pebbledb --dst data/extracted/lux-7777 --chain-id 7777 --include-state
+	@bin/archeology extract --src chaindata/lux-genesis-7777/db/pebbledb --dst data/extracted/lux-genesis-7777 --chain-id 7777 --include-state
 	@bin/archeology extract --src chaindata/lux-mainnet-96369/db/pebbledb --dst data/extracted/lux-96369 --chain-id 96369 --include-state
 	@echo "👉  Generating P-Chain genesis"
-	@bin/genesis generate --network p-chain --data data/extracted/lux-7777 --output configs/P/genesis.json
+	@bin/genesis generate --network p-chain --data data/extracted/lux-genesis-7777 --output configs/P/genesis.json
 	@echo "👉  Generating C-Chain genesis"
 	@bin/genesis generate --network c-chain --data data/extracted/lux-96369 --output configs/C/genesis.json
 	@echo "👉  Generating X-Chain genesis"
-	@bin/genesis generate --network x-chain --data data/extracted/lux-7777 --external data/external --output configs/xchain-genesis-complete.json
+	@bin/genesis generate --network x-chain --data data/extracted/lux-genesis-7777 --external data/external --output configs/xchain-genesis-complete.json
 	@echo "✅ Full genesis pipeline complete (configs/P, configs/C, configs/xchain-genesis-complete.json)"
 
 snapshot: genesis
