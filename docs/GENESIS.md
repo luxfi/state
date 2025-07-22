@@ -7,13 +7,13 @@ This document describes the complete pipeline for building genesis data for Lux 
 The genesis pipeline consists of four main phases:
 
 1. **Data Extraction** - Extract blockchain data from existing chains
-2. **Asset Migration** - Import external assets from other blockchains  
+2. **Asset Migration** - Import external assets from other blockchains
 3. **Genesis Generation** - Combine all data into genesis files
 4. **Network Launch** - Deploy networks with complete historical data
 
 ## Tools
 
-### `lux-archeology` - Blockchain Data Extraction
+### `archeology` - Blockchain Data Extraction
 Extracts and analyzes blockchain data from PebbleDB/LevelDB databases.
 
 ### `teleport` - External Asset Migration
@@ -30,7 +30,7 @@ Extract data from existing Lux chains:
 
 ```bash
 # Extract LUX mainnet (96369)
-lux-archeology extract \
+archeology extract \
   --source /path/to/lux-96369/db/pebbledb \
   --destination ./data/extracted/lux-96369 \
   --chain-id 96369 \
@@ -44,7 +44,7 @@ lux-archeology extract \
   --include-state
 
 # Extract SPC mainnet (36911)
-lux-archeology extract \
+archeology extract \
   --source /path/to/spc-36911/db/pebbledb \
   --destination ./data/extracted/spc-36911 \
   --chain-id 36911 \
@@ -57,12 +57,12 @@ Verify extraction and analyze contents:
 
 ```bash
 # Analyze LUX data
-lux-archeology analyze \
+archeology analyze \
   --db ./data/extracted/lux-96369 \
   --output ./reports/lux-analysis.json
 
 # Check specific accounts (e.g., treasury)
-lux-archeology analyze \
+archeology analyze \
   --db ./data/extracted/lux-96369 \
   --account 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714
 ```
