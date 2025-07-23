@@ -178,8 +178,6 @@ var _ = Describe("Network Integration", Ordered, func() {
 	})
 
 	Describe("L2 Subnet Deployment", func() {
-		var subnetID string
-
 		It("should deploy ZOO as L2 subnet", func() {
 			Skip("Requires running primary network")
 			

@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/node/staking"
 	"github.com/luxfi/node/utils/crypto/bls"
 	"github.com/luxfi/node/utils/crypto/bls/signer/localsigner"
-	"github.com/luxfi/node/utils/formatting/address"
+	// "github.com/luxfi/node/utils/formatting/address" // Not needed now
 )
 
 // KeyGenerator handles validator key generation using luxd
@@ -217,11 +217,11 @@ func (kg *KeyGenerator) GenerateCompatibleKeys() (*ValidatorKeysWithTLS, error) 
 	
 	nodeID := ids.NodeIDFromCert(cert)
 	
-	// Format address in X-Chain format
-	xAddr, err := address.FormatBech32("X", nodeID.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("failed to format X-Chain address: %w", err)
-	}
+	// X-Chain address can be derived from NodeID when needed
+	// _, err = address.FormatBech32("X", nodeID.Bytes())
+	// if err != nil {
+	//     return nil, fmt.Errorf("failed to format X-Chain address: %w", err)
+	// }
 	
 	keys := &ValidatorKeys{
 		NodeID:            nodeID.String(),
@@ -230,8 +230,8 @@ func (kg *KeyGenerator) GenerateCompatibleKeys() (*ValidatorKeysWithTLS, error) 
 		PrivateKey:        "0x" + hex.EncodeToString(signer.ToBytes()), // Include private key for secure storage
 	}
 	
-	// Also include the X-Chain address for convenience
-	keys.NodeID = fmt.Sprintf("%s (X-Chain: %s)", nodeID.String(), xAddr)
+	// Just use the clean NodeID without extra information
+	// The X-Chain address can be derived when needed
 	
 	return &ValidatorKeysWithTLS{
 		ValidatorKeys: keys,

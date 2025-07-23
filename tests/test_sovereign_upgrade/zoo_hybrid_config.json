@@ -1,0 +1,30 @@
+{
+  "networkID": 200200,
+  "chainName": "ZOO Network",
+  "deploymentType": "HYBRID_L2",
+  "config": {
+    "securityModel": "hybrid",
+    "primaryNetworkValidators": true,
+    "subnetValidators": [
+      {
+        "nodeID": "NodeID-Zoo1VJMGZYzqTvVjS23912uzu8gCFcnquPQW",
+        "weight": 1000000,
+        "startTime": 1704067200,
+        "endTime": 1735689600
+      },
+      {
+        "nodeID": "NodeID-Zoo2KL9z4p6hHFKL3kcQyF9Qoy8cTwp8xBu",
+        "weight": 1000000,
+        "startTime": 1704067200,
+        "endTime": 1735689600
+      }
+    ],
+    "minValidators": 8,
+    "validatorRewards": true,
+    "rewardConfig": {
+      "rewardRate": 2,
+      "minStakeDuration": 14,
+      "maxStakeDuration": 365
+    }
+  }
+}

@@ -23,11 +23,11 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 ### 2. Data Locations
 ```
 /home/z/work/lux/genesis/data/unified-genesis/
-├── lux-mainnet-96369/    # 7.2GB - Primary C-Chain
+├── lux-mainnet/96369/    # 7.2GB - Primary C-Chain
 ├── lux-testnet-96368/    # 1.1MB - REAL testnet (not 142MB one)
-├── zoo-mainnet-200200/   # 3.7MB
+├── zoo-mainnet/200200/   # 3.7MB
 ├── zoo-testnet-200201/   # 292KB
-├── spc-mainnet-36911/    # 48KB
+├── spc-mainnet/36911/    # 48KB
 ├── lux-genesis-7777/             # Historical
 └── configs/              # All configurations
 ```
@@ -85,10 +85,10 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 ### Running a Network
 ```bash
 # Start with luxd
-luxd --network-id=96369 --data-dir=./data/unified-genesis/lux-mainnet-96369/db
+luxd --network-id=96369 --data-dir=./data/unified-genesis/lux-mainnet/96369/db
 
 # Or with lux-cli
-./lux-cli network start --genesis-path=./configs/lux-mainnet-96369/genesis.json
+./lux-cli network start --genesis-path=./configs/lux-mainnet/96369/genesis.json
 ```
 
 ## Important Technical Details

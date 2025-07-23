@@ -1,0 +1,31 @@
+{
+  "timeline": [
+    {
+      "phase": "L2_SUBNET",
+      "duration": "6 months",
+      "milestones": [
+        "Deploy subnet",
+        "Onboard users",
+        "Establish ecosystem"
+      ]
+    },
+    {
+      "phase": "HYBRID_SECURITY",
+      "duration": "6 months",
+      "milestones": [
+        "Add subnet validators",
+        "Enable staking",
+        "Test independent operations"
+      ]
+    },
+    {
+      "phase": "SOVEREIGN_L1",
+      "duration": "ongoing",
+      "milestones": [
+        "Full independence",
+        "Governance activation",
+        "Economic sovereignty"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "genesis",
   "description": "Genesis generation and blockchain data import tools for Lux Network",
-  "executable": "./lux-cli-genesis",
+  "executable": "./bin/genesis",
   "commands": [
     {
       "name": "generate",

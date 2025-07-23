@@ -5,6 +5,9 @@ import (
 	"github.com/luxfi/node/vms/platformvm/signer"
 )
 
+// Genesis is an alias for MainGenesis for backward compatibility
+type Genesis = MainGenesis
+
 // MainGenesis represents the complete genesis configuration for all chains
 type MainGenesis struct {
 	NetworkID                  uint32                 `json:"networkID"`

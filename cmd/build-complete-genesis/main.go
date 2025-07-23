@@ -200,9 +200,15 @@ func buildTestnet(outputDir string) error {
 func buildXChainGenesis(outputDir, network, airdropPath string) error {
 	fmt.Printf("\nBuilding X-Chain genesis for %s...\n", network)
 
+	// Get network configuration
+	netConfig, err := config.GetNetwork(network)
+	if err != nil {
+		return fmt.Errorf("failed to get network config: %w", err)
+	}
+
 	// X-Chain genesis structure
 	xchainGenesis := map[string]interface{}{
-		"networkID": config.GetNetworkID(network),
+		"networkID": netConfig.ID,
 		"allocations": []interface{}{},
 		"startTime": 1577836800, // Jan 1, 2020
 		"initialStakeDuration": 31536000, // 1 year

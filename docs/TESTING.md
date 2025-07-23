@@ -176,8 +176,8 @@ Eventually(condition, 5*time.Minute).Should(Succeed())
 
 ### Port conflicts
 Ensure no other services are using:
-- 9650 (RPC port)
-- 9651 (Staking port)
+- 9630 (RPC port)
+- 9631 (Staking port)
 
 ### Database locks
 Remove LOCK files if tests fail:

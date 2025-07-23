@@ -8,8 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 	
 	"github.com/cockroachdb/pebble"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
 var _ = Describe("Database Operations", func() {
@@ -37,7 +35,8 @@ var _ = Describe("Database Operations", func() {
 
 				// Count keys by prefix
 				prefixCounts := make(map[string]int)
-				iter := db.NewIter(nil)
+				iter, err := db.NewIter(nil)
+				Expect(err).NotTo(HaveOccurred())
 				defer iter.Close()
 
 				keyCount := 0
@@ -70,10 +69,11 @@ var _ = Describe("Database Operations", func() {
 
 				// Look for genesis block (block 0)
 				// Key format: 'h' + block_number (8 bytes) + hash (32 bytes)
-				iter := db.NewIter(&pebble.IterOptions{
+				iter, err := db.NewIter(&pebble.IterOptions{
 					LowerBound: []byte("h"),
 					UpperBound: []byte("i"),
 				})
+				Expect(err).NotTo(HaveOccurred())
 				defer iter.Close()
 
 				foundGenesis := false

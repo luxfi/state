@@ -1,0 +1,4 @@
+address,burn_amount,block_number,tx_hash,notes
+# Placeholder for Zoo BSC burn accounts
+# To be populated with actual burn data from BSC
+# Format: address,burn_amount_wei,block_number,transaction_hash,notes

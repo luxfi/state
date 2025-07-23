@@ -1,0 +1,30 @@
+{
+  "networkID": 200200,
+  "chainName": "ZOO Network",
+  "deploymentType": "SOVEREIGN_L1",
+  "config": {
+    "securityModel": "independent",
+    "primaryNetworkValidators": false,
+    "minValidators": 20,
+    "consensusProtocol": "snowman++",
+    "vmType": "subnet-evm",
+    "governanceConfig": {
+      "proposalThreshold": 100000,
+      "votingPeriod": 604800,
+      "quorumPercentage": 30
+    },
+    "tokenomics": {
+      "nativeToken": "ZOO",
+      "totalSupply": "10000000000",
+      "stakingRewards": true,
+      "inflationRate": 2.5,
+      "burnMechanism": true
+    }
+  },
+  "validators": {
+    "minStake": 100000,
+    "maxValidators": 100,
+    "delegationEnabled": true,
+    "minDelegation": 1000
+  }
+}

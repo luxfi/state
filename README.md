@@ -1,43 +1,71 @@
-# Lux Network Genesis Tools
+# Lux Network Genesis Management System
 
-Comprehensive toolset for generating genesis files and managing blockchain data for Lux Network L1 and L2 chains.
+A unified, DRY (Don't Repeat Yourself) system for managing Lux Network genesis configurations, validators, and network launches.
 
 ## Quick Start
 
 ```bash
-# Install and build
-make build
-make install-plugin
+# Install dependencies
+make install
 
-# Deploy networks
-make deploy          # Local 11-node network
-make deploy-mainnet  # Mainnet with historical data
-make deploy-testnet  # Testnet network
+# Generate 11 validators
+MNEMONIC="your twelve word mnemonic phrase" make validators-generate
+
+# Generate genesis configuration
+make genesis-generate
+
+# Launch mainnet
+make launch-mainnet
+
+# Or use the unified launcher
+./scripts/launch.sh full
 ```
 
 ## Features
 
-- **Genesis Generation**: Create complete genesis files for all networks
-- **Blockchain Archaeology**: Extract and analyze historical blockchain data
-- **CLI Plugins**: Extends lux-cli with genesis and archaeology functionality  
-- **Multi-Chain Support**: Lux (96369), Zoo (200200), SPC (36911), and future L2s
-- **Historical Import**: Prepare existing blockchain state for migration
+### Unified CLI Tool
+- **Single Command Interface**: All genesis operations through `genesis-cli`
+- **Validator Management**: Generate, add, remove, and list validators
+- **Genesis Generation**: Create genesis for mainnet, testnet, or local networks
+- **Import Support**: Import C-Chain data and CSV allocations
+- **Validation**: Comprehensive genesis validation
 
-## CLI Usage
+### Simplified Operations
+- **DRY Makefile**: No redundant targets, clear and concise
+- **Unified Launch Script**: Single script for all launch modes
+- **Human-Readable Amounts**: Support for 2T, 1.5B, 500M notation
+- **Comprehensive Testing**: Full test coverage with `./test-all.sh`
 
-After installing plugins with `make install-plugin`:
+## Usage
 
-### Genesis Commands
+### Command Line Interface
+
 ```bash
-lux-cli genesis generate --network mainnet
-lux-cli genesis import historic --chain-data ./chaindata --network-id 96369
+# Generate genesis with validators
+./bin/genesis-cli generate \
+  --network mainnet \
+  --validators configs/mainnet/validators.json \
+  --treasury-amount 2T
+
+# Manage validators
+./bin/genesis-cli validators list
+./bin/genesis-cli validators generate --mnemonic "..." --offsets "0,1,2,3,4,5"
+./bin/genesis-cli validators add --node-id NodeID-xxx --eth-address 0x...
+./bin/genesis-cli validators remove --index 5
+
+# Validate genesis
+./bin/genesis-cli validate --network mainnet
 ```
 
-### Archaeology Commands  
+### Makefile Commands
+
 ```bash
-lux-cli archaeology extract --source ./pebbledb --chain-id 96369
-lux-cli archaeology scan-holders --contract 0x... --rpc https://...
-lux-cli archaeology scan-burns --token 0x... --burn-address 0x000...dead
+make help                 # Show all available commands
+make validators-generate  # Generate validators
+make genesis-generate     # Generate genesis file
+make launch-dev          # Single node dev mode
+make launch-mainnet      # Full 11-node network
+make test                # Run all tests
 ```
 
 ## Network Configuration
@@ -53,46 +81,98 @@ lux-cli archaeology scan-burns --token 0x... --burn-address 0x000...dead
 ## Project Structure
 
 ```
-├── cmd/            # Command-line tools
-├── pkg/            # Core packages
-├── scripts/        # Deployment scripts
-├── chaindata/      # Blockchain data (git-ignored)
-├── configs/        # Network configurations
-├── output/         # Generated genesis files
-└── validator-keys/ # Validator keys (git-ignored)
+genesis/
+├── bin/                    # Built binaries
+│   ├── genesis-cli        # Unified CLI tool
+│   ├── luxd              # Lux node binary
+│   └── lux-cli           # Lux CLI
+├── cmd/                   # Command source code
+│   └── genesis-cli/       # Genesis CLI implementation
+├── configs/               # Configuration files
+│   └── *-validators.json  # Validator configurations
+├── pkg/                   # Go packages
+│   └── genesis/          # Core genesis logic
+│       ├── allocation/   # Allocation management
+│       ├── config/       # Network configurations
+│       └── validator/    # Validator key generation
+├── scripts/              # Shell scripts
+│   └── launch.sh         # Unified launch script
+├── validator-keys/       # Generated validator keys
+├── Makefile             # Simplified, DRY Makefile
+└── test-all.sh          # Comprehensive test suite
 ```
 
-## Key Tools
+## Advanced Usage
 
-### genesis
-Main tool for genesis file generation with modular architecture supporting P-Chain, C-Chain, and X-Chain.
-
-### archaeology  
-Blockchain data extraction and analysis tool for historical chain data migration.
-
-### denamespace
-Removes namespace prefixes from PebbleDB data for C-Chain compatibility.
-
-## Development
+### Import Operations
 
 ```bash
-# Build specific tools
-make build-genesis
-make build-archeology
+# Import existing C-Chain genesis
+IMPORT_CCHAIN=path/to/cchain-genesis.json make genesis-generate
 
-# Run tests
-make test-all
-
-# Clean build artifacts
-make clean
+# Import allocations from CSV
+IMPORT_ALLOCS=path/to/allocations.csv make genesis-generate
 ```
 
-## Architecture
+### Custom Treasury
 
-- **Plugin System**: Clean extension of lux-cli functionality
-- **Modular Design**: Separate packages for genesis, archaeology, and utilities
-- **Chain-Specific**: Dedicated modules for P/C/X chain handling
-- **External Integration**: Import assets from Ethereum, BSC, and other chains
+```bash
+# Set custom treasury amount
+TREASURY_AMOUNT=1.5B make genesis-generate
+
+# Set custom treasury address and amount
+TREASURY=0x... TREASURY_AMOUNT=2T make genesis-generate
+```
+
+### Launch Modes
+
+```bash
+# Dev mode (single node, minimal consensus)
+./scripts/launch.sh dev
+
+# POA mode (single node, auto-mining)
+./scripts/launch.sh poa
+
+# Full network (11 nodes by default)
+./scripts/launch.sh full
+
+# Custom number of nodes
+NODES=5 ./scripts/launch.sh full
+```
+
+## Testing
+
+The system includes comprehensive test coverage:
+
+```bash
+# Run all tests
+make test
+
+# Run comprehensive test suite
+./test-all.sh
+
+# Run specific test packages
+go test ./pkg/genesis/allocation/... -v
+go test ./pkg/genesis/validator/... -v
+go test ./pkg/genesis/... -v
+```
+
+## Troubleshooting
+
+### Genesis Generation Issues
+- Ensure dependencies are installed: `make install`
+- Check validator file exists: `ls configs/*-validators.json`
+- Validate network parameter: mainnet, testnet, or local
+
+### Network Launch Issues
+- Check port availability: `netstat -tlnp | grep 9630`
+- Ensure genesis file exists: `ls genesis_*.json`
+- Verify luxd is built: `ls bin/luxd`
+
+### Validator Problems
+- For deterministic generation, ensure `MNEMONIC` is set
+- Check validator keys: `ls validator-keys/`
+- Validate BLS key format (48 bytes hex)
 
 ## Security
 

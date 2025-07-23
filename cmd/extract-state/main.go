@@ -1,21 +1,19 @@
 package main
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"math/big"
 	"os"
-	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/ethereum/go-ethereum/triedb"
 )
 
 // PebbleDBWrapper wraps PebbleDB to implement ethdb.Database
@@ -48,7 +46,7 @@ func (p *PebbleDBWrapper) Has(key []byte) (bool, error) {
 func (p *PebbleDBWrapper) Get(key []byte) ([]byte, error) {
 	val, closer, err := p.db.Get(key)
 	if err == pebble.ErrNotFound {
-		return nil, ethdb.ErrKeyNotFound
+		return nil, fmt.Errorf("not found")
 	}
 	if err != nil {
 		return nil, err
@@ -65,6 +63,15 @@ func (p *PebbleDBWrapper) Put(key []byte, value []byte) error {
 
 func (p *PebbleDBWrapper) Delete(key []byte) error {
 	return p.db.Delete(key, pebble.Sync)
+}
+
+func (p *PebbleDBWrapper) DeleteRange(start, end []byte) error {
+	batch := p.db.NewBatch()
+	defer batch.Close()
+	if err := batch.DeleteRange(start, end, nil); err != nil {
+		return err
+	}
+	return batch.Commit(pebble.Sync)
 }
 
 func (p *PebbleDBWrapper) NewBatch() ethdb.Batch {
@@ -84,11 +91,15 @@ func (p *PebbleDBWrapper) NewIterator(prefix []byte, start []byte) ethdb.Iterato
 	if start != nil {
 		opts.LowerBound = start
 	}
-	iter := p.db.NewIter(opts)
+	iter, err := p.db.NewIter(opts)
+	if err != nil {
+		// Return a dummy iterator that immediately returns false on Next()
+		return &pebbleIterator{iter: nil}
+	}
 	return &pebbleIterator{iter: iter}
 }
 
-func (p *PebbleDBWrapper) Stat(property string) (string, error) {
+func (p *PebbleDBWrapper) Stat() (string, error) {
 	return "", nil
 }
 
@@ -96,12 +107,49 @@ func (p *PebbleDBWrapper) Compact(start []byte, limit []byte) error {
 	return nil
 }
 
-func (p *PebbleDBWrapper) NewSnapshot() (ethdb.Snapshot, error) {
-	return nil, fmt.Errorf("snapshots not implemented")
+func (p *PebbleDBWrapper) NewSnapshot() error {
+	return fmt.Errorf("snapshots not implemented")
 }
 
 func (p *PebbleDBWrapper) Close() error {
 	return p.db.Close()
+}
+
+// Ancient methods - not implemented for PebbleDB
+func (p *PebbleDBWrapper) Ancient(kind string, number uint64) ([]byte, error) {
+	return nil, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) AncientSize(kind string) (uint64, error) {
+	return 0, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) Ancients() (uint64, error) {
+	return 0, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) Tail() (uint64, error) {
+	return 0, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) AncientRange(kind string, start, count, maxBytes uint64) ([][]byte, error) {
+	return nil, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) ReadAncients(fn func(op ethdb.AncientReaderOp) error) error {
+	return fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) AncientDatadir() (string, error) {
+	return "", fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) ModifyAncients(f func(ethdb.AncientWriteOp) error) (int64, error) {
+	return 0, fmt.Errorf("ancient not supported")
+}
+
+func (p *PebbleDBWrapper) SyncAncient() error {
+	return fmt.Errorf("ancient not supported")
 }
 
 // pebbleBatch implements ethdb.Batch
@@ -119,6 +167,11 @@ func (b *pebbleBatch) Put(key, value []byte) error {
 func (b *pebbleBatch) Delete(key []byte) error {
 	b.size += len(key)
 	return b.b.Delete(key, nil)
+}
+
+func (b *pebbleBatch) DeleteRange(start, end []byte) error {
+	// PebbleDB supports range deletes
+	return b.b.DeleteRange(start, end, nil)
 }
 
 func (b *pebbleBatch) ValueSize() int {
@@ -145,23 +198,37 @@ type pebbleIterator struct {
 }
 
 func (i *pebbleIterator) Next() bool {
+	if i.iter == nil {
+		return false
+	}
 	return i.iter.Next()
 }
 
 func (i *pebbleIterator) Error() error {
+	if i.iter == nil {
+		return nil
+	}
 	return i.iter.Error()
 }
 
 func (i *pebbleIterator) Key() []byte {
+	if i.iter == nil {
+		return nil
+	}
 	return i.iter.Key()
 }
 
 func (i *pebbleIterator) Value() []byte {
+	if i.iter == nil {
+		return nil
+	}
 	return i.iter.Value()
 }
 
 func (i *pebbleIterator) Release() {
-	i.iter.Close()
+	if i.iter != nil {
+		i.iter.Close()
+	}
 }
 
 // Account represents an Ethereum account
@@ -202,7 +269,11 @@ func main() {
 		log.Fatal("No head block found in database")
 	}
 
-	header := rawdb.ReadHeader(db, headHash, rawdb.ReadHeaderNumber(db, headHash))
+	headerNumber := rawdb.ReadHeaderNumber(db, headHash)
+	if headerNumber == nil {
+		log.Fatal("Failed to read header number")
+	}
+	header := rawdb.ReadHeader(db, headHash, *headerNumber)
 	if header == nil {
 		log.Fatal("Failed to read head header")
 	}
@@ -210,8 +281,12 @@ func main() {
 	fmt.Printf("Latest block: %d (hash: %s)\n", header.Number, header.Hash().Hex())
 	fmt.Printf("State root: %s\n", header.Root.Hex())
 
+	// Create trie database
+	tdb := triedb.NewDatabase(db, nil)
+	
 	// Open state trie
-	stateDB, err := state.New(header.Root, state.NewDatabase(rawdb.NewDatabase(db)))
+	sdb := state.NewDatabase(tdb, nil)
+	stateDB, err := state.New(header.Root, sdb)
 	if err != nil {
 		log.Fatalf("Failed to open state: %v", err)
 	}
@@ -222,43 +297,36 @@ func main() {
 	totalBalance := new(big.Int)
 	accountCount := 0
 
-	// Create a snapshot of the state
-	root := header.Root
-	stateTrie, err := trie.New(common.Hash{}, root, trie.NewDatabase(db))
-	if err != nil {
-		log.Fatalf("Failed to open state trie: %v", err)
-	}
-
-	// Iterate through all accounts
-	iter := trie.NewIterator(stateTrie.NodeIterator(nil))
-	for iter.Next() {
-		// The key is the account address hash
-		if len(iter.Key) != 32 {
-			continue
-		}
-
-		// Get the account data
-		var acc state.Account
-		if err := acc.UnmarshalJSON(iter.Value); err != nil {
-			// Try RLP decode
-			continue
-		}
-
-		// Skip if balance is below minimum
-		if acc.Balance.Cmp(minBal) < 0 {
-			continue
-		}
-
-		// Get actual address (we need to maintain a mapping or use a different approach)
-		// For now, we'll use the state DB dump functionality
-		accountCount++
-	}
-
-	// Alternative approach: use state dump
-	fmt.Println("Using state dump to extract accounts...")
+	// Use state dump to extract accounts
+	dump := stateDB.RawDump(nil)
 	
-	// We'll need to iterate through the state differently
-	// For now, let's create a simple account extraction
+	for addr, account := range dump.Accounts {
+		// Parse balance
+		balance := new(big.Int)
+		if account.Balance != "" {
+			balance.SetString(account.Balance, 10)
+		}
+		
+		// Skip if balance is below minimum
+		if balance.Cmp(minBal) < 0 {
+			continue
+		}
+
+		accounts = append(accounts, Account{
+			Address: addr,
+			Balance: balance,
+			Nonce:   account.Nonce,
+		})
+		
+		totalBalance.Add(totalBalance, balance)
+		accountCount++
+		
+		if accountCount%1000 == 0 {
+			fmt.Printf("Processed %d accounts...\n", accountCount)
+		}
+	}
+
+	fmt.Printf("\nExtracted %d accounts with total balance: %s wei\n", accountCount, totalBalance.String())
 	
 	// Write output
 	if *outputPath != "" {

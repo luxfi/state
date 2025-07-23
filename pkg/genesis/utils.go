@@ -76,3 +76,39 @@ func GetDefaultPath(network, resource string) string {
 
 	return ""
 }
+
+// ValidateGenesis validates a genesis configuration
+func ValidateGenesis(g *Genesis) error {
+	if g == nil {
+		return fmt.Errorf("genesis is nil")
+	}
+	
+	if g.NetworkID == 0 {
+		return fmt.Errorf("invalid network ID: must be non-zero")
+	}
+	
+	if g.StartTime == 0 {
+		return fmt.Errorf("invalid start time: must be non-zero")
+	}
+	
+	// Validate allocations
+	for i, alloc := range g.Allocations {
+		if alloc.ETHAddr == "" {
+			return fmt.Errorf("allocation %d has empty ETH address", i)
+		}
+		if alloc.InitialAmount == 0 && len(alloc.UnlockSchedule) == 0 {
+			return fmt.Errorf("allocation %d has no funds", i)
+		}
+	}
+	
+	// Validate stakers
+	for i, staker := range g.InitialStakers {
+		if staker.NodeID.String() == "" {
+			return fmt.Errorf("staker %d has empty node ID", i)
+		}
+		// UnparsedStaker doesn't have a Weight field directly
+		// The validation happens when converting to parsed staker
+	}
+	
+	return nil
+}

@@ -15,6 +15,11 @@ const (
 	LocalID   NetworkID = 12345
 )
 
+// Default addresses
+const (
+	DefaultTreasuryAddress = "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714"
+)
+
 // NetworkConfig contains configuration for a specific network
 type NetworkConfig struct {
 	ID                  NetworkID

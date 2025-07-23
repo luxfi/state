@@ -25,7 +25,7 @@ var (
 	importCChainFlag    = flag.String("import-cchain", "", "Path to existing C-Chain genesis to import")
 	importAllocsFlag    = flag.String("import-allocations", "", "Path to C-Chain allocations JSON to import")
 	treasuryAddrFlag    = flag.String("treasury", "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714", "Treasury address")
-	treasuryAmountFlag  = flag.String("treasury-amount", "2000000000000000000000", "Treasury amount in LUX (with 9 decimals)")
+	treasuryAmountFlag  = flag.String("treasury-amount", "2T", "Treasury amount (e.g., 2T, 1B, 500M, 1000000)")
 	validatorsFileFlag  = flag.String("validators", "", "Path to JSON file with validator configurations")
 	dryRunFlag          = flag.Bool("dry-run", false, "Print genesis without saving to file")
 	listNetworksFlag    = flag.Bool("list-networks", false, "List available networks")
@@ -52,6 +52,11 @@ type ValidatorConfig struct {
 	ProofOfPossession string `json:"proofOfPossession"`
 	Weight            uint64 `json:"weight"`
 	DelegationFee     uint32 `json:"delegationFee"`
+}
+
+// parseAmount is a wrapper for allocation.ParseLUXAmount
+func parseAmount(amountStr string) (*big.Int, error) {
+	return allocation.ParseLUXAmount(amountStr)
 }
 
 func main() {
@@ -101,10 +106,11 @@ func main() {
 	}
 
 	// Add treasury allocation only if not importing from CSV (CSV already includes treasury)
-	if !importedFromCSV && *treasuryAddrFlag != "" && *treasuryAmountFlag != "" {
-		treasuryAmount := new(big.Int)
-		if _, ok := treasuryAmount.SetString(*treasuryAmountFlag, 10); !ok {
-			log.Fatalf("Invalid treasury amount: %s", *treasuryAmountFlag)
+	// Skip treasury if importing C-Chain data
+	if !importedFromCSV && *importCChainFlag == "" && *treasuryAddrFlag != "" && *treasuryAmountFlag != "" {
+		treasuryAmount, err := parseAmount(*treasuryAmountFlag)
+		if err != nil {
+			log.Fatalf("Invalid treasury amount: %v", err)
 		}
 
 		fmt.Printf("Adding treasury allocation: %s -> %s LUX\n", 
@@ -360,8 +366,8 @@ func generateValidatorKeys() {
 		validatorConfig := validator.GenerateValidatorConfig(
 			keys,
 			ethAddr,
-			1000000000000000000, // 1B LUX default weight
-			20000,               // 2% delegation fee
+			2000000000000000, // 2M LUX default weight (with 9 decimals)
+			20000,            // 2% delegation fee
 		)
 		
 		validators = append(validators, validatorConfig)
