@@ -133,6 +133,11 @@ DATA_DIR=/path/to/chaindata make extract NETWORK=zoo
 ```
 
 ### View all available targets:
+
 ```bash
 make help
 ```
+
+## Auditing & Verification
+
+For auditors and community members, see the [Verification Guide](VERIFICATION.md) for step-by-step instructions on verifying treasury balances and allocations.

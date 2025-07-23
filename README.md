@@ -24,7 +24,7 @@ make launch-mainnet
 ## Features
 
 ### Unified CLI Tool
-- **Single Command Interface**: All genesis operations through `genesis-cli`
+- **Single Command Interface**: All genesis operations through `genesis`
 - **Validator Management**: Generate, add, remove, and list validators
 - **Genesis Generation**: Create genesis for mainnet, testnet, or local networks
 - **Import Support**: Import C-Chain data and CSV allocations
@@ -42,19 +42,22 @@ make launch-mainnet
 
 ```bash
 # Generate genesis with validators
-./bin/genesis-cli generate \
+./bin/genesis generate \
   --network mainnet \
   --validators configs/mainnet/validators.json \
   --treasury-amount 2T
 
 # Manage validators
-./bin/genesis-cli validators list
-./bin/genesis-cli validators generate --mnemonic "..." --offsets "0,1,2,3,4,5"
-./bin/genesis-cli validators add --node-id NodeID-xxx --eth-address 0x...
-./bin/genesis-cli validators remove --index 5
+./bin/genesis validators list
+./bin/genesis validators generate --mnemonic "..." --offsets "0,1,2,3,4,5"
+./bin/genesis validators add --node-id NodeID-xxx --eth-address 0x...
+./bin/genesis validators remove --index 5
 
 # Validate genesis
-./bin/genesis-cli validate --network mainnet
+./bin/genesis validate --network mainnet
+
+# List all available commands
+./bin/genesis tools
 ```
 
 ### Makefile Commands
@@ -77,6 +80,12 @@ make test                # Run all tests
 | Zoo Mainnet | 200200 | L2 Subnet | Active |
 | Zoo Testnet | 200201 | L2 Subnet | Active |
 | SPC Mainnet | 36911 | L2 Subnet | Active |
+
+## Documentation
+
+- **[Genesis Tools Guide](docs/GENESIS_TOOLS_GUIDE.md)** - Comprehensive guide for all genesis generation and management tools
+- **Primary Genesis Tool**: Run `./bin/genesis` to generate all chain genesis files
+- **[General Documentation](docs/README.md)** - Detailed guides and reference documentation for the Lux Network genesis transition
 
 ## Project Structure
 

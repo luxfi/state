@@ -1,6 +1,13 @@
-# AGENTS.md CLAUDE.md LLM.md - AI Assistant Guidance
+# LLM.md - AI Assistant Guidance
 
 This file provides context and guidance for AI assistants (Claude, GPT, etc.) working with the Lux Network Genesis repo.
+
+## Quick Reference
+
+- **Primary Tool**: `genesis` - Generates all chain genesis files
+- **Output Structure**: `configs/{network}/{P,C,X}/genesis.json`
+- **Key Chain IDs**: LUX=96369, ZOO=200200, SPC=36911
+- **Treasury**: `0x9011e888251ab053b7bd1cdb598db4f9ded94714`
 
 ## Project Context
 
@@ -40,7 +47,31 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 
 ## Tools You Should Know
 
-### 1. denamespace
+### 1. genesis (Primary Tool)
+```bash
+# Generate all genesis files with standard directory structure
+./bin/genesis generate
+
+# Output structure:
+# configs/mainnet/P/genesis.json
+# configs/mainnet/C/genesis.json  
+# configs/mainnet/X/genesis.json
+
+# Custom options
+./bin/genesis generate --network testnet --output /custom/path
+
+# Other commands
+./bin/genesis validators list            # List validators
+./bin/genesis extract state <src> <dst>   # Extract blockchain data
+./bin/genesis analyze                     # Analyze blockchain data
+./bin/genesis tools                       # List all commands
+```
+- Unified tool for all genesis operations
+- Combines functionality from all specialized tools
+- Uses standard P/, C/, X/ directory structure by default
+- Automatically includes validators and treasury
+
+### 2. denamespace
 ```bash
 # Extract blockchain data
 ./bin/denamespace -src <pebbledb> -dst <output> -network <chain-id> -state
@@ -49,7 +80,7 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 - Always include `-state` for account balances
 - Supports all chain IDs
 
-### 2. evmarchaeology
+### 3. evmarchaeology
 ```bash
 # Analyze blockchain data
 ./bin/evmarchaeology analyze -db <path> -network <name>
@@ -57,7 +88,7 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 - Good for finding accounts and balances
 - Can trace historical changes
 
-### 3. Helper Scripts
+### 4. Helper Scripts
 - `extract_all_networks.sh` - Extracts all 6 networks
 - `copy_all_networks.sh` - Copies to unified directory
 - `collect_all_chain_configs.sh` - Gathers configurations

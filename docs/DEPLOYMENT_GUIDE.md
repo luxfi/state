@@ -8,7 +8,6 @@ This guide explains how to deploy the Lux Network with historic chain data prese
 
 ### P-Chain (Platform Chain)
 - **Validators**: 11 bootstrap validators
-- **Genesis**: `unified-genesis-output/p-chain-genesis.json`
 - **Status**: Ready with BLS keys configured
 
 ### C-Chain (Contract Chain)
@@ -25,7 +24,6 @@ This guide explains how to deploy the Lux Network with historic chain data prese
 - **Assets**: Multi-asset support (LUX and ZOO)
 - **LUX holders**: 189 (Lux 7777 delta + Ethereum NFT holders)
 - **ZOO holders**: 109 (Historic burn participants with Egg NFTs)
-- **Genesis**: `unified-genesis-output/x-chain-genesis.json`
 
 ### Subnet L2s
 - **Zoo Network**: Chain ID 200200, 6,896 accounts

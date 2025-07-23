@@ -1,5 +1,13 @@
 # Lux Network Genesis Pipeline
 
+```mermaid
+flowchart LR
+  PDB[Existing Chain DB] -->|denamespace + extract-state| EX[Extracted State]
+  EX -->|archaeology scan/analyze| ALLOC[Allocation Data]
+  ALLOC -->|genesis generate| GEN[Genesis Files]
+  GEN -->|deploy| NET[Running Network]
+```
+
 Complete pipeline for building genesis data for Lux Network's L1 and L2 chains.
 
 ## Overview
