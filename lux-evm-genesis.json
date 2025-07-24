@@ -1,0 +1,39 @@
+{
+  "config": {
+    "chainId": 43125,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "muirGlacierBlock": 0,
+    "berlinBlock": 0,
+    "londonBlock": 0,
+    "shanghaiTime": 0,
+    "networkUpgrades": {
+      "evmTimestamp": 0,
+      "durangoTimestamp": 0,
+      "etnaTimestamp": 0,
+      "fortunaTimestamp": 0,
+      "graniteTimestamp": 0
+    },
+    "feeConfig": {
+      "baseFeeChangeDenominator": 8,
+      "blockGasTarget": "0x5F5E100",
+      "minimumBaseFee": "0x59682F00",
+      "maximumBaseFee": "0x77359400"
+    },
+    "warpConfig": {
+      "warpEnabled": true,
+      "warpPrecompileAddress": "0x0200000000000000000000000000000000000007"
+    },
+    "allowFeeRecipients": true
+  },
+  "alloc": {},
+  "extraData": "",
+  "nonce": "0x0",
+  "timestamp": "0x0"
+}

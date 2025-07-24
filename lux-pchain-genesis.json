@@ -1,0 +1,32 @@
+{
+  "networkID": 43125,
+  "allocations": [
+    {
+      "ethAddr": "0xb3d82b1367d362de99ab59a658165aff520cbd4d",
+      "luxAddr": "X-lux1k0vzkym86d3daxdttxn9s9j6lafqe02dvuj8vp",
+      "initialAmount": 10000000000000000000,
+      "unlockSchedule": []
+    }
+  ],
+  "startTime": 1737388800,
+  "initialStakeDuration": 31536000,
+  "initialStakeDurationOffset": 5400,
+  "initialStakedFunds": [
+    "X-lux1k0vzkym86d3daxdttxn9s9j6lafqe02dvuj8vp"
+  ],
+  "initialStakers": [
+    {
+      "nodeID": "NodeID-111111111111111111116DBWJs",
+      "rewardAddress": "P-lux1k0vzkym86d3daxdttxn9s9j6lafqe02dvuj8vp",
+      "delegationFee": 20000,
+      "weight": 1000000000000000000,
+      "signer": {
+        "publicKey": "0x900c9b119b5c82d781d4b49be78c3fc7ae65f2b435b7ed9e3a8b9a03e475edff86d8a64827fec8db23a6f236afbf127d",
+        "proofOfPossession": "0x8bfd6d4d2086b2b8115d8f72f94095fefe5a6c07876b2accf51a811adf520f389e74a3d2152a6d90b521e2be58ffe468043dc5ea68b4c44410eb67f8dc24f13ed4f194000764c0e922cd254a3588a4962b1cb4db7de4bb9cda9d9d4d6b03f3d2"
+      }
+    }
+  ],
+  "cChainGenesis": "{\"config\":{\"chainId\":43125,\"homesteadBlock\":0,\"eip150Block\":0,\"eip155Block\":0,\"eip158Block\":0,\"byzantiumBlock\":0,\"constantinopleBlock\":0,\"petersburgBlock\":0,\"istanbulBlock\":0,\"muirGlacierBlock\":0,\"berlinBlock\":0,\"londonBlock\":0,\"shanghaiTime\":0,\"networkUpgrades\":{\"evmTimestamp\":0,\"durangoTimestamp\":0,\"etnaTimestamp\":0,\"fortunaTimestamp\":0,\"graniteTimestamp\":0},\"feeConfig\":{\"baseFeeChangeDenominator\":8,\"blockGasTarget\":\"0x5F5E100\",\"minimumBaseFee\":\"0x59682F00\",\"maximumBaseFee\":\"0x77359400\"},\"warpConfig\":{\"warpEnabled\":true,\"warpPrecompileAddress\":\"0x0200000000000000000000000000000000000007\"},\"allowFeeRecipients\":true},\"alloc\":{},\"extraData\":\"\",\"nonce\":\"0x0\",\"timestamp\":\"0x0\"}",
+  "xChainGenesis": "",
+  "message": "Lux Network Primary Network Genesis"
+}

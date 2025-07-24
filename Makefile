@@ -18,6 +18,9 @@ help:
 	@echo "  make up NETWORK=<name>            # Launch a single network (e.g., zoo, spc, hanzo)"
 	@echo ""
 	@echo "COMMON WORKFLOWS:"
+	@echo "  make build-primary                # Build EVM and Node for clean genesis"
+	@echo "  make devnet                       # Launch 3-node devnet with clean genesis"
+	@echo "  make devnet-test                  # Test devnet health and features"
 	@echo "  make diag                         # Quick diagnose historic database"
 	@echo "  make migrate-complete             # Full migration workflow"
 	@echo "  make genesis-help                 # Show all genesis commands"
@@ -311,6 +314,18 @@ validate-supply: analyze-zoo analyze-spc
 
 # ============ GENESIS BUILDING ============
 
+# Build primary network with clean genesis
+build-primary: build-evm build-node
+	@echo "✅ Primary network build complete"
+
+build-evm:
+	@echo "🔨 Building EVM..."
+	@cd ../evm && make
+
+build-node:
+	@echo "🔨 Building Node..."
+	@cd ../node && make
+
 # Dynamic genesis based on NETWORK env var
 genesis:
 ifdef NETWORK
@@ -356,12 +371,57 @@ genesis-all: genesis-lux genesis-zoo genesis-spc
 # ============ LAUNCH COMMANDS ============
 
 # Primary network configuration
-NODE_DIR ?= /home/z/work/lux/node
-CLI_DIR ?= /home/z/work/lux/cli
-DATA_DIR ?= /home/z/.luxd
+NODE_DIR ?= ../node
+CLI_DIR ?= ../cli
+DATA_DIR ?= ../.devnet
 IMPORT_DIR ?= $(OUTPUT_DIR)/import-ready
 LUX_POA_CHAIN_ID := 96369
-LUX_PRIMARY_CHAIN_ID := 1
+LUX_PRIMARY_CHAIN_ID := 43125
+
+# Clean genesis devnet configuration
+devnet: build-primary kill-node
+	@echo "🚀 Launching clean genesis devnet..."
+	@mkdir -p $(DATA_DIR)/{node0,node1,node2}/{db,logs}
+	@$(MAKE) devnet-configs
+	@$(MAKE) devnet-start
+	@echo "✅ Devnet launched!"
+	@echo ""
+	@echo "Node endpoints:"
+	@echo "  - Node 0: http://127.0.0.1:9650"
+	@echo "  - Node 1: http://127.0.0.1:9652"
+	@echo "  - Node 2: http://127.0.0.1:9654"
+
+devnet-configs:
+	@for i in 0 1 2; do \
+		HTTP_PORT=$$((9650 + i*2)); \
+		STAKING_PORT=$$((9651 + i*2)); \
+		cat > $(DATA_DIR)/node$$i.json <<EOF \
+{ \
+  "network-id": "43125", \
+  "db-dir": "$(DATA_DIR)/node$$i/db", \
+  "log-dir": "$(DATA_DIR)/node$$i/logs", \
+  "http-port": $$HTTP_PORT, \
+  "staking-port": $$STAKING_PORT, \
+  "bootstrap-ips": "", \
+  "bootstrap-ids": "", \
+  "genesis-file": "./lux-pchain-genesis.json", \
+  "snow-mixed-query-num-push-vdr": 1, \
+  "consensus-shutdown-timeout": "1s" \
+} \
+EOF; \
+	done
+
+devnet-start:
+	@cd $(NODE_DIR) && ./build/luxd --config-file="$(DATA_DIR)/node0.json" > "$(DATA_DIR)/node0/output.log" 2>&1 &
+	@sleep 5
+	@cd $(NODE_DIR) && ./build/luxd --config-file="$(DATA_DIR)/node1.json" > "$(DATA_DIR)/node1/output.log" 2>&1 &
+	@cd $(NODE_DIR) && ./build/luxd --config-file="$(DATA_DIR)/node2.json" > "$(DATA_DIR)/node2/output.log" 2>&1 &
+	@echo "PID files created in $(DATA_DIR)/"
+
+devnet-test:
+	@echo "🧪 Testing devnet features..."
+	@curl -s -X POST --data '{"jsonrpc":"2.0","id":1,"method":"health.health"}' -H 'content-type:application/json;' http://127.0.0.1:9650/ext/health | jq .
+	@curl -s -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' -H 'content-type:application/json;' http://127.0.0.1:9650/ext/bc/C/rpc | jq .
 
 # Kill any existing processes
 kill-node:
