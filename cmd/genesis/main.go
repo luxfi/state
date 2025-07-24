@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -241,9 +242,24 @@ func addExtractSubcommands(extractCmd *cobra.Command) {
 	stateCmd.Flags().Bool("state", true, "Include state data")
 	stateCmd.Flags().Int("limit", 0, "Limit number of entries (0 = no limit)")
 
+	// Genesis extraction from blockchain
+	genesisCmd := &cobra.Command{
+		Use:   "genesis [database-path]",
+		Short: "Extract genesis configuration from blockchain database",
+		Long:  `Extract the genesis block configuration and allocations from an existing blockchain database`,
+		Args:  cobra.ExactArgs(1),
+		RunE:  runExtractGenesis,
+	}
+	genesisCmd.Flags().String("type", "auto", "Database type: leveldb, pebble, or auto")
+	genesisCmd.Flags().String("output", "", "Output file path (default: stdout)")
+	genesisCmd.Flags().Bool("pretty", true, "Pretty print JSON output")
+	genesisCmd.Flags().Bool("alloc", true, "Include account allocations")
+	genesisCmd.Flags().String("csv", "", "Export allocations to CSV file")
+
 	// Add archeology extract commands
 	extractCmd.AddCommand(
 		stateCmd,
+		genesisCmd,
 		archeologyCmd.NewExtractCommand(),
 	)
 }
@@ -411,6 +427,81 @@ func runExtractState(cmd *cobra.Command, args []string) error {
 	return denamespace.Extract(opts)
 }
 
+// Extract genesis command implementation
+func runExtractGenesis(cmd *cobra.Command, args []string) error {
+	dbPath := args[0]
+	dbType, _ := cmd.Flags().GetString("type")
+	outputPath, _ := cmd.Flags().GetString("output")
+	prettyPrint, _ := cmd.Flags().GetBool("pretty")
+	includeAlloc, _ := cmd.Flags().GetBool("alloc")
+	csvPath, _ := cmd.Flags().GetString("csv")
+
+	// Build command arguments
+	cmdArgs := []string{
+		"-db", dbPath,
+		"-type", dbType,
+		fmt.Sprintf("-pretty=%v", prettyPrint),
+		fmt.Sprintf("-alloc=%v", includeAlloc),
+	}
+
+	if outputPath != "" {
+		cmdArgs = append(cmdArgs, "-output", outputPath)
+	}
+
+	// Build and run the extract-genesis binary
+	extractCmd := exec.Command("./bin/extract-genesis", cmdArgs...)
+	extractCmd.Stdout = os.Stdout
+	extractCmd.Stderr = os.Stderr
+
+	if err := extractCmd.Run(); err != nil {
+		return fmt.Errorf("failed to extract genesis: %w", err)
+	}
+
+	// If CSV export was requested, extract allocations to CSV
+	if csvPath != "" && outputPath != "" {
+		// Read the generated genesis file
+		genesisData, err := os.ReadFile(outputPath)
+		if err != nil {
+			return fmt.Errorf("failed to read genesis file: %w", err)
+		}
+
+		var genesis struct {
+			Alloc map[string]struct {
+				Balance string `json:"balance"`
+			} `json:"alloc"`
+		}
+		if err := json.Unmarshal(genesisData, &genesis); err != nil {
+			return fmt.Errorf("failed to parse genesis: %w", err)
+		}
+
+		// Write CSV
+		csvFile, err := os.Create(csvPath)
+		if err != nil {
+			return fmt.Errorf("failed to create CSV file: %w", err)
+		}
+		defer csvFile.Close()
+
+		fmt.Fprintln(csvFile, "address,balance_wei")
+		for addr, account := range genesis.Alloc {
+			if account.Balance != "" {
+				fmt.Fprintf(csvFile, "%s,%s\n", addr, account.Balance)
+			}
+		}
+		fmt.Printf("Allocations exported to %s\n", csvPath)
+	}
+
+	return nil
+}
+
+func runArcheologyMigrate(cmd *cobra.Command, args []string) error {
+	fmt.Println("Running archeology migrate...")
+	// Call the archeology migrate command
+	migrateCmd := exec.Command("./bin/archeology", "migrate")
+	migrateCmd.Stdout = os.Stdout
+	migrateCmd.Stderr = os.Stderr
+	return migrateCmd.Run()
+}
+
 // Process historic command implementation
 func runProcessHistoric(cmd *cobra.Command, args []string) error {
 	source := args[0]
@@ -430,7 +521,7 @@ func runImportGenesis(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Chain: %s, Allocations Only: %v\n", chain, allocationsOnly)
 
 	// Read the original genesis file
-	data, err := ioutil.ReadFile(genesisFile)
+	data, err := os.ReadFile(genesisFile)
 	if err != nil {
 		return fmt.Errorf("failed to read genesis file: %w", err)
 	}

@@ -130,6 +130,32 @@ The unified tool for all genesis-related operations. It combines functionality f
     --network 96369
 ```
 
+#### Extract Genesis from Blockchain
+
+```bash
+# Extract complete genesis configuration from blockchain database
+./bin/genesis extract genesis /path/to/chaindata \
+    --type auto \
+    --output genesis.json \
+    --alloc \
+    --pretty
+
+# Extract genesis without allocations (smaller file)
+./bin/genesis extract genesis /path/to/chaindata \
+    --alloc=false \
+    --output genesis-config-only.json
+
+# Extract genesis and export allocations to CSV
+./bin/genesis extract genesis /path/to/chaindata \
+    --output genesis.json \
+    --csv allocations.csv
+
+# Auto-detect database type (PebbleDB or LevelDB)
+./bin/genesis extract genesis ~/.luxd/data/C/db \
+    --type auto \
+    --output c-chain-genesis.json
+```
+
 #### Validators Management
 
 ```bash
