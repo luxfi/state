@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"

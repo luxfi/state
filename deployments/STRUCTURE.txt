@@ -1,0 +1,37 @@
+deployments//
+├── configs/
+│   ├── local/
+│   │   ├── hanzo/
+│   │   │   └── genesis.json
+│   │   ├── lux/
+│   │   │   └── validators.json
+│   │   ├── spc/
+│   │   │   └── genesis.json
+│   │   └── zoo/
+│   │       └── genesis.json
+│   ├── mainnet/
+│   │   ├── hanzo/
+│   │   │   └── genesis.json
+│   │   ├── lux/
+│   │   │   ├── genesis.json
+│   │   │   └── validators.json
+│   │   ├── spc/
+│   │   │   └── genesis.json
+│   │   └── zoo/
+│   │       └── genesis.json
+│   └── testnet/
+│       ├── hanzo/
+│       │   └── genesis.json
+│       ├── lux/
+│       │   ├── genesis.json
+│       │   └── validators.json
+│       ├── spc/
+│       │   └── genesis.json
+│       └── zoo/
+│           └── genesis.json
+├── deploy.sh*
+├── NETWORK_SUMMARY.md
+├── README.md
+└── STRUCTURE.txt
+
+17 directories, 18 files

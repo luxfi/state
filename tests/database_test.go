@@ -131,15 +131,15 @@ var _ = Describe("Database Operations", func() {
 	})
 
 	Describe("Genesis File Validation", func() {
-		It("should have valid 7777 genesis", func() {
-			genesisPath := filepath.Join(genesisDir, "configs/genesis-7777-evm.json")
+		It("should have valid mainnet genesis", func() {
+			genesisPath := filepath.Join(genesisDir, "deployments/configs/mainnet/lux/genesis.json")
 			Expect(genesisPath).To(BeAnExistingFile())
 			
 			// Could parse and validate JSON structure here
 		})
 
-		It("should have valid 96369 genesis with 7777 accounts", func() {
-			genesisPath := filepath.Join(genesisDir, "configs/genesis-96369-with-7777-accounts.json")
+		It("should have valid testnet genesis", func() {
+			genesisPath := filepath.Join(genesisDir, "deployments/configs/testnet/lux/genesis.json")
 			Expect(genesisPath).To(BeAnExistingFile())
 			
 			// Could verify account migration here

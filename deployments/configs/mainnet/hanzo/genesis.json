@@ -1,0 +1,18 @@
+{
+	"networkID": 36963,
+	"allocations": [
+		{
+			"ethAddr": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+			"luxAddr": "X-hanzo1jqg73zp9r2c98daarnd4nrd5l80dj3c5c68e7t",
+			"initialAmount": 7751640039368425472,
+			"unlockSchedule": []
+		}
+	],
+	"startTime": 1737331200,
+	"initialStakeDuration": 31536000,
+	"initialStakeDurationOffset": 5400,
+	"initialStakedFunds": [],
+	"initialStakers": [],
+	"cChainGenesis": "{\n\t\"config\": {\n\t\t\"chainId\": 36963,\n\t\t\"homesteadBlock\": 0,\n\t\t\"eip150Block\": 0,\n\t\t\"eip150Hash\": \"0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0\",\n\t\t\"eip155Block\": 0,\n\t\t\"eip158Block\": 0,\n\t\t\"byzantiumBlock\": 0,\n\t\t\"constantinopleBlock\": 0,\n\t\t\"petersburgBlock\": 0,\n\t\t\"istanbulBlock\": 0,\n\t\t\"muirGlacierBlock\": 0,\n\t\t\"berlinBlock\": 0,\n\t\t\"londonBlock\": 0,\n\t\t\"subnetEVMTimestamp\": 0,\n\t\t\"feeConfig\": {\n\t\t\t\"gasLimit\": 15000000,\n\t\t\t\"minBaseFee\": 25000000000,\n\t\t\t\"targetGas\": 15000000,\n\t\t\t\"baseFeeChangeDenominator\": 36,\n\t\t\t\"minBlockGasCost\": 0,\n\t\t\t\"maxBlockGasCost\": 1000000,\n\t\t\t\"targetBlockRate\": 2,\n\t\t\t\"blockGasCostStep\": 200000\n\t\t},\n\t\t\"allowFeeRecipients\": false\n\t},\n\t\"alloc\": {},\n\t\"nonce\": \"0x0\",\n\t\"timestamp\": \"0x0\",\n\t\"extraData\": \"0x00\",\n\t\"gasLimit\": \"0xE4E1C0\",\n\t\"difficulty\": \"0x0\",\n\t\"mixHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\",\n\t\"coinbase\": \"0x0000000000000000000000000000000000000000\",\n\t\"number\": \"0x0\",\n\t\"gasUsed\": \"0x0\",\n\t\"parentHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n}",
+	"message": "Lux Network Genesis - Hanzo Mainnet L2"
+}

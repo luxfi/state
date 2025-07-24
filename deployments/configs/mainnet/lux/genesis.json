@@ -1,0 +1,251 @@
+{
+	"networkID": 96369,
+	"allocations": [
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000006",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxqhkf3y",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000000",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquc4vdn",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000002",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz0a5077",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000004",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqynjh2zf",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000007",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8apzuvk",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000008",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgzv3qnw",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000009",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfl694wu",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x000000000000000000000000000000000000000a",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq23fsrqr",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+			"luxAddr": "X-lux1jqg73zp9r2c98daarnd4nrd5l80dj3c5eha5fl",
+			"initialAmount": 7751640039368425472,
+			"unlockSchedule": []
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000001",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqppwpesp",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000003",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrjtq6rv",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		},
+		{
+			"ethAddr": "0x0000000000000000000000000000000000000005",
+			"luxAddr": "X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9wyrllm",
+			"initialAmount": 0,
+			"unlockSchedule": [
+				{
+					"amount": 2000000000000000,
+					"locktime": 1609372800
+				}
+			]
+		}
+	],
+	"startTime": 1577836800,
+	"initialStakeDuration": 31536000,
+	"initialStakeDurationOffset": 5400,
+	"initialStakedFunds": [
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxqhkf3y",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquc4vdn",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz0a5077",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqynjh2zf",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8apzuvk",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgzv3qnw",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfl694wu",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq23fsrqr",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqppwpesp",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrjtq6rv",
+		"X-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9wyrllm"
+	],
+	"initialStakers": [
+		{
+			"nodeID": "NodeID-3fyVgFRSVC4Ma7twsmghQatodnzGPvXgN",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquc4vdn",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xa882f3f709405fbf35c34c56d306af6534880428482bcfc7b4cea63bd1d5a807b96ae59da86fdc716d5e37acb67a2f5c",
+				"proofOfPossession": "0xb4aee107a8a13da78f58054d6b917ffb98c71eba6da95e7efe38b36b72c2619e96d3544553b2bc13ae39d85b58b6990519be4e9d5f8f9f1b15c18784848524908e59b2841e186e8b66c99ebb6716e8579d258cdd106f75496c5c27190ef47526"
+			}
+		},
+		{
+			"nodeID": "NodeID-JWdQfzLCkU5jVeSMERtnx4KG46L96G2Ut",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqppwpesp",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0x8c8e3679d1b4d1d26310281905eef1bbe2c4eb813870bb9826ee78dc7f7d522fafa0bc50b97344023d5318852f820a4c",
+				"proofOfPossession": "0x8458d6df0e5a5781da2d45ce276b1eb18ed9c2bf025b6e5c3f6cb7f557718273304b65a26a87581b2561ca4d613538f10ab3add0d2091a30b527a5e0666d9e617f5067f900b4bfd7d99a25f4c20400e7da653064455ceda33f188529c97ede4f"
+			}
+		},
+		{
+			"nodeID": "NodeID-2JUfo22Cct4aUsqpEdR3XooQ7gxLi7UBy",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz0a5077",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0x85705784fa38502979c68f0203fb80481ed1643190eb17d99f8534226f4b6bf209063d6393b3393d537d13687c2cd3b6",
+				"proofOfPossession": "0xb1ef1a3791f0a3f76c519831caf5d4fb189fbb4192334ba9d1a5826039974473c49c9411efb05b5d62af57d89729b685196ccbcd5b219617326638c5f82f6f853c5ba76c55e42c99afe1b339200cef800f5729880f7b415a6ce547b7f7eeb259"
+			}
+		},
+		{
+			"nodeID": "NodeID-KoC4FhNSSdWtTQbPeW63asUFZagx8gDno",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrjtq6rv",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xb897d4f57f2676488e2f252ab513dbd98f2c755eaf196bd2a3875b313059522a0adf1f4b6b40889c44b8f19e1574b745",
+				"proofOfPossession": "0xb027b61b15109d604ba51c658a99b8baa56139b556c15c5adc9c6582a8e01b288802aec43c13b41070435da0dc0367f3084b4cc56d30c462b0fb346688a0174858f1ab70e034c50227070ffdd548e78b2866a8a001e6c16f88a68f3e11bba088"
+			}
+		},
+		{
+			"nodeID": "NodeID-HMEf7NPPkW7Z5oPz12g3h2cShdiMoxL4d",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqynjh2zf",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0x95fc29174d0e0c726d01da96558a7b4b1e9c383683f390c108e1d4137675cd1a670472372688ac7d618f0a13a4c3f95e",
+				"proofOfPossession": "0xab68e8dc358ed24321e8bbff6742dc1b731a9375130d9a7ab60e9a2486dbc54f8bfa2f8f3ba0df6f3724bb6f51a0a6b410a45263eace30a06e391d7bbc8a5fa46f64096a01013849e0b232078125cbe90e113aaf7ca16748b662db2d592bf75b"
+			}
+		},
+		{
+			"nodeID": "NodeID-5PA7dpUc9dtQSMwLTcQ8LQENiY1kX94yD",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9wyrllm",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0x91e50e9d65d4c7b8187108a56ef9c51801f06982d2830338f4c59864f64fb913f06a85a6b67339a40cc18b6b27f96fc0",
+				"proofOfPossession": "0x84523655c5c216c2af6df794ae8d0540031af4aa4c2e37e05b3de2c5c5eeb41af40397625fff11f98994ef4c4212fc6c05675725e2f0683de46a5eb088f9d1e36dd9adbb5b861fac5e75bad749b14cc178d8a1cd7a7e9bda32c1c3d6eb46dd69"
+			}
+		},
+		{
+			"nodeID": "NodeID-BJVRdLVHw5XEMJ24zNzVQsPpABxfSHvtH",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxqhkf3y",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xabdeee304242960792e29638885f54fec0615bf6568a2997666fbdaec7790828739afb178fdb6e71730785ce8ecc2d2e",
+				"proofOfPossession": "0x93e313aec7b1b6f7fa9401d609ef98bf9fe5d841a4b83a902d886462072d691ffb6b135f675b91b2032b011cd3965ba811b745c94dc25c8e085500a5044affdb55e8aa43e51ad20fc7ad7129b0eca69608d528acffca5e1bc5476d956617576e"
+			}
+		},
+		{
+			"nodeID": "NodeID-593NC5jyVgQXKNZJpqSbaFgohCzDfhPv7",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8apzuvk",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xa6cfd2f224e2387027360d81778eb6549b645000a72b67310d8c0f59507a6e59c6e8772f0409f7f9ba8f98707d1d8d3f",
+				"proofOfPossession": "0x8786a069f58c7bf45459cc463bda2757094d49bfdf2cb6f04dad8511495431bda90ab2adc42802615bbbbbd4c44f20f00d19627a20c3212607704070844aec587843c537e8b53725cc070ce24592cf8a6ad5eb40a96657bc34c334030115e9fa"
+			}
+		},
+		{
+			"nodeID": "NodeID-L8ewpB7WrhKmKJKDfgSKsY9dmUtfamzCr",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgzv3qnw",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xa3f40ebc148a435d03a3ee011464f6d93bec617bc1ae09210178db840a281e34aecae92f4e8cb69417c53bd3da34573f",
+				"proofOfPossession": "0x847338a08790b7d25e620cc63610c68bfcf7210b641d82622ed04249a54dffd9ccd35e45b29ac1cc44eb7e6a783f7eb2011ae5acdc67020513fd8a44bf25fe480f4cc538419f24281a40f8cecb7c0d6606354687af79afc8059a7821b6cadc73"
+			}
+		},
+		{
+			"nodeID": "NodeID-HhNPbcrMwkidm7qQPGM5Estzc5pJwdk2s",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfl694wu",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0x8b2b89bea8ed21d767b89327cd9d92f06ed68d210a13b0df3ade46a8675f0311bb1a726b5b60324ad216785c97006b84",
+				"proofOfPossession": "0x92eea471ff77536db5b0b1a731494f57e6008848ce0bcf6bee5c49aaa267e750f1918187a15b2fac1fca5ee758c7ea950c3c099f4abc3f4d741fb1083761e632a23e5871727a085bb22652c2d0c8215d1f4775e5d13fac4e9fa141e9a24cc61d"
+			}
+		},
+		{
+			"nodeID": "NodeID-77MzGsPADNots3Ey5WDioSrD4KswuW1ML",
+			"rewardAddress": "P-lux1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq23fsrqr",
+			"delegationFee": 20000,
+			"signer": {
+				"publicKey": "0xa9699f13bc4bbfef811f88e1c295eae609079f7d69e7228a3d6047d7af1efdc1d883afe3aac8e0dca3ba7afe1afad3b2",
+				"proofOfPossession": "0x87686268c42b263b6e43c0203aea2d6c7138307ee79a7a7ab2e9eba046669b2299c60399ce4d187287b566a87cff82ff02f26801cde58c41e637840daf80494a0eabb43bebc65a97cebfe0e58e500b0a2ac1cdf46437020188ea4452dfb827d8"
+			}
+		}
+	],
+	"cChainGenesis": "{\n\t\"config\": {\n\t\t\"chainId\": 96369,\n\t\t\"homesteadBlock\": 0,\n\t\t\"eip150Block\": 0,\n\t\t\"eip150Hash\": \"0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0\",\n\t\t\"eip155Block\": 0,\n\t\t\"eip158Block\": 0,\n\t\t\"byzantiumBlock\": 0,\n\t\t\"constantinopleBlock\": 0,\n\t\t\"petersburgBlock\": 0,\n\t\t\"istanbulBlock\": 0,\n\t\t\"muirGlacierBlock\": 0,\n\t\t\"berlinBlock\": 0,\n\t\t\"londonBlock\": 0,\n\t\t\"subnetEVMTimestamp\": 0,\n\t\t\"feeConfig\": {\n\t\t\t\"gasLimit\": 15000000,\n\t\t\t\"minBaseFee\": 25000000000,\n\t\t\t\"targetGas\": 15000000,\n\t\t\t\"baseFeeChangeDenominator\": 36,\n\t\t\t\"minBlockGasCost\": 0,\n\t\t\t\"maxBlockGasCost\": 1000000,\n\t\t\t\"targetBlockRate\": 2,\n\t\t\t\"blockGasCostStep\": 200000\n\t\t},\n\t\t\"allowFeeRecipients\": false\n\t},\n\t\"alloc\": {},\n\t\"nonce\": \"0x0\",\n\t\"timestamp\": \"0x0\",\n\t\"extraData\": \"0x00\",\n\t\"gasLimit\": \"0xE4E1C0\",\n\t\"difficulty\": \"0x0\",\n\t\"mixHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\",\n\t\"coinbase\": \"0x0000000000000000000000000000000000000000\",\n\t\"number\": \"0x0\",\n\t\"gasUsed\": \"0x0\",\n\t\"parentHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n}",
+	"message": "Lux Network Genesis - Lux Mainnet"
+}
