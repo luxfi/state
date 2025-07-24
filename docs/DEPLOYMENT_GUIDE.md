@@ -55,10 +55,11 @@ This guide explains how to deploy the Lux Network with historic chain data prese
 ## Important Notes
 
 1. **C-Chain Data**: The C-Chain uses the complete historic blockchain data from Lux 96369 mainnet. This means:
-   - No genesis file is needed for C-Chain
    - All existing accounts and balances are preserved
    - All smart contracts continue to function
    - Transaction history is maintained
+
+   **Note on C-Chain Genesis**: While the C-Chain state is preserved from historical data, a `genesis.json` file is still used to configure essential parameters like the chain ID and to define the network's initial settings. The genesis file does not contain any account allocations, as those are already present in the historic chain data.
 
 2. **X-Chain**: Uses a new genesis with multi-asset support for both LUX and ZOO tokens
 

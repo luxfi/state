@@ -14,6 +14,8 @@ help:
 	@echo "  make pipeline NETWORK=lux         # Run complete pipeline for LUX"
 	@echo "  make extract NETWORK=zoo          # Extract specific network"
 	@echo "  make genesis NETWORK=zoo          # Build genesis for specific network"
+	@echo "  make up                           # Launch full historic genesis network"
+	@echo "  make up NETWORK=<name>            # Launch a single network (e.g., zoo, spc, hanzo)"
 	@echo ""
 	@echo "EXTRACTION COMMANDS:"
 	@echo "  make extract-chain CHAIN=<name>     # Extract any chain data"
@@ -38,12 +40,21 @@ help:
 	@echo "  make genesis-lux                    # Build LUX genesis"
 	@echo "  make genesis-zoo                    # Build ZOO genesis with BSC data"
 	@echo "  make genesis-spc                    # Build SPC genesis (bootstrap)"
-	@echo "  make genesis-all                    # Build all genesis files"
+	@echo "  make genesis-all                    # Build all genesis files
+
+# Validator Management
+validators-generate: build-genesis
+	@echo "🔑 Generating 11 new validator keys..."
+	@./bin/genesis validators generate \
+		--offsets 0,1,2,3,4,5,6,7,8,9,10 \
+		--save-keys configs/mainnet/validators.json
+	@echo "✅ 11 new validators generated and saved to configs/mainnet/validators.json"
 	@echo ""
 	@echo "LAUNCH COMMANDS (Full Network):"
 	@echo "  make launch                         # Launch full network (primary + L2s)"
 	@echo "  make launch-full                    # Same as 'make launch'"
 	@echo "  make launch-primary                 # Launch only LUX primary network"
+	@echo "  make launch-docker                  # Launch full network with Docker (recommended)"
 	@echo "  make launch-test                    # Launch test configuration"
 	@echo "  make kill-node                      # Stop all running nodes"
 	@echo "  make network-info                   # Show network information"
@@ -119,6 +130,7 @@ build: build-genesis
 
 build-genesis:
 	@echo "🔨 Building unified genesis tool..."
+	@go work use .
 	@go build -o bin/genesis ./cmd/genesis
 	@echo "✅ Genesis tool built"
 
@@ -499,6 +511,11 @@ network-info:
 launch: launch-full
 	@echo "✅ Full network launched!"
 
+launch-docker:
+	@echo "🐳 Launching network with Docker..."
+	@NETWORK=$(NETWORK) docker-compose -f docker/compose.yml up --build
+	@echo "✅ Docker network launched!"
+
 launch-full: prepare-import launch-lux create-l2s deploy-l2s network-info
 	@echo "✅ Full Lux network with L2s launched successfully!"
 
@@ -646,5 +663,17 @@ test-genesis: build
 zoo: pipeline-zoo
 fresh: pipeline-fresh
 migrate: pipeline-migrate
+
+up:
+ifeq ($(strip $(NETWORK)),)
+	@echo "🚀 Launching full historic genesis network..."
+	@$(MAKE) validators-generate
+	@$(MAKE) genesis-all
+	@$(MAKE) launch-docker
+else
+	@echo "🚀 Launching single network: $(NETWORK)..."
+	@$(MAKE) genesis-$(NETWORK)
+	@$(MAKE) launch-docker NETWORK=$(NETWORK)
+endif
 
 .DEFAULT_GOAL := help

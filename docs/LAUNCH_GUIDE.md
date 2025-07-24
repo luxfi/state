@@ -69,6 +69,56 @@ cd /home/z/work/lux/cli && go build -o bin/lux cmd/main.go
 - Located in `chaindata/` directory
 - Or in `~/.luxd/` directory
 
+## Docker-based Deployment (Recommended)
+
+For a more isolated and repeatable setup, you can use the provided Docker Compose configuration. This is the recommended way to launch a full, production-like network.
+
+### Quick Start with Docker
+
+1.  **Build the Docker image:**
+    ```bash
+    # This command is run from the genesis directory
+    docker-compose -f docker/compose.yml build
+    ```
+
+2.  **Launch the network:**
+    ```bash
+    # This will start the primary network and deploy all subnets
+    docker-compose -f docker/compose.yml up
+
+    # To run in detached mode:
+    docker-compose -f docker/compose.yml up -d
+    ```
+
+### Services
+
+The `docker-compose.yml` file defines the following services:
+- `lux-primary`: The main Lux network node.
+- `subnet-deployer`: A service that waits for the primary node to be healthy and then deploys the ZOO, SPC, and Hanzo subnets.
+- `lux-genesis-7777`: An optional service to run the historic 7777 network.
+- `monitor`: An optional Prometheus service for monitoring.
+
+### Using Profiles
+
+You can launch optional services using profiles:
+
+```bash
+# Launch with the historic 7777 network
+docker-compose -f docker/compose.yml up --profile historic
+
+# Launch with the monitoring stack
+docker-compose -f docker/compose.yml up --profile monitoring
+
+# Launch with all services
+docker-compose -f docker/compose.yml up --profile "*"
+```
+
+### Stopping the Network
+
+```bash
+docker-compose -f docker/compose.yml down
+```
+
 ## Troubleshooting
 
 ### Node won't start

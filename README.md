@@ -14,8 +14,8 @@ MNEMONIC="your twelve word mnemonic phrase" make validators-generate
 # Generate genesis configuration
 make genesis-generate
 
-# Launch mainnet
-make launch-mainnet
+# Launch mainnet with Docker (recommended)
+make launch-docker
 
 # Or use the unified launcher
 ./scripts/launch.sh full
@@ -66,8 +66,8 @@ make launch-mainnet
 make help                 # Show all available commands
 make validators-generate  # Generate validators
 make genesis-generate     # Generate genesis file
+make launch-docker        # Launch full network with Docker (recommended)
 make launch-dev          # Single node dev mode
-make launch-mainnet      # Full 11-node network
 make test                # Run all tests
 ```
 
