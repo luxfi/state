@@ -2,6 +2,8 @@
 
 This guide provides comprehensive documentation for all genesis generation and management tools in the Lux Network ecosystem.
 
+> **Quick Start**: To launch the full network with historic data, see [LAUNCH_GUIDE.md](../LAUNCH_GUIDE.md)
+
 ## Table of Contents
 
 1. [Overview](#overview)
