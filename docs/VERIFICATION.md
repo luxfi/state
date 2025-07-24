@@ -14,7 +14,7 @@ It is initialized with 2T LUX in the genesis. After accounting for real usage, t
 
 ## Prerequisites
 
-- `denamespace` (built via `make install-plugin` or `make build-tools`)
+- `namespace` (built via `make install-plugin` or `make build-tools`)
 - `evmarchaeology` (built via `make install-plugin` or `make build-tools`)
 
 ## Steps
@@ -22,7 +22,7 @@ It is initialized with 2T LUX in the genesis. After accounting for real usage, t
 1. **Extract C-Chain State**
 
 ```bash
-denamespace \
+namespace \
   -src chaindata/lux-mainnet/96369/db/pebbledb \
   -dst /tmp/extracted-96369 \
   -network 96369 \
@@ -49,7 +49,7 @@ Balance: 1.995000000000000000 T LUX
 For testnet (chain ID 96368), repeat with the corresponding path:
 
 ```bash
-denamespace \
+namespace \
   -src chaindata/lux-testnet-96368/db/pebbledb \
   -dst /tmp/extracted-96368 \
   -network 96368 \

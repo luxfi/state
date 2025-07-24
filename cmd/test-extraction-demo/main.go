@@ -65,12 +65,12 @@ func main() {
 		dstPath := fmt.Sprintf("./extracted/%s/db", network.Name)
 		
 		if network.Type == "C-Chain" || network.Type == "testnet" {
-			// For C-Chain networks, use denamespace with network ID
+			// For C-Chain networks, use namespace with network ID
 			fmt.Printf("# Extract %s (Chain ID: %d)\n", network.Name, network.ChainID)
-			fmt.Printf("./bin/denamespace -src %s -dst %s -network %d -state\n\n", 
+			fmt.Printf("./bin/namespace -src %s -dst %s -network %d -state\n\n", 
 				srcPath, dstPath, network.ChainID)
 		} else {
-			// For L2 networks, we need direct copy since denamespace doesn't support them
+			// For L2 networks, we need direct copy since namespace doesn't support them
 			fmt.Printf("# Extract %s (L2 - Chain ID: %d)\n", network.Name, network.ChainID)
 			fmt.Printf("# Note: L2 networks require direct copy as they use different namespace\n")
 			fmt.Printf("cp -r %s %s\n\n", srcPath, dstPath)

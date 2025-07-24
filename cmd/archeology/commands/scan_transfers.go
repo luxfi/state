@@ -38,7 +38,7 @@ This is useful for:
 - Analyzing token flows from distribution wallets
 - Building transfer history for specific addresses`,
 		Example: `  # Scan transfers TO a purchase address
-  archeology scan-transfers \
+  archaeology scan-transfers \
     --rpc https://bsc-dataseed.binance.org/ \
     --token 0x0a6045b79151d0a54dbd5227082445750a023af2 \
     --target 0x28dad8427f127664365109c4a9406c8bc7844718 \
@@ -46,7 +46,7 @@ This is useful for:
     --output purchases.csv
 
   # Scan all transfers for multiple addresses with balance calculation
-  archeology scan-transfers \
+  archaeology scan-transfers \
     --rpc https://bsc-dataseed.binance.org/ \
     --token 0x0a6045b79151d0a54dbd5227082445750a023af2 \
     --target 0xaddr1 --target 0xaddr2 \

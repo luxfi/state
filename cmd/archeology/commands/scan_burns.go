@@ -36,14 +36,14 @@ This command is useful for:
 - Analyzing deflationary token mechanics
 - Preparing genesis allocations that include burned amounts`,
 		Example: `  # Scan for ZOO token burns on BSC
-  archeology scan-burns \
+  archaeology scan-burns \
     --rpc https://bsc-dataseed.binance.org/ \
     --token 0x09e2b83fe5485a7c8beaa5dffd1d324a2b2d5c13 \
     --burn-address 0x000000000000000000000000000000000000dEaD \
     --output burns.csv
 
   # Scan with summary
-  archeology scan-burns \
+  archaeology scan-burns \
     --rpc https://bsc-dataseed.binance.org/ \
     --token 0x09e2b83fe5485a7c8beaa5dffd1d324a2b2d5c13 \
     --summarize --output-json burn-summary.json`,

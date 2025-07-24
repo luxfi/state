@@ -11,7 +11,7 @@ func NewListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List configs (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology list")
+			fmt.Println("stub: archaeology list")
 			return nil
 		},
 	}

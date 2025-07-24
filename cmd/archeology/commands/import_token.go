@@ -11,7 +11,7 @@ func NewImportTokenCommand() *cobra.Command {
 		Use:   "import-token",
 		Short: "Import tokens (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology import-token")
+			fmt.Println("stub: archaeology import-token")
 			return nil
 		},
 	}

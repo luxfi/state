@@ -34,14 +34,14 @@ Supports both:
 
 This command tracks all transfers from contract deployment to build current ownership state.`,
 		Example: `  # Scan EGG NFT holders on BSC
-  archeology scan-holders \
+  archaeology scan-holders \
     --rpc https://bsc-dataseed.binance.org/ \
     --contract 0x5bb68cf06289d54efde25155c88003be685356a8 \
     --type nft \
     --output egg-holders.csv
 
   # Scan token holders with distribution
-  archeology scan-holders \
+  archaeology scan-holders \
     --rpc https://bsc-dataseed.binance.org/ \
     --contract 0x0a6045b79151d0a54dbd5227082445750a023af2 \
     --type token \

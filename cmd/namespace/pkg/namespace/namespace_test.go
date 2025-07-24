@@ -1,4 +1,4 @@
-package denamespace
+package namespace
 
 import (
 	"encoding/hex"
@@ -27,7 +27,7 @@ func TestChainIDs(t *testing.T) {
 }
 
 func TestExtractOptions(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "denamespace-test-*")
+	tmpDir, err := ioutil.TempDir("", "namespace-test-*")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -62,7 +62,7 @@ func TestExtractWithMockData(t *testing.T) {
 		t.Skip("Skipping mock data test in short mode")
 	}
 
-	tmpDir, err := ioutil.TempDir("", "denamespace-mock-*")
+	tmpDir, err := ioutil.TempDir("", "namespace-mock-*")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 

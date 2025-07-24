@@ -119,7 +119,7 @@ The unified tool for all genesis-related operations. It combines functionality f
 
 ### Example Subcommands
 
-#### Extract State (formerly denamespace)
+#### Extract State (formerly namespace)
 
 ```bash
 # Extract with state data
@@ -359,7 +359,7 @@ jq . configs/mainnet/C/genesis.json > /dev/null
 
 1. **Always backup data** before running extraction or migration tools
 2. **Test on small datasets** first using the `-limit` flag
-3. **Verify outputs** using the archeology tools
+3. **Verify outputs** using the archaeology tools
 4. **Keep logs** of all operations for auditing
 5. **Use standard directory structure** for compatibility with luxd
 
@@ -390,7 +390,7 @@ done
 
 # Extract multiple chain data
 for chainid in 96369 200200 36911; do
-    ./bin/denamespace \
+    ./bin/namespace \
         -src /data/$chainid/pebbledb \
         -dst ./extracted/$chainid \
         -network $chainid \

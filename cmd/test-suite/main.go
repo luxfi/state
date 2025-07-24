@@ -209,8 +209,8 @@ func (ts *TestSuite) testTools() []TestResult {
 	var results []TestResult
 
 	tools := []string{
-		"denamespace-universal",
-		"denamespace-selective",
+		"namespace-universal",
+		"namespace-selective",
 		"evmarchaeology",
 	}
 
@@ -302,9 +302,9 @@ func (ts *TestSuite) extractNetwork(network NetworkConfig) error {
 		return err
 	}
 	
-	// Run denamespace-universal
+	// Run namespace-universal
 	cmd := exec.Command(
-		filepath.Join(ts.BaseDir, "bin/denamespace-universal"),
+		filepath.Join(ts.BaseDir, "bin/namespace-universal"),
 		"-src", srcPath,
 		"-dst", dstPath,
 		"-network", fmt.Sprintf("%d", network.ChainID),

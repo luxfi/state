@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/pebble"
+	"github.com/luxfi/node/ids"
 )
 
 var chainIDs = map[string]string{
@@ -15,25 +16,56 @@ var chainIDs = map[string]string{
 	"96368": "337fb73f9bcdac8c31a2d5f7b877ab1e8a2b7f2a1e9bf02a0a0e6c6fd164f1d1", // Same chain ID for testnet
 }
 
+// Map old blockchain IDs to new ones for migration
+var blockchainIDMap = map[string]string{
+	// Old LUX mainnet subnet blockchain ID -> New C-Chain blockchain ID
+	"dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ": "2S76s9v5CCCpFkvsvnVcGiTHZ8oTnek99Pp9sTJkGKGzD1inzC",
+}
+
 func main() {
 	srcPath := flag.String("src", "", "Path to original Pebble DB")
 	dstPath := flag.String("dst", "", "Path to new Pebble DB (must not exist)")
 	network := flag.String("network", "96369", "Network ID (96369 for mainnet, 96368 for testnet)")
 	includeState := flag.Bool("state", false, "Include state data (accounts, storage)")
+	migrateBlockchainID := flag.Bool("migrate-id", false, "Migrate from old blockchain ID to new C-Chain ID")
+	oldBlockchainID := flag.String("old-id", "dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ", "Old blockchain ID to migrate from")
+	newBlockchainID := flag.String("new-id", "2S76s9v5CCCpFkvsvnVcGiTHZ8oTnek99Pp9sTJkGKGzD1inzC", "New blockchain ID to migrate to")
 
 	flag.Parse()
 	if *srcPath == "" || *dstPath == "" {
-		log.Fatal("usage: denamespace -src /old/db -dst /new/db [-network 96369] [-state]")
+		log.Fatal("usage: namespace -src /old/db -dst /new/db [-network 96369] [-state]")
 	}
 
-	chainHex, ok := chainIDs[*network]
-	if !ok {
-		log.Fatalf("Unknown network: %s", *network)
-	}
+	var chainBytes []byte
+	var migrateToChainBytes []byte
+	
+	if *migrateBlockchainID {
+		// Parse old and new blockchain IDs
+		oldID, err := ids.FromString(*oldBlockchainID)
+		if err != nil {
+			log.Fatalf("Invalid old blockchain ID: %v", err)
+		}
+		newID, err := ids.FromString(*newBlockchainID)
+		if err != nil {
+			log.Fatalf("Invalid new blockchain ID: %v", err)
+		}
+		chainBytes = oldID[:]
+		migrateToChainBytes = newID[:]
+		
+		log.Printf("Blockchain ID Migration Mode:")
+		log.Printf("  From: %s", *oldBlockchainID)
+		log.Printf("  To:   %s", *newBlockchainID)
+	} else {
+		chainHex, ok := chainIDs[*network]
+		if !ok {
+			log.Fatalf("Unknown network: %s", *network)
+		}
 
-	chainBytes, err := hex.DecodeString(chainHex)
-	if err != nil {
-		log.Fatalf("decode chain hex: %v", err)
+		var err error
+		chainBytes, err = hex.DecodeString(chainHex)
+		if err != nil {
+			log.Fatalf("decode chain hex: %v", err)
+		}
 	}
 
 	// Define the suffixes we want to copy
@@ -127,11 +159,26 @@ func main() {
 
 			// Only process valid suffixes
 			if _, valid := validSuffixes[suffix]; valid {
-				// Strip the 33-byte prefix (32 bytes chain ID + 1 byte suffix)
-				newKey := key[33:]
+				var newKey []byte
+				value := iter.Value()
+				
+				if *migrateBlockchainID {
+					// Replace old blockchain ID with new one
+					newKey = make([]byte, len(key))
+					copy(newKey, migrateToChainBytes)  // New blockchain ID
+					copy(newKey[32:], key[32:])        // Rest of the key
+					
+					// Also replace blockchain ID in the value if it contains it
+					if bytes.Contains(value, chainBytes) {
+						value = bytes.ReplaceAll(value, chainBytes, migrateToChainBytes)
+					}
+				} else {
+					// Strip the 33-byte prefix (32 bytes chain ID + 1 byte suffix)
+					newKey = key[33:]
+				}
 
 				if len(newKey) > 0 {
-					if err := batch.Set(newKey, iter.Value(), nil); err != nil {
+					if err := batch.Set(newKey, value, nil); err != nil {
 						log.Fatalf("set key: %v", err)
 					}
 

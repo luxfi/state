@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  PDB[Existing Chain DB] -->|denamespace + extract-state| EX[Extracted State]
+  PDB[Existing Chain DB] -->|namespace + extract-state| EX[Extracted State]
   EX -->|archaeology scan/analyze| ALLOC[Allocation Data]
   ALLOC -->|genesis generate| GEN[Genesis Files]
   GEN -->|deploy| NET[Running Network]
@@ -36,7 +36,7 @@ Both tools are available as lux-cli plugins after running `make install-plugin`:
 
 ### Standalone Tools
 
-#### `denamespace`
+#### `namespace`
 Removes namespace prefixes from PebbleDB data for C-Chain compatibility.
 
 #### `extract-state`

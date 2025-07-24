@@ -10,10 +10,10 @@ import (
 
 func TestArcheologyCommands(t *testing.T) {
 	// Build the binary first
-	binPath := filepath.Join(t.TempDir(), "archeology")
+	binPath := filepath.Join(t.TempDir(), "archaeology")
 	buildCmd := exec.Command("go", "build", "-o", binPath, ".")
 	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build archeology: %v", err)
+		t.Fatalf("Failed to build archaeology: %v", err)
 	}
 
 	tests := []struct {
@@ -108,7 +108,7 @@ func TestArcheologyCommands(t *testing.T) {
 			gotErr := err != nil
 
 			if gotErr != tt.wantErr {
-				t.Errorf("archeology %v: gotErr = %v, wantErr = %v\nstderr: %s",
+				t.Errorf("archaeology %v: gotErr = %v, wantErr = %v\nstderr: %s",
 					tt.args, gotErr, tt.wantErr, stderr.String())
 			}
 
@@ -116,14 +116,14 @@ func TestArcheologyCommands(t *testing.T) {
 
 			if tt.wantErr && tt.errContains != "" {
 				if !strings.Contains(output, tt.errContains) {
-					t.Errorf("archeology %v: error output doesn't contain %q\nGot: %s",
+					t.Errorf("archaeology %v: error output doesn't contain %q\nGot: %s",
 						tt.args, tt.errContains, output)
 				}
 			}
 
 			for _, want := range tt.wantOutput {
 				if !strings.Contains(output, want) {
-					t.Errorf("archeology %v: output doesn't contain %q\nGot: %s",
+					t.Errorf("archaeology %v: output doesn't contain %q\nGot: %s",
 						tt.args, want, output)
 				}
 			}
@@ -148,7 +148,7 @@ func TestImportNFTValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// The validation is in the command, we'll test via command line
-			binPath := filepath.Join(t.TempDir(), "archeology")
+			binPath := filepath.Join(t.TempDir(), "archaeology")
 			buildCmd := exec.Command("go", "build", "-o", binPath, ".")
 			if err := buildCmd.Run(); err != nil {
 				t.Skipf("Skipping validation test: %v", err)

@@ -154,7 +154,7 @@ func TestFullMigrationWorkflow(t *testing.T) {
 		fmt.Println("\n=== COMPLETE MIGRATION WORKFLOW ===")
 		fmt.Println()
 		fmt.Println("1. Extract C-Chain data (LUX mainnet)")
-		fmt.Println("   ./bin/denamespace -src <pebbledb> -dst <output> -network 96369 -state")
+		fmt.Println("   ./bin/namespace -src <pebbledb> -dst <output> -network 96369 -state")
 		fmt.Println()
 		fmt.Println("2. Copy subnet data (preserves namespace)")
 		fmt.Println("   cp -r <zoo-pebbledb> ./migration/zoo/chaindata")

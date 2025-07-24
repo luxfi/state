@@ -1,0 +1,6 @@
+=============== Jul 24, 2025 (UTC) ===============
+17:02:00.735420 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+17:02:00.736489 manifest error: leveldb: manifest corrupted (field 'comparer'): short read [file=MANIFEST-012175] (skipped)
+17:02:00.736514 manifest error: leveldb: manifest corrupted (field 'comparer'): short read [file=MANIFEST-012175] (skipped)
+17:02:00.739385 manifest error: leveldb: manifest corrupted (field 'comparer'): short read [file=MANIFEST-012175] (skipped)
+17:02:00.739427 manifest error: leveldb: manifest corrupted (field 'comparer'): short read [file=MANIFEST-012175] (skipped)

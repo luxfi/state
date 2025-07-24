@@ -1,4 +1,4 @@
-package archeology
+package archaeology
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ type Denamespacer struct {
 	config DenamespacerConfig
 }
 
-// NewDenamespacer creates a new denamespacer
+// NewDenamespacer creates a new namespacer
 func NewDenamespacer(config DenamespacerConfig) (*Denamespacer, error) {
 	if config.SourcePath == "" {
 		return nil, fmt.Errorf("source path is required")
@@ -26,7 +26,7 @@ func NewDenamespacer(config DenamespacerConfig) (*Denamespacer, error) {
 
 // Process removes namespacing from the database
 func (d *Denamespacer) Process() (*DenamespacerResult, error) {
-	// TODO: Implement actual denamespace logic
+	// TODO: Implement actual namespace logic
 	// This is a stub implementation
 	
 	result := &DenamespacerResult{

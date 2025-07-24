@@ -78,7 +78,7 @@ This command caches all fetched data locally, allowing you to:
 - Handle RPC rate limits gracefully
 - Build a local dataset for analysis`,
 		Example: `  # Start a new scan with caching
-  archeology scan-burns-cached \
+  archaeology scan-burns-cached \
     --rpc https://bsc-dataseed.bnbchain.org \
     --rpc https://bsc-dataseed.nariox.org \
     --token 0x09e2b83fe5485a7c8beaa5dffd1d324a2b2d5c13 \
@@ -87,7 +87,7 @@ This command caches all fetched data locally, allowing you to:
     --from-block 14000000
 
   # Resume a previous scan
-  archeology scan-burns-cached \
+  archaeology scan-burns-cached \
     --cache-dir ./cache/zoo-burns \
     --resume`,
 		RunE: func(cmd *cobra.Command, args []string) error {

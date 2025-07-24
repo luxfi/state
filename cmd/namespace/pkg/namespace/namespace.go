@@ -1,4 +1,4 @@
-package denamespace
+package namespace
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/cockroachdb/pebble"
 )
 
-// Options for the denamespace operation
+// Options for the namespace operation
 type Options struct {
 	Source      string
 	Destination string
@@ -26,7 +26,7 @@ var chainIDs = map[uint64]string{
 	36911:  "5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e", // SPC
 }
 
-// Extract performs the denamespace operation
+// Extract performs the namespace operation
 func Extract(opts Options) error {
 	chainHex, ok := chainIDs[opts.NetworkID]
 	if !ok {

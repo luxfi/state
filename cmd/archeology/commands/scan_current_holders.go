@@ -71,14 +71,14 @@ This is much faster than scanning historical blocks and gives you the current st
 
 Supports load balancing across multiple RPC endpoints.`,
 		Example: `  # Scan EGG NFT holders on BSC
-  archeology scan-current-holders \
+  archaeology scan-current-holders \
     --rpc https://bsc-dataseed.bnbchain.org \
     --rpc https://bsc-dataseed.nariox.org \
     --contract 0x5bb68cf06289d54efde25155c88003be685356a8 \
     --output holders.csv
 
   # Scan LUX NFT holders on Ethereum
-  archeology scan-current-holders \
+  archaeology scan-current-holders \
     --rpc https://mainnet.infura.io/v3/YOUR_KEY \
     --contract 0x31e0f919c67cedd2bc3e294340dc900735810311 \
     --project lux`,

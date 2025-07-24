@@ -1,6 +1,6 @@
-// Package archeology provides tools for extracting and analyzing historical blockchain data
+// Package archaeology provides tools for extracting and analyzing historical blockchain data
 // from LevelDB and PebbleDB databases used by various EVM implementations.
-package archeology
+package archaeology
 
 import (
     "encoding/binary"

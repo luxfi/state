@@ -11,7 +11,7 @@ func NewImportNFTCommand() *cobra.Command {
 		Use:   "import-nft",
 		Short: "Import NFTs (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology import-nft")
+			fmt.Println("stub: archaeology import-nft")
 			return nil
 		},
 	}

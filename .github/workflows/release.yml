@@ -1,0 +1,18 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  unit_test:
+    uses: ./.github/workflows/unit-test.yml
+
+  release:
+    needs: [lint, unit_test]
+    uses: ./.github/workflows/release-binaries.yml
+    secrets: inherit

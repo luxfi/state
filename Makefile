@@ -17,6 +17,12 @@ help:
 	@echo "  make up                           # Launch full historic genesis network"
 	@echo "  make up NETWORK=<name>            # Launch a single network (e.g., zoo, spc, hanzo)"
 	@echo ""
+	@echo "COMMON WORKFLOWS:"
+	@echo "  make diag                         # Quick diagnose historic database"
+	@echo "  make migrate-complete             # Full migration workflow"
+	@echo "  make genesis-help                 # Show all genesis commands"
+	@echo "  ./genesis diagnose /path/to/db    # Direct CLI usage"
+	@echo ""
 	@echo "EXTRACTION COMMANDS:"
 	@echo "  make extract-chain CHAIN=<name>     # Extract any chain data"
 	@echo "  make extract-lux                    # Extract LUX mainnet (96369)"
@@ -50,6 +56,20 @@ validators-generate: build-genesis
 		--save-keys configs/mainnet/validators.json
 	@echo "✅ 11 new validators generated and saved to configs/mainnet/validators.json"
 	@echo ""
+	@echo "MIGRATION COMMANDS:"
+	@echo "  make migrate                        # Migrate historic chain data"
+	@echo "  make migrate-genesis                # Extract genesis from historic data"
+	@echo "  make migrate-complete               # Run complete migration workflow"
+	@echo "  make migrate-dry-run                # Preview migration without changes"
+	@echo ""
+	@echo "DIAGNOSTIC COMMANDS:"
+	@echo "  make diagnose DB_PATH=/path/to/db  # Diagnose any database"
+	@echo "  make diagnose-historic              # Diagnose historic LUX database"
+	@echo "  make count-keys DB_PATH=/path/to/db# Count keys in database"
+	@echo "  make show-pointers DB_PATH=/path    # Show pointer keys"
+	@echo "  make copy-pointers SRC_DB=... DST_DB=... # Copy pointer keys"
+	@echo "  make inspect-sst                    # Inspect SST files in restored DB"
+	@echo ""
 	@echo "LAUNCH COMMANDS (Full Network):"
 	@echo "  make launch                         # Launch full network (primary + L2s)"
 	@echo "  make launch-full                    # Same as 'make launch'"
@@ -69,6 +89,8 @@ validators-generate: build-genesis
 	@echo "  make test                           # Run all tests"
 	@echo "  make validate                       # Validate all genesis files"
 	@echo "  make backup                         # Backup current genesis"
+	@echo "  make genesis-cmd CMD=\"...\"          # Run custom genesis command"
+	@echo "  make namespace ARGS=\"...\"         # Run namespace tool"
 	@echo ""
 	@echo "PIPELINES (Common Workflows):"
 	@echo "  make pipeline-zoo                   # Complete ZOO migration pipeline"
@@ -91,7 +113,7 @@ ANALYSIS_DIR ?= $(OUTPUT_DIR)/analysis
 
 # Tools
 TELEPORT := ./bin/teleport
-ARCHEOLOGY := ./bin/archeology
+ARCHEOLOGY := ./bin/archaeology
 
 # Networks
 LUX_MAINNET := 96369
@@ -122,17 +144,22 @@ clean:
 # Build tools if needed
 build-tools:
 	@echo "🔨 Building tools..."
-	@cd .. && make build-teleport build-archeology
+	@cd .. && make build-teleport build-archaeology
 	@echo "✅ Tools built"
 
 # Build unified genesis tool
-build: build-genesis
+build: build-genesis build-extract-genesis
 
 build-genesis:
 	@echo "🔨 Building unified genesis tool..."
 	@go work use .
 	@go build -o bin/genesis ./cmd/genesis
 	@echo "✅ Genesis tool built"
+
+build-extract-genesis:
+	@echo "🔨 Building extract-genesis tool..."
+	@go build -o bin/extract-genesis ./cmd/extract-genesis
+	@echo "✅ Extract-genesis tool built"
 
 # ============ EXTRACTION COMMANDS ============
 
@@ -659,10 +686,153 @@ test-genesis: build
 	@./bin/genesis migrate --help > /dev/null
 	@echo "✅ Genesis tool tests passed"
 
+# ============ MIGRATION COMMANDS ============
+
+# Migrate historic chain data to new blockchain ID
+migrate: build-genesis
+	@echo "🔄 Migrating historic chain data..."
+	@./bin/genesis migrate \
+		/home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ
+	@echo "✅ Migration complete"
+
+# Extract genesis from historic data only
+migrate-genesis: build-genesis
+	@echo "📤 Extracting genesis from historic data..."
+	@./bin/genesis read \
+		/home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ \
+		--write-config --show-id --raw --pointers
+	@echo "✅ Genesis extraction complete"
+
+# ============ DIAGNOSTIC COMMANDS ============
+
+# Diagnose blockchain database
+diagnose: build-genesis
+	@echo "🔍 Diagnosing blockchain database..."
+	@./bin/genesis diagnose $(DB_PATH)
+
+# Diagnose historic database
+diagnose-historic: build-genesis
+	@./bin/genesis diagnose /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ
+
+# Count keys in database
+count-keys: build-genesis
+	@echo "📊 Counting keys in database..."
+	@./bin/genesis count $(DB_PATH) --all
+
+# Show pointer keys
+show-pointers: build-genesis
+	@echo "🔑 Showing pointer keys..."
+	@./bin/genesis pointers show $(DB_PATH)
+
+# Copy pointer keys between databases
+copy-pointers: build-genesis
+ifndef SRC_DB
+	$(error SRC_DB is not set. Usage: make copy-pointers SRC_DB=/path/to/source DST_DB=/path/to/dest)
+endif
+ifndef DST_DB
+	$(error DST_DB is not set. Usage: make copy-pointers SRC_DB=/path/to/source DST_DB=/path/to/dest)
+endif
+	@echo "📋 Copying pointer keys from $(SRC_DB) to $(DST_DB)..."
+	@./bin/genesis pointers copy $(SRC_DB) $(DST_DB)
+
+# ============ ANALYSIS COMMANDS ============
+
+# Inspect SST files in restored database
+inspect-sst:
+	@echo "🔍 Inspecting Restored Database Files"
+	@echo "====================================="
+	@echo ""
+	@echo "📁 Database path: /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb"
+	@echo ""
+	@echo "📊 Database statistics:"
+	@echo "  Total SST files: $$(ls -1 /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb/*.sst 2>/dev/null | wc -l)"
+	@echo "  Total size: $$(du -sh /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb 2>/dev/null | cut -f1)"
+	@echo ""
+	@echo "📄 Sample SST files:"
+	@ls -lh /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb/*.sst 2>/dev/null | head -5
+	@echo ""
+	@echo "⚠️  Note: This database is missing CURRENT/MANIFEST files"
+
+# ============ COMPREHENSIVE MIGRATION WORKFLOW ============
+
+# Complete migration workflow
+migrate-complete: build-genesis
+	@echo "🔄 Complete Historic Data Migration Workflow"
+	@echo "==========================================="
+	@echo ""
+	@echo "Step 1: Diagnosing source database..."
+	@$(MAKE) diagnose-historic || true
+	@echo ""
+	@echo "Step 2: Extracting genesis..."
+	@$(MAKE) migrate-genesis
+	@echo ""
+	@echo "Step 3: Running migration..."
+	@$(MAKE) migrate
+	@echo ""
+	@echo "✅ Migration workflow complete!"
+	@echo ""
+	@echo "Next steps:"
+	@echo "1. Review genesis at ~/.luxd/configs/C/genesis.json"
+	@echo "2. Start node: cd /home/z/work/lux/node && ./build/luxd --http-port=9630"
+
+# Dry run migration to see what would happen
+migrate-dry-run: build-genesis
+	@echo "🔍 Migration Dry Run"
+	@./bin/genesis migrate \
+		/home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ \
+		--dry-run
+
+# ============ HELPER COMMANDS ============
+
+# Run genesis tool with custom command
+genesis-cmd: build-genesis
+ifndef CMD
+	$(error CMD is not set. Usage: make genesis-cmd CMD="diagnose /path/to/db")
+endif
+	@./bin/genesis $(CMD)
+
+# Run namespace tool directly
+namespace: build-migrate
+ifndef ARGS
+	$(error ARGS is not set. Usage: make namespace ARGS="-src /path -dst /path -migrate-id")
+endif
+	@./bin/namespace $(ARGS)
+
+# ============ DATABASE VARIABLES ============
+
+# Default database paths
+HISTORIC_DB ?= /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ
+DB_PATH ?= $(HISTORIC_DB)
+
+# Show all genesis tool commands
+genesis-help: build-genesis
+	@./bin/genesis --help
+
+# Show specific genesis command help
+genesis-help-cmd: build-genesis
+ifndef CMD
+	$(error CMD is not set. Usage: make genesis-help-cmd CMD=diagnose)
+endif
+	@./bin/genesis $(CMD) --help
+
+# Show current status
+status: 
+	@echo "📊 Genesis Tool Status"
+	@echo "====================="
+	@echo ""
+	@echo "✅ Genesis tool: $$(if [ -f ./bin/genesis ]; then echo 'Built'; else echo 'Not built'; fi)"
+	@echo "✅ Historic DB: $(HISTORIC_DB)"
+	@echo "✅ SST files: $$(ls -1 $(HISTORIC_DB)/db/pebbledb/*.sst 2>/dev/null | wc -l) files"
+	@echo ""
+	@echo "Available commands:"
+	@echo "  ./genesis --help                  # Show all commands"
+	@echo "  make diag                         # Diagnose historic DB"
+	@echo "  make migrate-complete             # Run full migration"
+
 # Aliases for common operations
 zoo: pipeline-zoo
 fresh: pipeline-fresh
-migrate: pipeline-migrate
+diag: diagnose-historic
 
 up:
 ifeq ($(strip $(NETWORK)),)

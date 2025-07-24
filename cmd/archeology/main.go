@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/luxfi/genesis/cmd/archeology/commands"
+	"github.com/luxfi/genesis/cmd/archaeology/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ var (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "archeology",
+		Use:   "archaeology",
 		Short: "Blockchain Archaeology - Extract and analyze historical blockchain data",
 		Long: `Blockchain Archaeology is a comprehensive tool for extracting, analyzing, and migrating
 historical blockchain data from various EVM chains. It supports data extraction from
@@ -28,7 +28,7 @@ genesis file generation for Lux Network.`,
 
 	// Add subcommands
 	rootCmd.AddCommand(
-		// Core archeology commands
+		// Core archaeology commands
 		commands.NewExtractCommand(),
 		commands.NewAnalyzeCommand(),
 		commands.NewScanCommand(),

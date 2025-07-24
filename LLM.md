@@ -71,10 +71,10 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 - Uses standard P/, C/, X/ directory structure by default
 - Automatically includes validators and treasury
 
-### 2. denamespace
+### 2. namespace
 ```bash
 # Extract blockchain data
-./bin/denamespace -src <pebbledb> -dst <output> -network <chain-id> -state
+./bin/namespace -src <pebbledb> -dst <output> -network <chain-id> -state
 ```
 - Use this for any network extraction
 - Always include `-state` for account balances
@@ -98,7 +98,7 @@ You are working with the Lux Network's 2025 genesis data, which represents a maj
 ### Extracting a Network
 ```bash
 # Example: Extract ZOO mainnet
-./bin/denamespace \
+./bin/namespace \
     -src /path/to/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/db/pebbledb \
     -dst ./extracted-zoo \
     -network 200200 \
@@ -179,7 +179,7 @@ When asked about:
 Always test extraction before full operations:
 ```bash
 # Test extraction (small dataset)
-./bin/denamespace \
+./bin/namespace \
     -src /path/to/data \
     -dst /tmp/test \
     -network <id> \

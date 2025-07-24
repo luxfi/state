@@ -11,7 +11,7 @@ func NewValidateCommand() *cobra.Command {
 		Use:   "validate",
 		Short: "Validate extraction (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology validate")
+			fmt.Println("stub: archaeology validate")
 			return nil
 		},
 	}

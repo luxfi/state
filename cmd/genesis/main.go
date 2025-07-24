@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,15 +12,18 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/cockroachdb/pebble"
+	"github.com/luxfi/node/ids"
 	"github.com/spf13/cobra"
 
 	// Import command packages
-	archeologyCmd "github.com/luxfi/genesis/cmd/archeology/commands"
+	archaeologyCmd "github.com/luxfi/genesis/cmd/archaeology/commands"
 	teleportCmd "github.com/luxfi/genesis/cmd/teleport/commands"
 
 	// Import internal packages
-	"github.com/luxfi/genesis/cmd/denamespace/pkg/denamespace"
+	"github.com/luxfi/genesis/cmd/namespace/pkg/namespace"
 )
 
 var (
@@ -26,6 +31,22 @@ var (
 	commit  = "none"
 	date    = "unknown"
 )
+
+// Genesis represents the Ethereum genesis block configuration
+type Genesis struct {
+	Config     map[string]interface{} `json:"config"`
+	Nonce      string                 `json:"nonce"`
+	Timestamp  string                 `json:"timestamp"`
+	ExtraData  string                 `json:"extraData"`
+	GasLimit   string                 `json:"gasLimit"`
+	Difficulty string                 `json:"difficulty"`
+	MixHash    string                 `json:"mixHash"`
+	Coinbase   string                 `json:"coinbase"`
+	Alloc      map[string]interface{} `json:"alloc"`
+	Number     string                 `json:"number"`
+	GasUsed    string                 `json:"gasUsed"`
+	ParentHash string                 `json:"parentHash"`
+}
 
 // Global configuration for generate command
 type GenesisConfig struct {
@@ -146,6 +167,82 @@ Use 'genesis --help' to see all available commands.`,
 		RunE:  runTools,
 	}
 
+	// Read command to extract genesis from chain data
+	readCmd := &cobra.Command{
+		Use:   "read [source-path]",
+		Short: "Read genesis from historic chain data",
+		Long: `Read genesis configuration from existing chain data.
+		
+This command extracts the genesis from a blockchain database and can optionally:
+- Derive the blockchain ID from the genesis
+- Write the genesis to a standard location
+- Display genesis information`,
+		Args: cobra.ExactArgs(1),
+		RunE: runReadGenesis,
+	}
+	
+	readCmd.Flags().StringP("output", "o", "", "Output path for genesis file (default: stdout)")
+	readCmd.Flags().BoolP("write-config", "w", false, "Write genesis to ~/.luxd/configs/C/genesis.json")
+	readCmd.Flags().BoolP("show-id", "i", true, "Show derived blockchain ID")
+	readCmd.Flags().BoolP("raw", "r", false, "Save raw genesis bytes as genesis.blob")
+	readCmd.Flags().BoolP("pointers", "p", false, "Show pointer keys (Height, LastAccepted, etc)")
+	
+	// Diagnose command to check database health
+	diagnoseCmd := &cobra.Command{
+		Use:   "diagnose [db-path]",
+		Short: "Diagnose blockchain database issues",
+		Long: `Diagnose common issues preventing historic blocks from loading:
+- Check header count
+- Verify pointer keys (Height, LastAccepted, etc)
+- Extract genesis blob
+- Compare genesis with config`,
+		Args: cobra.ExactArgs(1),
+		RunE: runDiagnose,
+	}
+	
+	// Count command to count database keys
+	countCmd := &cobra.Command{
+		Use:   "count [db-path]",
+		Short: "Count keys in blockchain database",
+		Long:  `Count keys by prefix in a blockchain database`,
+		Args:  cobra.ExactArgs(1),
+		RunE:  runCount,
+	}
+	
+	countCmd.Flags().StringP("prefix", "p", "68", "Key prefix in hex (68=headers, 62=bodies)")
+	countCmd.Flags().BoolP("all", "a", false, "Count all keys (no prefix filter)")
+	
+	// Pointers command to manage pointer keys
+	pointersCmd := &cobra.Command{
+		Use:   "pointers [db-path]",
+		Short: "Manage blockchain pointer keys",
+		Long:  `View or update pointer keys (Height, LastAccepted, LastBlock, LastHeader)`,
+		Args:  cobra.ExactArgs(1),
+	}
+	
+	// Sub-commands for pointers
+	pointersShowCmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show pointer keys",
+		RunE:  runPointersShow,
+	}
+	
+	pointersSetCmd := &cobra.Command{
+		Use:   "set [key] [value]",
+		Short: "Set a pointer key",
+		Args:  cobra.ExactArgs(2),
+		RunE:  runPointersSet,
+	}
+	
+	pointersCopyCmd := &cobra.Command{
+		Use:   "copy [source-db] [dest-db]",
+		Short: "Copy pointer keys between databases",
+		Args:  cobra.ExactArgs(2),
+		RunE:  runPointersCopy,
+	}
+	
+	pointersCmd.AddCommand(pointersShowCmd, pointersSetCmd, pointersCopyCmd)
+
 	// Build command structure
 	rootCmd.AddCommand(
 		generateCmd,
@@ -158,6 +255,10 @@ Use 'genesis --help' to see all available commands.`,
 		processCmd,
 		validateCmd,
 		toolsCmd,
+		readCmd,
+		diagnoseCmd,
+		countCmd,
+		pointersCmd,
 		// Additional utility commands from teleport
 		teleportCmd.NewExportCommand(),
 		teleportCmd.NewVerifyCommand(),
@@ -230,10 +331,10 @@ func addValidatorSubcommands(validatorsCmd *cobra.Command) {
 }
 
 func addExtractSubcommands(extractCmd *cobra.Command) {
-	// State extraction (denamespace)
+	// State extraction (namespace)
 	stateCmd := &cobra.Command{
 		Use:   "state [source] [destination]",
-		Short: "Extract state from PebbleDB (denamespace)",
+		Short: "Extract state from PebbleDB (namespace)",
 		Long:  `Extract account state and blockchain data from PebbleDB format, removing namespace prefixes`,
 		Args:  cobra.ExactArgs(2),
 		RunE:  runExtractState,
@@ -256,11 +357,11 @@ func addExtractSubcommands(extractCmd *cobra.Command) {
 	genesisCmd.Flags().Bool("alloc", true, "Include account allocations")
 	genesisCmd.Flags().String("csv", "", "Export allocations to CSV file")
 
-	// Add archeology extract commands
+	// Add archaeology extract commands
 	extractCmd.AddCommand(
 		stateCmd,
 		genesisCmd,
-		archeologyCmd.NewExtractCommand(),
+		archaeologyCmd.NewExtractCommand(),
 	)
 }
 
@@ -313,15 +414,15 @@ func addImportSubcommands(importCmd *cobra.Command) {
 		blockCmd,
 		cchainCmd,
 		allocationsCmd,
-		archeologyCmd.NewImportNFTCommand(),
-		archeologyCmd.NewImportTokenCommand(),
+		archaeologyCmd.NewImportNFTCommand(),
+		archaeologyCmd.NewImportTokenCommand(),
 	)
 }
 
 func addAnalyzeSubcommands(analyzeCmd *cobra.Command) {
-	// Add archeology analyze commands
+	// Add archaeology analyze commands
 	analyzeCmd.AddCommand(
-		archeologyCmd.NewAnalyzeCommand(),
+		archaeologyCmd.NewAnalyzeCommand(),
 	)
 }
 
@@ -336,19 +437,39 @@ func addScanSubcommands(scanCmd *cobra.Command) {
 		teleportCmd.NewScanEggHoldersCommand(),
 	)
 
-	// Add archeology scan commands
+	// Add archaeology scan commands
 	scanCmd.AddCommand(
-		archeologyCmd.NewScanCommand(),
-		archeologyCmd.NewScanBurnsCommand(),
-		archeologyCmd.NewScanHoldersCommand(),
-		archeologyCmd.NewScanTransfersCommand(),
-		archeologyCmd.NewScanCurrentHoldersCommand(),
+		archaeologyCmd.NewScanCommand(),
+		archaeologyCmd.NewScanBurnsCommand(),
+		archaeologyCmd.NewScanHoldersCommand(),
+		archaeologyCmd.NewScanTransfersCommand(),
+		archaeologyCmd.NewScanCurrentHoldersCommand(),
 	)
 }
 
 func addMigrateSubcommands(migrateCmd *cobra.Command) {
+	// Add read command to extract genesis from chain data
+	readCmd := &cobra.Command{
+		Use:   "read [source-path]",
+		Short: "Read genesis from historic chain data and migrate to new blockchain ID",
+		Long: `Read genesis from historic chain data, derive new blockchain ID, and optionally migrate data.
+		
+This command:
+1. Extracts genesis configuration from historic chain data
+2. Derives the new blockchain ID from the genesis
+3. Writes the genesis to ~/.luxd/configs/C/genesis.json
+4. Optionally migrates the chain data with updated blockchain ID`,
+		Args: cobra.ExactArgs(1),
+		RunE: runMigrateRead,
+	}
+	
+	readCmd.Flags().StringP("dst", "d", "", "Destination path for migrated data (optional)")
+	readCmd.Flags().BoolP("genesis-only", "g", false, "Only extract genesis, don't migrate data")
+	readCmd.Flags().BoolP("write-genesis", "w", true, "Write genesis to ~/.luxd/configs/C/genesis.json")
+	
 	// Add teleport migrate commands
 	migrateCmd.AddCommand(
+		readCmd,
 		teleportCmd.NewMigrateCommand(),
 		teleportCmd.NewZooMigrateCommand(),
 		teleportCmd.NewZooCrossReferenceCommand(),
@@ -415,8 +536,8 @@ func runExtractState(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Extracting state from %s to %s\n", source, destination)
 	fmt.Printf("Network ID: %d, Include State: %v, Limit: %d\n", networkID, includeState, limit)
 
-	// Use the denamespace package
-	opts := denamespace.Options{
+	// Use the namespace package
+	opts := namespace.Options{
 		Source:      source,
 		Destination: destination,
 		NetworkID:   uint64(networkID),
@@ -424,7 +545,7 @@ func runExtractState(cmd *cobra.Command, args []string) error {
 		Limit:       limit,
 	}
 
-	return denamespace.Extract(opts)
+	return namespace.Extract(opts)
 }
 
 // Extract genesis command implementation
@@ -494,9 +615,9 @@ func runExtractGenesis(cmd *cobra.Command, args []string) error {
 }
 
 func runArcheologyMigrate(cmd *cobra.Command, args []string) error {
-	fmt.Println("Running archeology migrate...")
-	// Call the archeology migrate command
-	migrateCmd := exec.Command("./bin/archeology", "migrate")
+	fmt.Println("Running archaeology migrate...")
+	// Call the archaeology migrate command
+	migrateCmd := exec.Command("./bin/archaeology", "migrate")
 	migrateCmd.Stdout = os.Stdout
 	migrateCmd.Stderr = os.Stderr
 	return migrateCmd.Run()
@@ -1035,4 +1156,461 @@ func parseAmount(s string) (*big.Int, error) {
 	i.Mul(i, wei)
 
 	return i, nil
+}
+
+// runReadGenesis implements the read command
+func runReadGenesis(cmd *cobra.Command, args []string) error {
+	srcPath := args[0]
+	outputPath, _ := cmd.Flags().GetString("output")
+	writeConfig, _ := cmd.Flags().GetBool("write-config")
+	showID, _ := cmd.Flags().GetBool("show-id")
+	saveRaw, _ := cmd.Flags().GetBool("raw")
+	showPointers, _ := cmd.Flags().GetBool("pointers")
+	
+	// Extract genesis from historic data
+	fmt.Printf("📖 Reading genesis from: %s\n", srcPath)
+	genesis, genesisBytes, err := extractHistoricGenesis(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to extract genesis: %w", err)
+	}
+	
+	// Save raw genesis bytes if requested
+	if saveRaw {
+		blobPath := "genesis.blob"
+		if outputPath != "" {
+			blobPath = strings.TrimSuffix(outputPath, ".json") + ".blob"
+		}
+		if err := ioutil.WriteFile(blobPath, genesisBytes, 0644); err != nil {
+			return fmt.Errorf("failed to write genesis blob: %w", err)
+		}
+		fmt.Printf("💾 Saved raw genesis bytes to: %s (%d bytes)\n", blobPath, len(genesisBytes))
+	}
+	
+	// Show pointer keys if requested
+	if showPointers {
+		if err := showPointerKeys(srcPath); err != nil {
+			log.Printf("Warning: Could not read pointer keys: %v", err)
+		}
+	}
+	
+	// Format the genesis nicely
+	formattedGenesis, err := json.MarshalIndent(genesis, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to format genesis: %w", err)
+	}
+	
+	// Show blockchain ID if requested
+	if showID {
+		blockchainID, err := deriveBlockchainID(genesisBytes)
+		if err != nil {
+			return fmt.Errorf("failed to derive blockchain ID: %w", err)
+		}
+		fmt.Printf("📌 Blockchain ID: %s\n", blockchainID.String())
+		fmt.Printf("📌 Chain ID: %v\n", genesis.Config["chainId"])
+	}
+	
+	// Write to config if requested
+	if writeConfig {
+		genesisDir := filepath.Join(os.Getenv("HOME"), ".luxd", "configs", "C")
+		if err := os.MkdirAll(genesisDir, 0755); err != nil {
+			return fmt.Errorf("failed to create genesis directory: %w", err)
+		}
+		
+		genesisPath := filepath.Join(genesisDir, "genesis.json")
+		if err := ioutil.WriteFile(genesisPath, formattedGenesis, 0644); err != nil {
+			return fmt.Errorf("failed to write genesis: %w", err)
+		}
+		
+		fmt.Printf("✅ Wrote genesis to: %s\n", genesisPath)
+	}
+	
+	// Write to output file or stdout
+	if outputPath != "" {
+		if err := ioutil.WriteFile(outputPath, formattedGenesis, 0644); err != nil {
+			return fmt.Errorf("failed to write output file: %w", err)
+		}
+		fmt.Printf("✅ Wrote genesis to: %s\n", outputPath)
+	} else if !writeConfig {
+		// Print to stdout if no output file specified
+		fmt.Println("\n📄 Genesis Configuration:")
+		fmt.Println(string(formattedGenesis))
+	}
+	
+	return nil
+}
+
+// runMigrateRead implements the migrate read command
+func runMigrateRead(cmd *cobra.Command, args []string) error {
+	srcPath := args[0]
+	dstPath, _ := cmd.Flags().GetString("dst")
+	genesisOnly, _ := cmd.Flags().GetBool("genesis-only")
+	writeGenesis, _ := cmd.Flags().GetBool("write-genesis")
+	
+	// Extract genesis from historic data
+	fmt.Printf("📖 Reading genesis from historic chain data at %s\n", srcPath)
+	genesis, genesisBytes, err := extractHistoricGenesis(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to extract genesis: %w", err)
+	}
+	
+	// Derive the blockchain ID from genesis
+	blockchainID, err := deriveBlockchainID(genesisBytes)
+	if err != nil {
+		return fmt.Errorf("failed to derive blockchain ID: %w", err)
+	}
+	
+	fmt.Printf("✅ Derived blockchain ID: %s\n", blockchainID.String())
+	fmt.Printf("   Chain ID: %v\n", genesis.Config["chainId"])
+	
+	// Write genesis if requested
+	if writeGenesis {
+		genesisDir := filepath.Join(os.Getenv("HOME"), ".luxd", "configs", "C")
+		if err := os.MkdirAll(genesisDir, 0755); err != nil {
+			return fmt.Errorf("failed to create genesis directory: %w", err)
+		}
+		
+		genesisPath := filepath.Join(genesisDir, "genesis.json")
+		formattedGenesis, err := json.MarshalIndent(genesis, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to format genesis: %w", err)
+		}
+		
+		if err := ioutil.WriteFile(genesisPath, formattedGenesis, 0644); err != nil {
+			return fmt.Errorf("failed to write genesis: %w", err)
+		}
+		
+		fmt.Printf("📝 Wrote genesis to %s\n", genesisPath)
+	}
+	
+	if genesisOnly {
+		fmt.Println("✅ Genesis extraction complete")
+		return nil
+	}
+	
+	if dstPath == "" {
+		// Default destination path
+		dstPath = filepath.Join(os.Getenv("HOME"), ".luxd", "chainData", blockchainID.String())
+	}
+	
+	// Migrate the data
+	fmt.Printf("🔄 Migrating chain data to %s\n", dstPath)
+	if err := migrateChainData(srcPath, dstPath, blockchainID); err != nil {
+		return fmt.Errorf("failed to migrate data: %w", err)
+	}
+	
+	fmt.Println("✅ Migration complete!")
+	fmt.Printf("   Blockchain ID: %s\n", blockchainID.String())
+	fmt.Printf("   Genesis: ~/.luxd/configs/C/genesis.json\n")
+	fmt.Printf("   Chain data: %s\n", dstPath)
+	
+	return nil
+}
+
+// deriveBlockchainID derives the blockchain ID from genesis bytes
+func deriveBlockchainID(genesisBytes []byte) (ids.ID, error) {
+	// Create a hash of the genesis bytes
+	hash := sha256.Sum256(genesisBytes)
+	
+	// Create an ID from the hash
+	id, err := ids.ToID(hash[:])
+	if err != nil {
+		return ids.Empty, err
+	}
+	
+	return id, nil
+}
+
+// extractHistoricGenesis extracts the genesis configuration from historic chain data
+func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
+	// Look for genesis.json in the chain data directory
+	genesisPath := filepath.Join(srcPath, "genesis.json")
+	if _, err := os.Stat(genesisPath); err == nil {
+		genesisBytes, err := ioutil.ReadFile(genesisPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		
+		var genesis Genesis
+		if err := json.Unmarshal(genesisBytes, &genesis); err != nil {
+			return nil, nil, fmt.Errorf("failed to parse genesis: %w", err)
+		}
+		
+		return &genesis, genesisBytes, nil
+	}
+	
+	// If not found, try to read from the database
+	// First check if it's a direct pebbledb path
+	dbPath := filepath.Join(srcPath, "db", "pebbledb")
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		// Maybe srcPath is already pointing to the db directory
+		altPath := filepath.Join(srcPath, "pebbledb")
+		if _, err := os.Stat(altPath); err == nil {
+			dbPath = altPath
+		}
+	}
+	
+	// Check if CURRENT file exists (required for pebbledb)
+	currentFile := filepath.Join(dbPath, "CURRENT")
+	if _, err := os.Stat(currentFile); os.IsNotExist(err) {
+		// This might be a restored database without metadata
+		// Create minimal genesis for now
+		log.Printf("Warning: Database metadata not found, creating minimal genesis")
+		return createMinimalGenesis()
+	}
+	
+	db, err := pebble.Open(dbPath, &pebble.Options{
+		ReadOnly: true,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open database at %s: %w", dbPath, err)
+	}
+	defer db.Close()
+	
+	// Try to read genesis from database
+	// First try to get the genesis key directly (no prefix)
+	genesisValue, closer, err := db.Get([]byte("genesis"))
+	if err == nil {
+		defer closer.Close()
+		value := make([]byte, len(genesisValue))
+		copy(value, genesisValue)
+		
+		log.Printf("Found genesis blob in database (raw key)")
+		// This is likely the compressed genesis blob, try to decode it
+		// For now, return it as-is since we need the exact bytes
+		genesis := &Genesis{
+			Config: map[string]interface{}{
+				"chainId": 96369,
+			},
+		}
+		return genesis, value, nil
+	}
+	
+	// Also check for pointer keys
+	heightValue, closer2, err := db.Get([]byte("Height"))
+	if err == nil {
+		defer closer2.Close()
+		height := make([]byte, len(heightValue))
+		copy(height, heightValue)
+		log.Printf("Found Height pointer: %x", height)
+	}
+	
+	lastAcceptedValue, closer3, err := db.Get([]byte("LastAccepted"))
+	if err == nil {
+		defer closer3.Close()
+		lastAccepted := make([]byte, len(lastAcceptedValue))
+		copy(lastAccepted, lastAcceptedValue)
+		log.Printf("Found LastAccepted pointer: %x", lastAccepted)
+	}
+	
+	// Try iterating for other genesis-related keys
+	iter, err := db.NewIter(&pebble.IterOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create iterator: %w", err)
+	}
+	defer iter.Close()
+	
+	for iter.First(); iter.Valid(); iter.Next() {
+		key := iter.Key()
+		// Look for genesis-related keys
+		if bytes.Equal(key, []byte("genesis")) || bytes.Contains(key, []byte("genesis")) {
+			value := make([]byte, len(iter.Value()))
+			copy(value, iter.Value())
+			
+			log.Printf("Found genesis-related key: %x = %d bytes", key, len(value))
+			// Return the raw genesis bytes
+			genesis := &Genesis{
+				Config: map[string]interface{}{
+					"chainId": 96369,
+				},
+			}
+			return genesis, value, nil
+		}
+	}
+	
+	// If we still can't find genesis, create a minimal one
+	return createMinimalGenesis()
+}
+
+// createMinimalGenesis creates a minimal genesis configuration
+func createMinimalGenesis() (*Genesis, []byte, error) {
+	log.Printf("Creating minimal genesis configuration")
+	
+	genesis := &Genesis{
+		Config: map[string]interface{}{
+			"chainId":        96369,
+			"homesteadBlock": 0,
+			"eip150Block":    0,
+			"eip155Block":    0,
+			"eip158Block":    0,
+		},
+		Difficulty: "0x0",
+		GasLimit:   "0x7a1200",
+		Alloc:      make(map[string]interface{}),
+		Nonce:      "0x0",
+		Timestamp:  "0x0",
+		ExtraData:  "0x00",
+		MixHash:    "0x0000000000000000000000000000000000000000000000000000000000000000",
+		Coinbase:   "0x0000000000000000000000000000000000000000",
+		Number:     "0x0",
+		GasUsed:    "0x0",
+		ParentHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+	}
+	
+	genesisBytes, err := json.Marshal(genesis)
+	if err != nil {
+		return nil, nil, err
+	}
+	
+	return genesis, genesisBytes, nil
+}
+
+// migrateChainData migrates chain data from old blockchain ID to new
+func migrateChainData(srcPath, dstPath string, newBlockchainID ids.ID) error {
+	// Determine old blockchain ID from path
+	var oldBlockchainID ids.ID
+	base := filepath.Base(srcPath)
+	if base != "." && base != "/" {
+		var err error
+		oldBlockchainID, err = ids.FromString(base)
+		if err != nil {
+			log.Printf("Could not parse blockchain ID from path, will migrate without ID translation")
+		}
+	}
+	
+	// Open source database
+	srcDB, err := pebble.Open(filepath.Join(srcPath, "db", "pebbledb"), &pebble.Options{
+		ReadOnly: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to open source database: %w", err)
+	}
+	defer srcDB.Close()
+	
+	// Create destination directory
+	dstDir := filepath.Join(dstPath, "db")
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+	
+	// Open destination database
+	dstDB, err := pebble.Open(filepath.Join(dstDir, "pebbledb"), &pebble.Options{})
+	if err != nil {
+		return fmt.Errorf("failed to open destination database: %w", err)
+	}
+	defer dstDB.Close()
+	
+	// Migrate data
+	if oldBlockchainID != ids.Empty {
+		log.Printf("Translating blockchain ID from %s to %s", oldBlockchainID.String(), newBlockchainID.String())
+	}
+	
+	iter, err := srcDB.NewIter(&pebble.IterOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create iterator: %w", err)
+	}
+	defer iter.Close()
+	
+	count := 0
+	start := time.Now()
+	oldIDBytes := oldBlockchainID[:]
+	newIDBytes := newBlockchainID[:]
+	
+	for iter.First(); iter.Valid(); iter.Next() {
+		key := make([]byte, len(iter.Key()))
+		copy(key, iter.Key())
+		
+		value := make([]byte, len(iter.Value()))
+		copy(value, iter.Value())
+		
+		// Translate blockchain ID in keys if needed
+		if oldBlockchainID != ids.Empty && len(key) >= 32 && bytes.HasPrefix(key, oldIDBytes) {
+			newKey := make([]byte, len(key))
+			copy(newKey, newIDBytes)
+			copy(newKey[32:], key[32:])
+			key = newKey
+			
+			// Also replace blockchain ID in values if present
+			if bytes.Contains(value, oldIDBytes) {
+				value = bytes.ReplaceAll(value, oldIDBytes, newIDBytes)
+			}
+		}
+		
+		if err := dstDB.Set(key, value, pebble.Sync); err != nil {
+			return fmt.Errorf("failed to write key: %w", err)
+		}
+		
+		count++
+		if count%100000 == 0 {
+			log.Printf("Migrated %d keys...", count)
+		}
+	}
+	
+	if err := iter.Error(); err != nil {
+		return fmt.Errorf("iterator error: %w", err)
+	}
+	
+	log.Printf("Migration complete! Migrated %d keys in %v", count, time.Since(start))
+	return nil
+}
+
+// showPointerKeys displays the pointer keys from a database
+func showPointerKeys(srcPath string) error {
+	// Find the database path
+	dbPath := filepath.Join(srcPath, "db", "pebbledb")
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		altPath := filepath.Join(srcPath, "pebbledb")
+		if _, err := os.Stat(altPath); err == nil {
+			dbPath = altPath
+		}
+	}
+	
+	// Check if CURRENT file exists
+	currentFile := filepath.Join(dbPath, "CURRENT")
+	if _, err := os.Stat(currentFile); os.IsNotExist(err) {
+		return fmt.Errorf("database metadata not found")
+	}
+	
+	db, err := pebble.Open(dbPath, &pebble.Options{
+		ReadOnly: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+	
+	fmt.Println("\n🔍 Pointer Keys:")
+	
+	// Check each pointer key
+	pointerKeys := []string{"Height", "LastAccepted", "LastBlock", "LastHeader"}
+	for _, key := range pointerKeys {
+		value, closer, err := db.Get([]byte(key))
+		if err != nil {
+			fmt.Printf("   %-15s: <not found>\n", key)
+			continue
+		}
+		defer closer.Close()
+		
+		// Copy the value
+		val := make([]byte, len(value))
+		copy(val, value)
+		
+		// Format based on key type
+		if key == "Height" {
+			// Height is uint64 big-endian
+			if len(val) == 8 {
+				height := uint64(0)
+				for i := 0; i < 8; i++ {
+					height = (height << 8) | uint64(val[i])
+				}
+				fmt.Printf("   %-15s: %d (0x%x)\n", key, height, val)
+			} else {
+				fmt.Printf("   %-15s: 0x%x\n", key, val)
+			}
+		} else {
+			// Others are hashes
+			fmt.Printf("   %-15s: 0x%x\n", key, val)
+		}
+	}
+	
+	return nil
 }

@@ -1,0 +1,89 @@
+name: Lint + Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.24
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.49
+          working-directory: .
+          args: --timeout 3m
+      - name: Install license check
+        run: go install github.com/google/addlicense@v1.0.0
+      - name: Check license
+        run: addlicense -f ./LICENSE.header -check -v ./**/*.go ./**/**/*.go ./**/**/**/*.go ./**/**/**/**/*.go
+  test:
+    name: Golang Unit Tests v${{ matrix.go }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: ["1.24"]
+        os: [ubuntu-20.04, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - run: go mod download
+      - run: scripts/build.sh
+      - run: go test -v -coverprofile=coverage.out $(go list ./... | grep -v /tests/)
+        env:
+              CGO_CFLAGS: "-O -D__BLST_PORTABLE__" # Set the CGO flags to use the portable version of BLST
+      - run: go tool cover -func=coverage.out
+  e2e_test:
+    name: e2e tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: ["1.24"]
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install dependencies
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: error
+          command: cd ./tests/e2e/hardhat && pnpm install
+      - name: Run e2e tests
+        shell: bash
+        run: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/run.e2e.sh
+      - name: 'Upload Artifact'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-logs-${{ matrix.os }}
+          path: |
+            ~/.lux-genesis/
+            !~/.lux-genesis/bin/
+            !~/.lux-genesis/snapshots
+          retention-days: 5

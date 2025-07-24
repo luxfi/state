@@ -11,7 +11,7 @@ func NewGenesisCommand() *cobra.Command {
 		Use:   "genesis",
 		Short: "Generate genesis (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology genesis")
+			fmt.Println("stub: archaeology genesis")
 			return nil
 		},
 	}

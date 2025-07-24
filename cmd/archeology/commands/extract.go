@@ -11,7 +11,7 @@ func NewExtractCommand() *cobra.Command {
 		Use:   "extract",
 		Short: "Extract chain data (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology extract")
+			fmt.Println("stub: archaeology extract")
 			return nil
 		},
 	}

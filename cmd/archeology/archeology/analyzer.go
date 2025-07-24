@@ -1,4 +1,4 @@
-package archeology
+package archaeology
 
 import (
 	"encoding/hex"

@@ -11,7 +11,7 @@ func NewScanCommand() *cobra.Command {
 		Use:   "scan",
 		Short: "Scan external assets (stub)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("stub: archeology scan")
+			fmt.Println("stub: archaeology scan")
 			return nil
 		},
 	}
