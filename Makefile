@@ -40,7 +40,15 @@ help:
 	@echo "  make genesis-spc                    # Build SPC genesis (bootstrap)"
 	@echo "  make genesis-all                    # Build all genesis files"
 	@echo ""
-	@echo "DEPLOYMENT:"
+	@echo "LAUNCH COMMANDS (Full Network):"
+	@echo "  make launch                         # Launch full network (primary + L2s)"
+	@echo "  make launch-full                    # Same as 'make launch'"
+	@echo "  make launch-primary                 # Launch only LUX primary network"
+	@echo "  make launch-test                    # Launch test configuration"
+	@echo "  make kill-node                      # Stop all running nodes"
+	@echo "  make network-info                   # Show network information"
+	@echo ""
+	@echo "DEPLOYMENT (Individual):"
 	@echo "  make deploy-lux                     # Deploy LUX network"
 	@echo "  make deploy-l2 L2=zoo               # Deploy L2 (zoo/spc/hanzo)"
 	@echo "  make deploy-all                     # Deploy all networks"
@@ -105,6 +113,14 @@ build-tools:
 	@echo "🔨 Building tools..."
 	@cd .. && make build-teleport build-archeology
 	@echo "✅ Tools built"
+
+# Build unified genesis tool
+build: build-genesis
+
+build-genesis:
+	@echo "🔨 Building unified genesis tool..."
+	@go build -o bin/genesis ./cmd/genesis
+	@echo "✅ Genesis tool built"
 
 # ============ EXTRACTION COMMANDS ============
 
@@ -298,6 +314,202 @@ genesis-spc: $(GENESIS_DIR)
 genesis-all: genesis-lux genesis-zoo genesis-spc
 	@echo "✅ All genesis files built"
 
+# ============ LAUNCH COMMANDS ============
+
+# Primary network configuration
+NODE_DIR ?= /home/z/work/lux/node
+CLI_DIR ?= /home/z/work/lux/cli
+DATA_DIR ?= /home/z/.luxd
+IMPORT_DIR ?= $(OUTPUT_DIR)/import-ready
+LUX_POA_CHAIN_ID := 96369
+LUX_PRIMARY_CHAIN_ID := 1
+
+# Kill any existing processes
+kill-node:
+	@echo "🛑 Stopping existing nodes..."
+	@pkill -f luxd || true
+	@pkill -f avalanche || true
+	@sleep 2
+
+# Prepare import-ready data
+prepare-import: $(IMPORT_DIR)
+	@echo "🔧 Preparing genesis data for import..."
+	@mkdir -p $(IMPORT_DIR)/{lux,zoo,spc,hanzo}/{C,L2}
+	
+	# LUX mainnet - prepare C-Chain data
+	@if [ -d "$(DATA_DIR)/lux-mainnet-$(LUX_POA_CHAIN_ID)/db/pebbledb" ]; then \
+		echo "  ✅ Found LUX mainnet chaindata"; \
+		cp -r $(DATA_DIR)/lux-mainnet-$(LUX_POA_CHAIN_ID)/db/pebbledb $(IMPORT_DIR)/lux/C/chaindata; \
+		if [ -f "$(DATA_DIR)/configs/lux-mainnet-$(LUX_POA_CHAIN_ID)/genesis.json" ]; then \
+			cp $(DATA_DIR)/configs/lux-mainnet-$(LUX_POA_CHAIN_ID)/genesis.json $(IMPORT_DIR)/lux/C/genesis.json; \
+		fi; \
+	elif [ -d "chaindata/lux-mainnet-$(LUX_POA_CHAIN_ID)/db/pebbledb" ]; then \
+		echo "  ✅ Found LUX mainnet chaindata in local directory"; \
+		cp -r chaindata/lux-mainnet-$(LUX_POA_CHAIN_ID)/db/pebbledb $(IMPORT_DIR)/lux/C/chaindata; \
+		if [ -f "chaindata/configs/lux-mainnet-$(LUX_POA_CHAIN_ID)/genesis.json" ]; then \
+			cp chaindata/configs/lux-mainnet-$(LUX_POA_CHAIN_ID)/genesis.json $(IMPORT_DIR)/lux/C/genesis.json; \
+		fi; \
+	fi
+	
+	# ZOO L2 - prepare with BSC migration
+	@if [ -d "$(DATA_DIR)/zoo-mainnet-$(ZOO_MAINNET)/db/pebbledb" ]; then \
+		echo "  ✅ Found ZOO mainnet chaindata"; \
+		cp -r $(DATA_DIR)/zoo-mainnet-$(ZOO_MAINNET)/db/pebbledb $(IMPORT_DIR)/zoo/L2/chaindata; \
+		if [ -f "$(DATA_DIR)/configs/zoo-mainnet-$(ZOO_MAINNET)/genesis.json" ]; then \
+			cp $(DATA_DIR)/configs/zoo-mainnet-$(ZOO_MAINNET)/genesis.json $(IMPORT_DIR)/zoo/L2/genesis.json; \
+		fi; \
+	elif [ -d "chaindata/zoo-mainnet-$(ZOO_MAINNET)/db/pebbledb" ]; then \
+		echo "  ✅ Found ZOO mainnet chaindata in local directory"; \
+		cp -r chaindata/zoo-mainnet-$(ZOO_MAINNET)/db/pebbledb $(IMPORT_DIR)/zoo/L2/chaindata; \
+		if [ -f "chaindata/configs/zoo-mainnet-$(ZOO_MAINNET)/genesis.json" ]; then \
+			cp chaindata/configs/zoo-mainnet-$(ZOO_MAINNET)/genesis.json $(IMPORT_DIR)/zoo/L2/genesis.json; \
+		fi; \
+	fi
+	
+	# SPC L2 - prepare chaindata
+	@if [ -d "$(DATA_DIR)/spc-mainnet-$(SPC_MAINNET)/db/pebbledb" ]; then \
+		echo "  ✅ Found SPC mainnet chaindata"; \
+		cp -r $(DATA_DIR)/spc-mainnet-$(SPC_MAINNET)/db/pebbledb $(IMPORT_DIR)/spc/L2/chaindata; \
+		if [ -f "$(DATA_DIR)/configs/spc-mainnet-$(SPC_MAINNET)/genesis.json" ]; then \
+			cp $(DATA_DIR)/configs/spc-mainnet-$(SPC_MAINNET)/genesis.json $(IMPORT_DIR)/spc/L2/genesis.json; \
+		fi; \
+	elif [ -d "chaindata/spc-mainnet-$(SPC_MAINNET)/db/pebbledb" ]; then \
+		echo "  ✅ Found SPC mainnet chaindata in local directory"; \
+		cp -r chaindata/spc-mainnet-$(SPC_MAINNET)/db/pebbledb $(IMPORT_DIR)/spc/L2/chaindata; \
+		if [ -f "chaindata/configs/spc-mainnet-$(SPC_MAINNET)/genesis.json" ]; then \
+			cp chaindata/configs/spc-mainnet-$(SPC_MAINNET)/genesis.json $(IMPORT_DIR)/spc/L2/genesis.json; \
+		fi; \
+	fi
+	
+	# Hanzo L2 - fresh genesis only
+	@echo "  📄 Creating fresh Hanzo genesis..."
+	@echo '{"chainId": $(HANZO_MAINNET), "homesteadBlock": 0, "eip150Block": 0, "eip155Block": 0, "eip158Block": 0, "byzantiumBlock": 0, "constantinopleBlock": 0, "petersburgBlock": 0, "istanbulBlock": 0, "muirGlacierBlock": 0, "subnetEVMTimestamp": 0}' > $(IMPORT_DIR)/hanzo/L2/genesis.json
+	
+	@echo "✅ Import preparation complete"
+
+# Launch LUX primary network with POA automining
+launch-lux: kill-node
+	@echo "🚀 Launching LUX mainnet (Chain ID: $(LUX_PRIMARY_CHAIN_ID)+$(LUX_POA_CHAIN_ID))..."
+	@cd $(NODE_DIR) && nohup ./build/luxd \
+		--network-id=$(LUX_POA_CHAIN_ID) \
+		--data-dir="$(DATA_DIR)" \
+		--chain-config-content='{"C": {"chainId": $(LUX_PRIMARY_CHAIN_ID), "state-sync-enabled": false, "pruning-enabled": false}}' \
+		--http-host=0.0.0.0 \
+		--http-port=9650 \
+		--staking-enabled=false \
+		--sybil-protection-enabled=false \
+		--bootstrap-ips="" \
+		--bootstrap-ids="" \
+		--public-ip=127.0.0.1 \
+		--snow-sample-size=1 \
+		--snow-quorum-size=1 \
+		--snow-virtuous-commit-threshold=1 \
+		--snow-rogue-commit-threshold=1 \
+		--snow-concurrent-repolls=1 \
+		--index-enabled \
+		--db-dir="$(DATA_DIR)/db" \
+		> $(OUTPUT_DIR)/lux-mainnet.log 2>&1 &
+	@sleep 10
+	@if curl -s -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' -H 'content-type:application/json;' http://localhost:9650/ext/bc/C/rpc > /dev/null; then \
+		echo "✅ LUX mainnet running on chain ID $(LUX_PRIMARY_CHAIN_ID)"; \
+	else \
+		echo "❌ Failed to start LUX mainnet"; \
+		exit 1; \
+	fi
+
+# Create and deploy L2s with existing or fresh data
+create-l2s: 
+	@echo "🚀 Creating L2s..."
+	@cd $(CLI_DIR) && \
+	export AVALANCHE_NETWORK=Local && \
+	export AVALANCHE_CHAIN_ID=$(LUX_POA_CHAIN_ID) && \
+	\
+	echo "Creating ZOO L2 (with existing data)..." && \
+	./bin/lux blockchain create zoo \
+		--evm \
+		--chain-id=$(ZOO_MAINNET) \
+		--token-symbol=ZOO \
+		--genesis-file=$(IMPORT_DIR)/zoo/L2/genesis.json \
+		--force && \
+	\
+	echo "Creating SPC L2 (with existing data)..." && \
+	./bin/lux blockchain create spc \
+		--evm \
+		--chain-id=$(SPC_MAINNET) \
+		--token-symbol=SPC \
+		--genesis-file=$(IMPORT_DIR)/spc/L2/genesis.json \
+		--force && \
+	\
+	echo "Creating Hanzo L2 (fresh deployment)..." && \
+	./bin/lux blockchain create hanzo \
+		--evm \
+		--chain-id=$(HANZO_MAINNET) \
+		--token-symbol=AI \
+		--genesis-file=$(IMPORT_DIR)/hanzo/L2/genesis.json \
+		--force
+
+deploy-l2s:
+	@echo "🚀 Deploying L2s to local network..."
+	@cd $(CLI_DIR) && \
+	export AVALANCHE_NETWORK=Local && \
+	\
+	echo "Deploying ZOO L2..." && \
+	./bin/lux blockchain deploy zoo --local --avalanchego-version latest && \
+	\
+	echo "Deploying SPC L2..." && \
+	./bin/lux blockchain deploy spc --local --avalanchego-version latest && \
+	\
+	echo "Deploying Hanzo L2..." && \
+	./bin/lux blockchain deploy hanzo --local --avalanchego-version latest
+
+# Get network information
+network-info:
+	@echo "📊 Network Information"
+	@echo "===================="
+	@cd $(CLI_DIR) && \
+	\
+	echo "LUX Primary Network:" && \
+	echo "  Chain ID: $(LUX_PRIMARY_CHAIN_ID) (presented as)" && \
+	echo "  Network ID: $(LUX_POA_CHAIN_ID) (actual)" && \
+	echo "  RPC: http://localhost:9650/ext/bc/C/rpc" && \
+	echo "" && \
+	\
+	./bin/lux blockchain list && \
+	echo "" && \
+	\
+	if ./bin/lux blockchain describe zoo 2>/dev/null | grep -q "Blockchain ID"; then \
+		echo "ZOO L2:" && \
+		./bin/lux blockchain describe zoo | grep -E "(Chain ID|Blockchain ID|RPC URL)" && \
+		echo ""; \
+	fi && \
+	\
+	if ./bin/lux blockchain describe spc 2>/dev/null | grep -q "Blockchain ID"; then \
+		echo "SPC L2:" && \
+		./bin/lux blockchain describe spc | grep -E "(Chain ID|Blockchain ID|RPC URL)" && \
+		echo ""; \
+	fi && \
+	\
+	if ./bin/lux blockchain describe hanzo 2>/dev/null | grep -q "Blockchain ID"; then \
+		echo "Hanzo L2:" && \
+		./bin/lux blockchain describe hanzo | grep -E "(Chain ID|Blockchain ID|RPC URL)" && \
+		echo ""; \
+	fi
+
+# Main launch targets
+launch: launch-full
+	@echo "✅ Full network launched!"
+
+launch-full: prepare-import launch-lux create-l2s deploy-l2s network-info
+	@echo "✅ Full Lux network with L2s launched successfully!"
+
+launch-primary: launch-lux
+	@echo "✅ LUX primary network launched!"
+
+launch-test: kill-node
+	@echo "🧪 Launching test configuration..."
+	@$(MAKE) launch-lux
+	@echo "✅ Test network ready!"
+
 # ============ DEPLOYMENT ============
 
 # Dynamic deployment based on NETWORK env var
@@ -330,19 +542,18 @@ deploy-spc: genesis-spc
 		--evm
 	@echo "✅ SPC deployment complete"
 
-deploy-l2: genesis-$(L2)
-ifndef L2
-	$(error L2 is not set. Usage: make deploy-l2 L2=zoo)
-endif
-	@echo "🚀 Deploying $(L2) L2..."
-	@lux subnet create $(L2)-mainnet \
-		--genesis $(GENESIS_DIR)/$(L2)-mainnet-genesis.json \
-		--evm
-	@echo "✅ $(L2) deployment complete"
+deploy-hanzo:
+	@echo "🚀 Deploying Hanzo L2 (fresh)..."
+	@lux subnet create hanzo-mainnet \
+		--evm \
+		--chain-id $(HANZO_MAINNET) \
+		--token-symbol AI
+	@echo "✅ Hanzo deployment complete"
 
 deploy-all: deploy-lux
 	@$(MAKE) deploy-l2 L2=zoo
 	@$(MAKE) deploy-l2 L2=spc
+	@$(MAKE) deploy-l2 L2=hanzo
 	@echo "✅ All networks deployed"
 
 # ============ PIPELINES ============
@@ -420,6 +631,16 @@ test:
 	@echo "🧪 Running tests..."
 	@cd .. && go test ./...
 	@echo "✅ All tests passed"
+
+test-genesis: build
+	@echo "🧪 Testing unified genesis tool..."
+	@./bin/genesis --help > /dev/null
+	@./bin/genesis tools > /dev/null
+	@./bin/genesis validators list > /dev/null || true
+	@./bin/genesis extract --help > /dev/null
+	@./bin/genesis analyze --help > /dev/null
+	@./bin/genesis migrate --help > /dev/null
+	@echo "✅ Genesis tool tests passed"
 
 # Aliases for common operations
 zoo: pipeline-zoo
