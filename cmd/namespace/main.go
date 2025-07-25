@@ -91,7 +91,6 @@ func main() {
 	}
 
 	log.Printf("Network %s Selective Migration", *network)
-	log.Printf("Chain hex: %s", chainHex)
 	log.Printf("Include state: %v", *includeState)
 	log.Printf("Processing blockchain data prefixes...")
 

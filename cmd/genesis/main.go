@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 
 	// Import command packages
-	archaeologyCmd "github.com/luxfi/genesis/cmd/archaeology/commands"
+	archaeologyCmd "github.com/luxfi/genesis/cmd/archeology/commands"
 	teleportCmd "github.com/luxfi/genesis/cmd/teleport/commands"
 
 	// Import internal packages
@@ -228,9 +228,9 @@ This command extracts the genesis from a blockchain database and can optionally:
 	}
 	
 	pointersSetCmd := &cobra.Command{
-		Use:   "set [key] [value]",
+		Use:   "set [db-path] [key] [value]",
 		Short: "Set a pointer key",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE:  runPointersSet,
 	}
 	
@@ -414,6 +414,7 @@ func addImportSubcommands(importCmd *cobra.Command) {
 		blockCmd,
 		cchainCmd,
 		allocationsCmd,
+		importSubnetCmd(),  // Import subnet as C-Chain fork
 		archaeologyCmd.NewImportNFTCommand(),
 		archaeologyCmd.NewImportTokenCommand(),
 	)
@@ -470,6 +471,9 @@ This command:
 	// Add teleport migrate commands
 	migrateCmd.AddCommand(
 		readCmd,
+		subnetToCChainCmd(),          // Convert subnet EVM to C-Chain format
+		subnetToL2Cmd(),              // Convert subnet EVM to L2 format  
+		migrateSubnetToCChainCmd(),   // Migrate subnet to C-Chain with prefixes
 		teleportCmd.NewMigrateCommand(),
 		teleportCmd.NewZooMigrateCommand(),
 		teleportCmd.NewZooCrossReferenceCommand(),
@@ -489,39 +493,19 @@ func addProcessSubcommands(processCmd *cobra.Command) {
 	processCmd.AddCommand(historicCmd)
 }
 
-// Command implementations - Generate command
+// Command implementations - Generate command (delegate to generate.go)
 func runGenerate(cmd *cobra.Command, args []string) error {
-	// This is a simplified version - in production, copy the full implementation
-	// from main_generate.go or main_old.go
-
-	fmt.Println("Genesis Generation")
-	fmt.Println("==================")
-	fmt.Printf("Network: %s\n", cfg.Network)
-
-	// Set default output directory if not specified
-	if cfg.OutputDir == "" {
-		cfg.OutputDir = filepath.Join("configs", cfg.Network)
+	// Delegate to the actual generate command
+	generateCommand := generateCmd()
+	generateCommand.SetArgs(args)
+	
+	// Copy flags
+	generateCommand.Flags().Set("network", cfg.Network)
+	if cfg.OutputDir != "" {
+		generateCommand.Flags().Set("output", cfg.OutputDir)
 	}
-	fmt.Printf("Output: %s\n", cfg.OutputDir)
-
-	// Create output directories based on standard structure
-	if cfg.UseStandardDirs {
-		for _, chain := range []string{"P", "C", "X"} {
-			chainDir := filepath.Join(cfg.OutputDir, chain)
-			if err := os.MkdirAll(chainDir, 0755); err != nil {
-				return fmt.Errorf("failed to create %s directory: %w", chain, err)
-			}
-		}
-	} else {
-		if err := os.MkdirAll(cfg.OutputDir, 0755); err != nil {
-			return fmt.Errorf("failed to create output directory: %w", err)
-		}
-	}
-
-	fmt.Println("\n✅ Genesis generation complete!")
-	fmt.Printf("Output directory: %s\n", cfg.OutputDir)
-
-	return nil
+	
+	return generateCommand.Execute()
 }
 
 // Extract state command implementation
@@ -617,7 +601,7 @@ func runExtractGenesis(cmd *cobra.Command, args []string) error {
 func runArcheologyMigrate(cmd *cobra.Command, args []string) error {
 	fmt.Println("Running archaeology migrate...")
 	// Call the archaeology migrate command
-	migrateCmd := exec.Command("./bin/archaeology", "migrate")
+	migrateCmd := exec.Command("./bin/archeology", "migrate")
 	migrateCmd.Stdout = os.Stdout
 	migrateCmd.Stderr = os.Stderr
 	return migrateCmd.Run()

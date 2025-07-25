@@ -270,15 +270,21 @@ func runCount(cmd *cobra.Command, args []string) error {
 
 // runPointersShow implements the pointers show command
 func runPointersShow(cmd *cobra.Command, args []string) error {
-	dbPath := cmd.Parent().Flags().Args()[0]
+	if len(args) < 1 {
+		return fmt.Errorf("database path required")
+	}
+	dbPath := args[0]
 	return showPointerKeys(dbPath)
 }
 
 // runPointersSet implements the pointers set command
 func runPointersSet(cmd *cobra.Command, args []string) error {
-	dbPath := cmd.Parent().Parent().Flags().Args()[0]
-	key := args[0]
-	value := args[1]
+	if len(args) < 3 {
+		return fmt.Errorf("usage: pointers set [db-path] [key] [value]")
+	}
+	dbPath := args[0]
+	key := args[1]
+	value := args[2]
 	
 	// Find database path
 	pebblePath := filepath.Join(dbPath, "db", "pebbledb")

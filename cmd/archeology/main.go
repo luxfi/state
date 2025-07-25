@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/luxfi/genesis/cmd/archaeology/commands"
+	"github.com/luxfi/genesis/cmd/archeology/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +34,7 @@ genesis file generation for Lux Network.`,
 		commands.NewScanCommand(),
 		commands.NewGenesisCommand(),
 		commands.NewListCommand(),
+		commands.NewReadGenesisCommand(), // New command
 		
 		// Import commands
 		commands.NewImportNFTCommand(),
