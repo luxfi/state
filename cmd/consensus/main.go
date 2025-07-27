@@ -32,6 +32,8 @@ func main() {
 		guide        = flag.Bool("guide", false, "Show parameter guidance")
 		safety       = flag.Bool("safety", false, "Perform safety analysis")
 		totalNodes   = flag.Int("total-nodes", 0, "Total nodes for safety analysis")
+		check        = flag.Bool("check", false, "Run comprehensive parameter checker")
+		tune         = flag.Bool("tune", false, "Tune parameters based on network requirements")
 	)
 
 	flag.Parse()
@@ -48,6 +50,15 @@ func main() {
 	// Handle parameter guide
 	if *guide {
 		showParameterGuide()
+		return
+	}
+
+	// Handle parameter tuning mode
+	if *tune {
+		if err := runTuning(); err != nil {
+			fmt.Fprintf(os.Stderr, "Parameter tuning error: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
@@ -170,6 +181,30 @@ func main() {
 		} else {
 			fmt.Println("\n✅ Parameters are production-ready")
 		}
+	}
+
+	// Run comprehensive checker if requested
+	if *check {
+		nodes := *totalNodes
+		if nodes == 0 && *nodeCount > 0 {
+			nodes = *nodeCount
+		}
+		if nodes == 0 {
+			// Estimate from preset
+			switch *preset {
+			case "mainnet":
+				nodes = 21
+			case "testnet":
+				nodes = 11
+			case "local":
+				nodes = 5
+			default:
+				nodes = params.K
+			}
+		}
+		
+		report := consensus.RunChecker(params, nodes, *networkLat)
+		fmt.Println(consensus.FormatCheckerReport(report, nodes))
 	}
 }
 

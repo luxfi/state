@@ -81,8 +81,8 @@ var (
 		AlphaConfidence:       4,  // 80% quorum - can tolerate 1 failure
 		Beta:                  4,  // 4 rounds → minimum latency
 		ConcurrentRepolls:     4,  // Pipeline all 4 rounds
-		OptimalProcessing:     10,
-		MaxOutstandingItems:   369,
+		OptimalProcessing:     32, // High parallelism for 10Gbps
+		MaxOutstandingItems:   1024, // High throughput capacity
 		MaxItemProcessingTime: 3690 * time.Millisecond, // 3.69 seconds timeout
 	}
 

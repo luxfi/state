@@ -20,6 +20,50 @@ go build -o bin/consensus ./cmd/consensus
 
 ## Usage
 
+### Comprehensive Parameter Checker
+
+```bash
+# Run full analysis with mainnet preset
+./bin/consensus -preset mainnet -check
+
+# Analyze testnet with custom network latency
+./bin/consensus -preset testnet -check -network-latency 100
+
+# Check local network optimized for 10Gbps
+./bin/consensus -preset local -check -network-latency 10
+```
+
+The checker provides:
+- Finality timing analysis with mathematical breakdown
+- Security analysis with failure probabilities for different adversarial stakes
+- Liveness analysis showing crash tolerance
+- Throughput analysis with bottleneck identification
+- Detailed explanation of how consensus works with your settings
+
+### Parameter Tuning Mode
+
+```bash
+# Interactive parameter tuning
+./bin/consensus -tune
+```
+
+This mode allows you to:
+- Start with mainnet/testnet/local presets or custom parameters
+- Tune based on target finality time (seconds)
+- Adjust for specific validator counts
+- Set Byzantine fault tolerance percentages
+- Tune minimum safety cutoff
+- Directly modify any parameter (K, Alpha, Beta)
+- Optimize for throughput requirements
+- View real-time analysis of changes
+
+Example tuning session:
+1. Choose preset (mainnet/testnet/local/custom)
+2. Select what to tune (finality, validators, Byzantine tolerance, etc.)
+3. Provide target values
+4. Tool calculates optimal parameters
+5. Review analysis and save configuration
+
 ### Interactive Mode (Recommended for First-Time Users)
 
 ```bash
@@ -203,6 +247,8 @@ Suggestion: Set ConcurrentRepolls=10 (same as Beta)
 - `-guide` - Show parameter guidance
 - `-safety` - Perform safety analysis
 - `-total-nodes` - Total nodes for safety analysis
+- `-check` - Run comprehensive parameter checker
+- `-tune` - Interactively tune parameters based on requirements
 
 ### Parameter Guidelines
 
@@ -304,3 +350,36 @@ Finality ≈ (Beta × NetworkLatency) / ConcurrentRepolls
 With Beta=8, 50ms latency, ConcurrentRepolls=8:
 - Finality ≈ (8 × 50ms) / 8 = 50ms (theoretical minimum)
 - In practice, add processing overhead: ~100-200ms
+
+## Checker Output Example
+
+```
+╔════════════════════════════════════════════════════════════╗
+║           LUX CONSENSUS PARAMETER ANALYSIS REPORT          ║
+╚════════════════════════════════════════════════════════════╝
+
+📊 PARAMETER CONFIGURATION
+─────────────────────────
+• Sample Size (K): 21 nodes
+• Preference Quorum: 13/21 (61.9%)
+• Confidence Quorum: 18/21 (85.7%)
+• Finalization Rounds (Beta): 8
+• Pipeline Depth: 8
+
+⏱️  FINALITY TIMING ANALYSIS
+────────────────────────────
+• Expected Finality: 60ms
+• Theoretical Minimum: 60ms
+• Worst Case: 960ms
+• Pipeline Efficiency: 100%
+
+🔒 SECURITY ANALYSIS (Failure Probabilities)
+────────────────────────────────────────────
+Adversary | Per-Round | Per-Block | Expected Time to Failure
+----------|-----------|-----------|-------------------------
+   20%   | 1.86e-10 | 1.42e-78 | Never
+   33%   | 9.32e-07 | 5.69e-49 | Never
+   50%   | 7.45e-04 | 9.47e-26 | Never
+
+🎯 Safety Cutoff (ε ≤ 10⁻⁹): 69.3% adversarial stake
+```
