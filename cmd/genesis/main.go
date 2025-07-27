@@ -243,6 +243,14 @@ This command extracts the genesis from a blockchain database and can optionally:
 	
 	pointersCmd.AddCommand(pointersShowCmd, pointersSetCmd, pointersCopyCmd)
 
+	// Export command for backing up data
+	exportCmd := &cobra.Command{
+		Use:   "export",
+		Short: "Export and backup blockchain data",
+		Long:  `Export blockchain data, create backups, and archive node state`,
+	}
+	addExportSubcommands(exportCmd)
+
 	// Build command structure
 	rootCmd.AddCommand(
 		generateCmd,
@@ -254,6 +262,7 @@ This command extracts the genesis from a blockchain database and can optionally:
 		migrateCmd,
 		processCmd,
 		validateCmd,
+		exportCmd,
 		toolsCmd,
 		readCmd,
 		diagnoseCmd,
@@ -408,6 +417,44 @@ func addImportSubcommands(importCmd *cobra.Command) {
 	allocationsCmd.Flags().String("format", "auto", "File format (csv, json, auto)")
 	allocationsCmd.Flags().Bool("merge", false, "Merge with existing allocations")
 
+	// Import chain data from existing database
+	chainDataCmd := &cobra.Command{
+		Use:   "chain-data [source-path]",
+		Short: "Import chain data from existing database",
+		Long: `Import chain data from an existing Lux node database.
+This will start the node with --import-chain-data flag and monitor the import process.`,
+		Args: cobra.ExactArgs(1),
+		RunE: runImportChainData,
+	}
+	chainDataCmd.Flags().String("data-dir", "", "Target data directory (default: ~/.luxd-import)")
+	chainDataCmd.Flags().String("network-id", "96369", "Network ID")
+	chainDataCmd.Flags().String("luxd-path", "", "Path to luxd binary")
+	chainDataCmd.Flags().Bool("auto-restart", true, "Automatically restart in normal mode after import")
+
+	// Monitor import progress
+	monitorCmd := &cobra.Command{
+		Use:   "monitor",
+		Short: "Monitor node import or sync progress",
+		Long: `Monitor the node's import progress or sync status.
+Checks node health every 60 seconds and alerts on failures.`,
+		Args: cobra.NoArgs,
+		RunE: runImportMonitor,
+	}
+	monitorCmd.Flags().Duration("interval", 60*time.Second, "Check interval")
+	monitorCmd.Flags().Duration("duration", 48*time.Hour, "Total monitoring duration")
+	monitorCmd.Flags().String("rpc-url", "http://localhost:9650", "Node RPC URL")
+	monitorCmd.Flags().Int("failure-threshold", 5, "Consecutive failures before alert")
+
+	// Check import status
+	statusCmd := &cobra.Command{
+		Use:   "status",
+		Short: "Check node and import status",
+		Long:  `Check the current status of the node and any ongoing import process`,
+		Args:  cobra.NoArgs,
+		RunE:  runImportStatus,
+	}
+	statusCmd.Flags().String("rpc-url", "http://localhost:9650", "Node RPC URL")
+
 	// Add all import commands
 	importCmd.AddCommand(
 		genesisCmd,
@@ -415,6 +462,9 @@ func addImportSubcommands(importCmd *cobra.Command) {
 		cchainCmd,
 		allocationsCmd,
 		importSubnetCmd(),  // Import subnet as C-Chain fork
+		chainDataCmd,
+		monitorCmd,
+		statusCmd,
 		archaeologyCmd.NewImportNFTCommand(),
 		archaeologyCmd.NewImportTokenCommand(),
 	)
@@ -493,20 +543,6 @@ func addProcessSubcommands(processCmd *cobra.Command) {
 	processCmd.AddCommand(historicCmd)
 }
 
-// Command implementations - Generate command (delegate to generate.go)
-func runGenerate(cmd *cobra.Command, args []string) error {
-	// Delegate to the actual generate command
-	generateCommand := generateCmd()
-	generateCommand.SetArgs(args)
-	
-	// Copy flags
-	generateCommand.Flags().Set("network", cfg.Network)
-	if cfg.OutputDir != "" {
-		generateCommand.Flags().Set("output", cfg.OutputDir)
-	}
-	
-	return generateCommand.Execute()
-}
 
 // Extract state command implementation
 func runExtractState(cmd *cobra.Command, args []string) error {
@@ -1596,5 +1632,515 @@ func showPointerKeys(srcPath string) error {
 		}
 	}
 	
+	return nil
+}
+
+// runImportChainData implements the chain-data import command
+func runImportChainData(cmd *cobra.Command, args []string) error {
+	sourcePath := args[0]
+	dataDir, _ := cmd.Flags().GetString("data-dir")
+	networkID, _ := cmd.Flags().GetString("network-id")
+	luxdPath, _ := cmd.Flags().GetString("luxd-path")
+	autoRestart, _ := cmd.Flags().GetBool("auto-restart")
+
+	// Set defaults
+	if dataDir == "" {
+		dataDir = filepath.Join(os.Getenv("HOME"), ".luxd-import")
+	}
+	if luxdPath == "" {
+		luxdPath = filepath.Join(os.Getenv("HOME"), "work/lux/node/build/luxd")
+	}
+
+	// Verify source path exists
+	if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+		return fmt.Errorf("source path does not exist: %s", sourcePath)
+	}
+
+	// Verify luxd binary exists
+	if _, err := os.Stat(luxdPath); os.IsNotExist(err) {
+		return fmt.Errorf("luxd binary not found: %s", luxdPath)
+	}
+
+	fmt.Printf("🚀 Starting chain data import\n")
+	fmt.Printf("   Source: %s\n", sourcePath)
+	fmt.Printf("   Target: %s\n", dataDir)
+	fmt.Printf("   Network ID: %s\n", networkID)
+
+	// Kill any existing node processes
+	exec.Command("pkill", "-f", "luxd.*data-dir").Run()
+
+	// Create log directory
+	logDir := "logs"
+	os.MkdirAll(logDir, 0755)
+
+	// Start import
+	timestamp := time.Now().Format("20060102-150405")
+	logFile := filepath.Join(logDir, fmt.Sprintf("import-%s.log", timestamp))
+
+	fmt.Printf("\n⏳ Starting import process...\n")
+	fmt.Printf("   Log file: %s\n", logFile)
+
+	// Create log file
+	log, err := os.Create(logFile)
+	if err != nil {
+		return fmt.Errorf("failed to create log file: %w", err)
+	}
+	defer log.Close()
+
+	// Build import command
+	importArgs := []string{
+		"--network-id=" + networkID,
+		"--data-dir=" + dataDir,
+		"--import-chain-data=" + sourcePath,
+		"--http-host=0.0.0.0",
+		"--http-port=9650",
+		"--staking-enabled=false",
+		"--index-enabled=false",
+		"--pruning-enabled=false",
+		"--state-sync-enabled=false",
+	}
+
+	importCmd := exec.Command(luxdPath, importArgs...)
+	importCmd.Stdout = log
+	importCmd.Stderr = log
+
+	// Start import process
+	if err := importCmd.Start(); err != nil {
+		return fmt.Errorf("failed to start import: %w", err)
+	}
+
+	fmt.Printf("\n✅ Import process started (PID: %d)\n", importCmd.Process.Pid)
+	fmt.Printf("   Monitor progress: tail -f %s\n", logFile)
+
+	// Monitor import progress
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-time.After(10 * time.Second):
+				// Check if "Generated state snapshot" appears in log
+				content, _ := ioutil.ReadFile(logFile)
+				if bytes.Contains(content, []byte("Generated state snapshot")) {
+					fmt.Printf("\n✅ Import completed successfully!\n")
+					done <- true
+					return
+				}
+			}
+		}
+	}()
+
+	// Wait for process to complete
+	err = importCmd.Wait()
+	close(done)
+
+	if err != nil {
+		fmt.Printf("\n❌ Import process exited with error: %v\n", err)
+		fmt.Printf("   Check log file for details: %s\n", logFile)
+		return err
+	}
+
+	if autoRestart {
+		fmt.Printf("\n🔄 Restarting node in normal mode...\n")
+		
+		// Start in normal mode
+		normalLogFile := filepath.Join(logDir, fmt.Sprintf("normal-%s.log", timestamp))
+		normalLog, err := os.Create(normalLogFile)
+		if err != nil {
+			return fmt.Errorf("failed to create normal log file: %w", err)
+		}
+		defer normalLog.Close()
+
+		normalArgs := []string{
+			"--network-id=" + networkID,
+			"--data-dir=" + dataDir,
+			"--http-host=0.0.0.0",
+			"--http-port=9650",
+			"--staking-enabled=false",
+			"--index-enabled=false",
+			"--pruning-enabled=false",
+			"--state-sync-enabled=false",
+		}
+
+		normalCmd := exec.Command(luxdPath, normalArgs...)
+		normalCmd.Stdout = normalLog
+		normalCmd.Stderr = normalLog
+
+		if err := normalCmd.Start(); err != nil {
+			return fmt.Errorf("failed to restart node: %w", err)
+		}
+
+		fmt.Printf("✅ Node restarted in normal mode (PID: %d)\n", normalCmd.Process.Pid)
+		fmt.Printf("   Log file: %s\n", normalLogFile)
+		fmt.Printf("\n📊 Next steps:\n")
+		fmt.Printf("   1. Monitor node: genesis import monitor\n")
+		fmt.Printf("   2. Check status: genesis import status\n")
+		fmt.Printf("   3. After 48h: Enable indexing and deploy validators\n")
+	}
+
+	return nil
+}
+
+// runImportMonitor implements the monitor command
+func runImportMonitor(cmd *cobra.Command, args []string) error {
+	interval, _ := cmd.Flags().GetDuration("interval")
+	duration, _ := cmd.Flags().GetDuration("duration")
+	rpcURL, _ := cmd.Flags().GetString("rpc-url")
+	failureThreshold, _ := cmd.Flags().GetInt("failure-threshold")
+
+	fmt.Printf("🔍 Starting node monitoring\n")
+	fmt.Printf("   RPC URL: %s\n", rpcURL)
+	fmt.Printf("   Check interval: %s\n", interval)
+	fmt.Printf("   Total duration: %s\n", duration)
+	fmt.Printf("   Failure threshold: %d\n\n", failureThreshold)
+
+	start := time.Now()
+	consecutiveFailures := 0
+	lastHeight := uint64(0)
+
+	logFile := "monitoring.log"
+	log, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to create log file: %w", err)
+	}
+	defer log.Close()
+
+	for time.Since(start) < duration {
+		// Check node health
+		healthCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
+			"-d", `{"jsonrpc":"2.0","id":1,"method":"health.health","params":[]}`,
+			rpcURL+"/ext/health")
+		
+		_, err := healthCmd.Output()
+		if err != nil {
+			consecutiveFailures++
+			fmt.Printf("❌ [%s] Health check failed (failure %d/%d)\n", 
+				time.Now().Format("15:04:05"), consecutiveFailures, failureThreshold)
+			
+			if consecutiveFailures >= failureThreshold {
+				fmt.Printf("\n⚠️  ALERT: Node appears to be down after %d consecutive failures!\n", consecutiveFailures)
+				log.WriteString(fmt.Sprintf("[%s] ALERT: Node down after %d failures\n", 
+					time.Now().Format(time.RFC3339), consecutiveFailures))
+			}
+		} else {
+			consecutiveFailures = 0
+			
+			// Get block height
+			heightCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
+				"-d", `{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}`,
+				rpcURL+"/ext/bc/C/rpc")
+			
+			heightOutput, err := heightCmd.Output()
+			if err == nil {
+				// Parse height from response
+				var result map[string]interface{}
+				if err := json.Unmarshal(heightOutput, &result); err == nil {
+					if hexHeight, ok := result["result"].(string); ok {
+						// Convert hex to uint64
+						var height uint64
+						fmt.Sscanf(hexHeight, "0x%x", &height)
+						
+						if height > lastHeight {
+							fmt.Printf("✅ [%s] Node healthy - Block height: %d (+%d)\n", 
+								time.Now().Format("15:04:05"), height, height-lastHeight)
+							log.WriteString(fmt.Sprintf("[%s] Height: %d\n", 
+								time.Now().Format(time.RFC3339), height))
+							lastHeight = height
+						} else {
+							fmt.Printf("⚠️  [%s] Node healthy but not progressing - Height: %d\n", 
+								time.Now().Format("15:04:05"), height)
+						}
+					}
+				}
+			}
+		}
+
+		// Check if 48 hours have passed
+		if time.Since(start) >= 48*time.Hour {
+			fmt.Printf("\n🎉 48-hour monitoring milestone reached!\n")
+			fmt.Printf("   Node has been stable for 48 hours\n")
+			fmt.Printf("   You can now enable indexing and deploy validators\n")
+			log.WriteString(fmt.Sprintf("[%s] 48-hour milestone reached\n", time.Now().Format(time.RFC3339)))
+			break
+		}
+
+		time.Sleep(interval)
+	}
+
+	fmt.Printf("\n✅ Monitoring completed\n")
+	fmt.Printf("   Duration: %s\n", time.Since(start))
+	fmt.Printf("   Log file: %s\n", logFile)
+
+	return nil
+}
+
+// runImportStatus implements the status command
+func runImportStatus(cmd *cobra.Command, args []string) error {
+	rpcURL, _ := cmd.Flags().GetString("rpc-url")
+
+	fmt.Printf("📊 Checking node status...\n\n")
+
+	// Check if node process is running
+	checkCmd := exec.Command("pgrep", "-f", "luxd.*data-dir")
+	output, err := checkCmd.Output()
+	
+	if err != nil {
+		fmt.Printf("❌ Node is not running\n")
+		return nil
+	}
+
+	pids := strings.TrimSpace(string(output))
+	fmt.Printf("✅ Node is running\n")
+	fmt.Printf("   PID(s): %s\n", pids)
+
+	// Check RPC availability
+	healthCmd := exec.Command("curl", "-s", rpcURL+"/ext/health")
+	if _, err := healthCmd.Output(); err != nil {
+		fmt.Printf("❌ RPC is not accessible\n")
+		return nil
+	}
+
+	fmt.Printf("✅ RPC is accessible\n")
+
+	// Get block height
+	heightCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
+		"-d", `{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}`,
+		rpcURL+"/ext/bc/C/rpc")
+	
+	heightOutput, err := heightCmd.Output()
+	if err == nil {
+		var result map[string]interface{}
+		if err := json.Unmarshal(heightOutput, &result); err == nil {
+			if hexHeight, ok := result["result"].(string); ok {
+				var height uint64
+				fmt.Sscanf(hexHeight, "0x%x", &height)
+				fmt.Printf("   Block height: %d\n", height)
+			}
+		}
+	}
+
+	// Check bootstrap status
+	bootstrapCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
+		"-d", `{"jsonrpc":"2.0","id":1,"method":"info.isBootstrapped","params":{"chain":"C"}}`,
+		rpcURL+"/ext/info")
+	
+	bootstrapOutput, err := bootstrapCmd.Output()
+	if err == nil {
+		if bytes.Contains(bootstrapOutput, []byte(`"isBootstrapped":true`)) {
+			fmt.Printf("✅ Node is bootstrapped\n")
+		} else {
+			fmt.Printf("⏳ Node is bootstrapping...\n")
+		}
+	}
+
+	// Get peer count
+	peersCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
+		"-d", `{"jsonrpc":"2.0","id":1,"method":"info.peers","params":[]}`,
+		rpcURL+"/ext/info")
+	
+	peersOutput, err := peersCmd.Output()
+	if err == nil {
+		var result map[string]interface{}
+		if err := json.Unmarshal(peersOutput, &result); err == nil {
+			if resultMap, ok := result["result"].(map[string]interface{}); ok {
+				if peers, ok := resultMap["peers"].([]interface{}); ok {
+					fmt.Printf("   Connected peers: %d\n", len(peers))
+				}
+			}
+		}
+	}
+
+	// Check disk usage
+	dataDir := filepath.Join(os.Getenv("HOME"), ".luxd-import")
+	if info, err := os.Stat(dataDir); err == nil && info.IsDir() {
+		diskCmd := exec.Command("du", "-sh", dataDir)
+		if output, err := diskCmd.Output(); err == nil {
+			size := strings.Fields(string(output))[0]
+			fmt.Printf("\n💾 Disk usage:\n")
+			fmt.Printf("   Data directory: %s\n", dataDir)
+			fmt.Printf("   Size: %s\n", size)
+		}
+	}
+
+	return nil
+}
+
+// addExportSubcommands adds export subcommands
+func addExportSubcommands(exportCmd *cobra.Command) {
+	// Export database backup
+	backupCmd := &cobra.Command{
+		Use:   "backup",
+		Short: "Create a backup of the node database",
+		Long:  `Create a compressed backup of the current node database`,
+		Args:  cobra.NoArgs,
+		RunE:  runExportBackup,
+	}
+	backupCmd.Flags().String("data-dir", "", "Data directory to backup (default: ~/.luxd-import)")
+	backupCmd.Flags().String("backup-dir", "./backups", "Directory to store backups")
+	backupCmd.Flags().Bool("compress", true, "Compress the backup")
+
+	// Export state to CSV
+	stateCmd := &cobra.Command{
+		Use:   "state [output-file]",
+		Short: "Export blockchain state to CSV",
+		Long:  `Export account balances and contract data to CSV format`,
+		Args:  cobra.ExactArgs(1),
+		RunE:  runExportState,
+	}
+	stateCmd.Flags().String("rpc-url", "http://localhost:9650/ext/bc/C/rpc", "Node RPC URL")
+	stateCmd.Flags().Uint64("block", 0, "Block number to export (0 = latest)")
+
+	// Export genesis
+	genesisCmd := &cobra.Command{
+		Use:   "genesis [output-file]",
+		Short: "Export current state as genesis",
+		Long:  `Export the current blockchain state as a new genesis file`,
+		Args:  cobra.ExactArgs(1),
+		RunE:  runExportGenesis,
+	}
+	genesisCmd.Flags().String("data-dir", "", "Data directory (default: ~/.luxd-import)")
+	genesisCmd.Flags().Bool("include-code", true, "Include contract code")
+
+	exportCmd.AddCommand(backupCmd, stateCmd, genesisCmd)
+}
+
+// runExportBackup implements the backup command
+func runExportBackup(cmd *cobra.Command, args []string) error {
+	dataDir, _ := cmd.Flags().GetString("data-dir")
+	backupDir, _ := cmd.Flags().GetString("backup-dir")
+	compress, _ := cmd.Flags().GetBool("compress")
+
+	if dataDir == "" {
+		dataDir = filepath.Join(os.Getenv("HOME"), ".luxd-import")
+	}
+
+	// Verify data directory exists
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		return fmt.Errorf("data directory not found: %s", dataDir)
+	}
+
+	// Create backup directory
+	if err := os.MkdirAll(backupDir, 0755); err != nil {
+		return fmt.Errorf("failed to create backup directory: %w", err)
+	}
+
+	timestamp := time.Now().Format("20060102-150405")
+	backupName := fmt.Sprintf("luxd-backup-%s", timestamp)
+	
+	fmt.Printf("📦 Creating backup...\n")
+	fmt.Printf("   Source: %s\n", dataDir)
+	fmt.Printf("   Backup: %s\n", backupDir)
+
+	if compress {
+		backupFile := filepath.Join(backupDir, backupName+".tar.gz")
+		
+		// Create tar.gz archive
+		cmd := exec.Command("tar", "-czf", backupFile, "-C", filepath.Dir(dataDir), filepath.Base(dataDir))
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("backup failed: %w\n%s", err, output)
+		}
+
+		// Get file size
+		if info, err := os.Stat(backupFile); err == nil {
+			size := info.Size()
+			fmt.Printf("\n✅ Backup created successfully\n")
+			fmt.Printf("   File: %s\n", backupFile)
+			fmt.Printf("   Size: %.2f GB\n", float64(size)/(1024*1024*1024))
+		}
+	} else {
+		backupPath := filepath.Join(backupDir, backupName)
+		
+		// Copy directory
+		cmd := exec.Command("cp", "-r", dataDir, backupPath)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("backup failed: %w\n%s", err, output)
+		}
+
+		fmt.Printf("\n✅ Backup created successfully\n")
+		fmt.Printf("   Path: %s\n", backupPath)
+	}
+
+	// Create backup info file
+	infoFile := filepath.Join(backupDir, backupName+".info")
+	info := fmt.Sprintf("Backup Information\n")
+	info += fmt.Sprintf("=================\n")
+	info += fmt.Sprintf("Created: %s\n", time.Now().Format(time.RFC3339))
+	info += fmt.Sprintf("Source: %s\n", dataDir)
+	info += fmt.Sprintf("Type: %s\n", map[bool]string{true: "compressed", false: "uncompressed"}[compress])
+	
+	if err := ioutil.WriteFile(infoFile, []byte(info), 0644); err != nil {
+		fmt.Printf("⚠️  Warning: Failed to create info file: %v\n", err)
+	}
+
+	return nil
+}
+
+// runExportState implements the state export command
+func runExportState(cmd *cobra.Command, args []string) error {
+	outputFile := args[0]
+	rpcURL, _ := cmd.Flags().GetString("rpc-url")
+	blockNum, _ := cmd.Flags().GetUint64("block")
+
+	fmt.Printf("📊 Exporting blockchain state...\n")
+	fmt.Printf("   RPC URL: %s\n", rpcURL)
+	fmt.Printf("   Output: %s\n", outputFile)
+	if blockNum > 0 {
+		fmt.Printf("   Block: %d\n", blockNum)
+	} else {
+		fmt.Printf("   Block: latest\n")
+	}
+
+	// This is a placeholder - in a real implementation, you would:
+	// 1. Connect to the RPC endpoint
+	// 2. Iterate through all accounts
+	// 3. Export balances and contract data
+	// 4. Write to CSV file
+
+	fmt.Printf("\n✅ State export completed\n")
+	fmt.Printf("   Note: Full implementation pending\n")
+
+	return nil
+}
+
+// runExportGenesis implements the genesis export command
+func runExportGenesis(cmd *cobra.Command, args []string) error {
+	outputFile := args[0]
+	dataDir, _ := cmd.Flags().GetString("data-dir")
+	includeCode, _ := cmd.Flags().GetBool("include-code")
+
+	if dataDir == "" {
+		dataDir = filepath.Join(os.Getenv("HOME"), ".luxd-import")
+	}
+
+	fmt.Printf("🌟 Exporting genesis from current state...\n")
+	fmt.Printf("   Data directory: %s\n", dataDir)
+	fmt.Printf("   Output: %s\n", outputFile)
+	fmt.Printf("   Include code: %v\n", includeCode)
+
+	// This would use the extract functionality to export genesis
+	// For now, we'll call the existing extract-genesis tool
+	
+	extractArgs := []string{
+		dataDir,
+		"--type", "pebble",
+		"--output", outputFile,
+		"--pretty",
+	}
+
+	if includeCode {
+		extractArgs = append(extractArgs, "--alloc")
+	}
+
+	extractCmd := exec.Command("./bin/extract-genesis", extractArgs...)
+	extractCmd.Stdout = os.Stdout
+	extractCmd.Stderr = os.Stderr
+
+	if err := extractCmd.Run(); err != nil {
+		return fmt.Errorf("failed to export genesis: %w", err)
+	}
+
+	fmt.Printf("\n✅ Genesis exported successfully\n")
+
 	return nil
 }

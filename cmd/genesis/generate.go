@@ -202,12 +202,12 @@ func generateXChainGenesis(outputPath string, network string) error {
 	genesis := map[string]interface{}{
 		"networkID": getNetworkID(network),
 		"allocations": []interface{}{
-			{
+			map[string]interface{}{
 				"ethAddr": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
 				"luxAddr": "X-lux1jqg73pqj52pqhae63k4vs6cf7lkwj3csy6kzw",
 				"initialAmount": 360000000000000000,
 				"unlockSchedule": []interface{}{
-					{
+					map[string]interface{}{
 						"amount": 10000000000000,
 						"locktime": time.Now().Unix(),
 					},

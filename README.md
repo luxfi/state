@@ -53,6 +53,16 @@ make launch-docker
 ./bin/genesis validators add --node-id NodeID-xxx --eth-address 0x...
 ./bin/genesis validators remove --index 5
 
+# Import chain data
+./bin/genesis import chain-data /path/to/source/chaindata
+./bin/genesis import monitor        # Monitor import progress
+./bin/genesis import status         # Check node status
+
+# Export operations
+./bin/genesis export backup         # Backup node database
+./bin/genesis export state output.csv  # Export state to CSV
+./bin/genesis export genesis genesis.json  # Export as genesis
+
 # Validate genesis
 ./bin/genesis validate --network mainnet
 
@@ -69,6 +79,16 @@ make genesis-generate     # Generate genesis file
 make launch-docker        # Launch full network with Docker (recommended)
 make launch-dev          # Single node dev mode
 make test                # Run all tests
+
+# Import operations
+make import-chain-data SRC=/path/to/chaindata  # Import chain data
+make import-monitor       # Monitor node for 48 hours
+make import-status        # Check current node status
+
+# Export operations  
+make export-backup        # Create compressed backup
+make export-state OUTPUT=state.csv   # Export state to CSV
+make export-genesis OUTPUT=genesis.json  # Export as genesis
 ```
 
 ## Network Configuration

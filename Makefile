@@ -49,7 +49,15 @@ help:
 	@echo "  make genesis-lux                    # Build LUX genesis"
 	@echo "  make genesis-zoo                    # Build ZOO genesis with BSC data"
 	@echo "  make genesis-spc                    # Build SPC genesis (bootstrap)"
-	@echo "  make genesis-all                    # Build all genesis files
+	@echo "  make genesis-all                    # Build all genesis files"
+	@echo ""
+	@echo "IMPORT COMMANDS:"
+	@echo "  make import-chain-data SRC=/path    # Import chain data from existing DB"
+	@echo "  make import-monitor                 # Monitor node import/sync progress"
+	@echo "  make import-status                  # Check current node status"
+	@echo "  make export-backup                  # Create backup of node database"
+	@echo "  make export-state                   # Export blockchain state to CSV"
+	@echo "  make export-genesis                 # Export current state as genesis"
 
 # Validator Management
 validators-generate: build-genesis
@@ -1124,5 +1132,64 @@ else
 	@$(MAKE) genesis-$(NETWORK)
 	@$(MAKE) launch-docker NETWORK=$(NETWORK)
 endif
+
+# ============ IMPORT COMMANDS ============
+# Import chain data from existing database
+import-chain-data: build-genesis
+ifndef SRC
+	$(error SRC is not set. Usage: make import-chain-data SRC=/path/to/chaindata)
+endif
+	@echo "🚀 Importing chain data from $(SRC)..."
+	@./bin/genesis import chain-data "$(SRC)" \
+		--data-dir="$(DATA_DIR)" \
+		--network-id="$(NETWORK_ID)" \
+		--luxd-path="$(NODE_DIR)/build/luxd"
+
+# Monitor node import/sync progress  
+import-monitor: build-genesis
+	@echo "🔍 Starting node monitoring..."
+	@./bin/genesis import monitor \
+		--interval=60s \
+		--duration=48h \
+		--rpc-url="http://localhost:9650" \
+		--failure-threshold=5
+
+# Check current node status
+import-status: build-genesis
+	@echo "📊 Checking node status..."
+	@./bin/genesis import status \
+		--rpc-url="http://localhost:9650"
+
+# Create backup of node database
+export-backup: build-genesis
+	@echo "📦 Creating database backup..."
+	@./bin/genesis export backup \
+		--data-dir="$(DATA_DIR)" \
+		--backup-dir="./backups" \
+		--compress=true
+
+# Export blockchain state to CSV
+export-state: build-genesis
+ifndef OUTPUT
+	$(error OUTPUT is not set. Usage: make export-state OUTPUT=/path/to/output.csv)
+endif
+	@echo "📊 Exporting blockchain state to $(OUTPUT)..."
+	@./bin/genesis export state "$(OUTPUT)" \
+		--rpc-url="http://localhost:9650/ext/bc/C/rpc" \
+		--block=0
+
+# Export current state as genesis
+export-genesis: build-genesis
+ifndef OUTPUT
+	$(error OUTPUT is not set. Usage: make export-genesis OUTPUT=/path/to/genesis.json)
+endif
+	@echo "🌟 Exporting current state as genesis to $(OUTPUT)..."
+	@./bin/genesis export genesis "$(OUTPUT)" \
+		--data-dir="$(DATA_DIR)" \
+		--include-code=true
+
+# Default values for import operations
+NETWORK_ID ?= 96369
+DATA_DIR ?= $(HOME)/.luxd-import
 
 .DEFAULT_GOAL := help
