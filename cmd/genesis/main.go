@@ -251,6 +251,15 @@ This command extracts the genesis from a blockchain database and can optionally:
 	}
 	addExportSubcommands(exportCmd)
 
+	// Transfer command for copying chaindata
+	transferCmd := &cobra.Command{
+		Use:   "transfer",
+		Short: "Transfer blockchain data between databases",
+		Long:  `Transfer block data (headers, bodies, receipts, etc.) from one database to another.
+This is useful for migrating subnet data to C-Chain format while preserving all historic blocks.`,
+	}
+	addTransferSubcommands(transferCmd)
+
 	// Build command structure
 	rootCmd.AddCommand(
 		generateCmd,
@@ -268,6 +277,7 @@ This command extracts the genesis from a blockchain database and can optionally:
 		diagnoseCmd,
 		countCmd,
 		pointersCmd,
+		transferCmd,
 		// Additional utility commands from teleport
 		teleportCmd.NewExportCommand(),
 		teleportCmd.NewVerifyCommand(),
@@ -517,6 +527,9 @@ This command:
 	readCmd.Flags().StringP("dst", "d", "", "Destination path for migrated data (optional)")
 	readCmd.Flags().BoolP("genesis-only", "g", false, "Only extract genesis, don't migrate data")
 	readCmd.Flags().BoolP("write-genesis", "w", true, "Write genesis to ~/.luxd/configs/C/genesis.json")
+	
+	// Add migrate-subnet command for subnet to C-Chain migration
+	migrateCmd.AddCommand(migrateSubnetCmd)
 	
 	// Add teleport migrate commands
 	migrateCmd.AddCommand(
@@ -2146,4 +2159,185 @@ func runExportGenesis(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\n✅ Genesis exported successfully\n")
 
 	return nil
+}
+
+// addTransferSubcommands adds transfer subcommands
+func addTransferSubcommands(transferCmd *cobra.Command) {
+	// Transfer chaindata command
+	chaindataCmd := &cobra.Command{
+		Use:   "chaindata",
+		Short: "Transfer blockchain data between databases",
+		Long:  `Transfer all block data (headers, bodies, receipts, etc.) from source to destination database`,
+		Args:  cobra.NoArgs,
+		RunE:  runTransferChaindata,
+	}
+	
+	chaindataCmd.Flags().String("src", "", "Source database path")
+	chaindataCmd.Flags().String("dst", "", "Destination database path")
+	chaindataCmd.Flags().Bool("include-state", true, "Include state data (accounts, storage)")
+	chaindataCmd.Flags().Bool("dry-run", false, "Show what would be transferred without actually doing it")
+	chaindataCmd.MarkFlagRequired("src")
+	chaindataCmd.MarkFlagRequired("dst")
+	
+	transferCmd.AddCommand(chaindataCmd)
+}
+
+// runTransferChaindata implements the chaindata transfer command
+func runTransferChaindata(cmd *cobra.Command, args []string) error {
+	srcPath, _ := cmd.Flags().GetString("src")
+	dstPath, _ := cmd.Flags().GetString("dst")
+	includeState, _ := cmd.Flags().GetBool("include-state")
+	dryRun, _ := cmd.Flags().GetBool("dry-run")
+	
+	fmt.Printf("🚀 Transferring blockchain data...\n")
+	fmt.Printf("   Source: %s\n", srcPath)
+	fmt.Printf("   Destination: %s\n", dstPath)
+	fmt.Printf("   Include state: %v\n", includeState)
+	if dryRun {
+		fmt.Printf("   Mode: DRY RUN (no changes will be made)\n")
+	}
+	fmt.Println()
+	
+	// Open source database
+	srcDB, err := pebble.Open(srcPath, &pebble.Options{
+		ReadOnly: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to open source database: %w", err)
+	}
+	defer srcDB.Close()
+	
+	// Open destination database  
+	var dstDB *pebble.DB
+	if !dryRun {
+		dstDB, err = pebble.Open(dstPath, &pebble.Options{})
+		if err != nil {
+			return fmt.Errorf("failed to open destination database: %w", err)
+		}
+		defer dstDB.Close()
+	}
+	
+	// Key prefixes we want to transfer (based on geth rawdb prefixes)
+	prefixes := map[byte]string{
+		0x68: "headers",        // 'h' - block headers
+		0x62: "bodies",         // 'b' - block bodies  
+		0x72: "receipts",       // 'r' - receipts
+		0x6e: "canonical",      // 'n' - canonical hash
+		0x48: "hash->number",   // 'H' - hash to number mapping
+		0x74: "difficulty",     // 't' - total difficulty
+		0x6c: "tx-lookup",      // 'l' - transaction lookup
+	}
+	
+	if includeState {
+		// Add state-related prefixes
+		prefixes[0x00] = "accounts"      // Account data (may have different prefix)
+		prefixes[0x73] = "storage"       // 's' - storage data
+		prefixes[0x63] = "code"          // 'c' - contract code
+	}
+	
+	// Count keys by prefix
+	counts := make(map[byte]int)
+	transferred := 0
+	
+	// Create iterator
+	iter, err := srcDB.NewIter(&pebble.IterOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create iterator: %w", err)
+	}
+	defer iter.Close()
+	
+	// Create batch for efficient writes
+	var batch *pebble.Batch
+	if !dryRun && dstDB != nil {
+		batch = dstDB.NewBatch()
+	}
+	
+	// Iterate through all keys
+	for iter.First(); iter.Valid(); iter.Next() {
+		key := iter.Key()
+		if len(key) == 0 {
+			continue
+		}
+		
+		prefix := key[0]
+		
+		// Check if this is a prefix we want to transfer
+		if name, ok := prefixes[prefix]; ok {
+			counts[prefix]++
+			
+			if !dryRun && batch != nil {
+				// Copy key-value pair
+				val := iter.Value()
+				if err := batch.Set(key, val, nil); err != nil {
+					return fmt.Errorf("failed to set key: %w", err)
+				}
+				transferred++
+				
+				// Commit batch every 10000 entries
+				if transferred%10000 == 0 {
+					if err := batch.Commit(nil); err != nil {
+						return fmt.Errorf("failed to commit batch: %w", err)
+					}
+					batch = dstDB.NewBatch()
+					fmt.Printf("   Transferred %d entries...\n", transferred)
+				}
+			}
+			
+			// Show sample keys for each prefix (first 3)
+			if counts[prefix] <= 3 {
+				fmt.Printf("   Found %s key: %x (len=%d)\n", name, key[:min(len(key), 32)], len(key))
+			}
+		}
+	}
+	
+	// Commit final batch
+	if !dryRun && batch != nil && transferred%10000 != 0 {
+		if err := batch.Commit(nil); err != nil {
+			return fmt.Errorf("failed to commit final batch: %w", err)
+		}
+	}
+	
+	// Show summary
+	fmt.Println("\n📊 Transfer Summary:")
+	for prefix, name := range prefixes {
+		if count, ok := counts[prefix]; ok && count > 0 {
+			fmt.Printf("   %s: %d entries\n", name, count)
+		}
+	}
+	
+	if dryRun {
+		fmt.Printf("\n✅ Dry run completed. Would transfer %d entries.\n", transferred)
+	} else {
+		fmt.Printf("\n✅ Transfer completed. Transferred %d entries.\n", transferred)
+		
+		// Also copy pointer keys if they exist
+		pointerKeys := []string{
+			"LastBlock",
+			"LastHeader", 
+			"LastFast",
+			"LastPivot",
+			"Height",
+			"LastAccepted",
+		}
+		
+		fmt.Println("\n📍 Copying pointer keys...")
+		for _, key := range pointerKeys {
+			if val, closer, err := srcDB.Get([]byte(key)); err == nil {
+				if !dryRun && dstDB != nil {
+					dstDB.Set([]byte(key), val, nil)
+				}
+				fmt.Printf("   %s: %x\n", key, val[:min(len(val), 32)])
+				closer.Close()
+			}
+		}
+	}
+	
+	return nil
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

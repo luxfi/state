@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/rlp"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 

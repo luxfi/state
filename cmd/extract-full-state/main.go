@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/rlp"
 )
 
 // StateAccount represents the Ethereum state account structure

@@ -9,11 +9,11 @@ import (
 	"os"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/triedb"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/geth/triedb"
 )
 
 // PebbleDBWrapper wraps PebbleDB to implement ethdb.Database

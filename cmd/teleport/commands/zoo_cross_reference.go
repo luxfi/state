@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/luxfi/geth/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/luxfi/genesis/pkg/bridge"
 )

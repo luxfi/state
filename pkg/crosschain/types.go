@@ -3,7 +3,7 @@ package crosschain
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxfi/geth/common"
 )
 
 // TokenHolder represents a token holder

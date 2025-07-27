@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	// TODO: Replace with github.com/luxfi/geth when available
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxfi/geth/common"
 )
 
 // AssetHolder represents an NFT or token holder

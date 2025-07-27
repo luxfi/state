@@ -9,9 +9,9 @@ import (
 	"time"
 
 	// TODO: Replace with github.com/luxfi/geth when available
-	ethereum "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
+	ethereum "github.com/luxfi/geth"
+	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/geth/common"
 )
 
 func (s *Scanner) scanNFTHolders(contractAddr common.Address, currentBlock uint64) (map[string]*AssetHolder, error) {

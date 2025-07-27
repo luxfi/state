@@ -13,9 +13,9 @@ import (
 	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/ids"
 	"github.com/spf13/cobra"
 )
