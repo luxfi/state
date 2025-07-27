@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/spf13/cobra"
 )
 

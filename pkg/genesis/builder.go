@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/luxfi/node/genesis"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/vms/platformvm/signer"
 	
 	"github.com/luxfi/genesis/pkg/genesis/address"

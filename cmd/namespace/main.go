@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 )
 
 var chainIDs = map[string]string{

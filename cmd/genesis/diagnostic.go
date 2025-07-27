@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/spf13/cobra"
 )
 

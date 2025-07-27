@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/spf13/cobra"
 
 	// Import command packages
@@ -521,6 +521,7 @@ This command:
 	// Add teleport migrate commands
 	migrateCmd.AddCommand(
 		readCmd,
+		mainnetCmd(),                 // Prepare 2025 mainnet launch
 		subnetToCChainCmd(),          // Convert subnet EVM to C-Chain format
 		subnetToL2Cmd(),              // Convert subnet EVM to L2 format  
 		migrateSubnetToCChainCmd(),   // Migrate subnet to C-Chain with prefixes
@@ -543,6 +544,8 @@ func addProcessSubcommands(processCmd *cobra.Command) {
 	processCmd.AddCommand(historicCmd)
 }
 
+// Command implementations - Generate command (delegate to generate.go)
+// runGenerate is now defined in generate.go
 
 // Extract state command implementation
 func runExtractState(cmd *cobra.Command, args []string) error {
