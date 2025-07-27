@@ -6,6 +6,7 @@ package consensus
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // SafetyLevel represents the safety assessment of consensus parameters

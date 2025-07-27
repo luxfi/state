@@ -174,10 +174,10 @@ func CalculateOptimalParameters(nc NetworkCharacteristics) (*Parameters, string)
 	
 	if nc.IsProduction {
 		// Production needs at least 8 rounds for security
-		p.Beta = max(8, maxRounds)
+		p.Beta = maxInt(8, maxRounds)
 	} else {
 		// Testing can use fewer rounds
-		p.Beta = max(4, maxRounds)
+		p.Beta = maxInt(4, maxRounds)
 	}
 	
 	// Adjust Beta based on quorum strength
@@ -289,4 +289,11 @@ func binomialCoeff(n, k int) float64 {
 		result += math.Log(float64(n-i)) - math.Log(float64(i+1))
 	}
 	return math.Exp(result)
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
