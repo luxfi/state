@@ -1,0 +1,11 @@
+{
+  "allocations": [],
+  "cChainGenesis": "",
+  "initialStakeDuration": 31536000,
+  "initialStakeDurationOffset": 5400,
+  "initialStakedFunds": [],
+  "initialStakers": [],
+  "message": "Lux Network Genesis",
+  "networkID": 96368,
+  "startTime": 1753580717
+}

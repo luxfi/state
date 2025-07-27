@@ -1,0 +1,25 @@
+{
+  "allocations": [
+    {
+      "ethAddr": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
+      "initialAmount": 360000000000000000,
+      "luxAddr": "X-lux1jqg73pqj52pqhae63k4vs6cf7lkwj3csy6kzw",
+      "unlockSchedule": [
+        {
+          "amount": 10000000000000,
+          "locktime": 1753580717
+        }
+      ]
+    }
+  ],
+  "cChainGenesis": "",
+  "initialStakeDuration": 31536000,
+  "initialStakeDurationOffset": 5400,
+  "initialStakedFunds": [
+    "X-lux1jqg73pqj52pqhae63k4vs6cf7lkwj3csy6kzw"
+  ],
+  "initialStakers": [],
+  "message": "Lux Network X-Chain Genesis",
+  "networkID": 96368,
+  "startTime": 1753580717
+}
