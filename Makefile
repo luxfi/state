@@ -59,6 +59,225 @@ validators-generate: build-genesis
 		--save-keys configs/mainnet/validators.json
 	@echo "✅ 11 new validators generated and saved to configs/mainnet/validators.json"
 	@echo ""
+
+# Network Deployment Commands
+deploy: deploy-network
+
+deploy-network:
+ifndef NETWORK
+	@echo "❌ Please specify NETWORK=mainnet|testnet|local"
+	@echo "Usage: make deploy NETWORK=mainnet"
+	@exit 1
+endif
+ifeq ($(NETWORK),mainnet)
+	@$(MAKE) deploy-mainnet
+else ifeq ($(NETWORK),testnet)
+	@$(MAKE) deploy-testnet
+else ifeq ($(NETWORK),local)
+	@$(MAKE) deploy-local
+else
+	@echo "❌ Invalid network: $(NETWORK)"
+	@exit 1
+endif
+
+# Deploy mainnet (21 nodes with historic data)
+deploy-mainnet: build-node
+	@echo "🚀 Deploying Lux Mainnet (21 nodes)"
+	@# Generate validators if not exists
+	@if [ ! -f "$(HOME)/.luxd/keys/mainnet/validators.json" ]; then \
+		echo "Generating mainnet validators..."; \
+		$(HOME)/.luxd/genkeys mainnet; \
+	fi
+	@# Create genesis if not exists
+	@if [ ! -f "$(HOME)/.luxd/genesis/mainnet/genesis.json" ]; then \
+		echo "Creating mainnet genesis..."; \
+		$(HOME)/.luxd/create_genesis_with_validators.py mainnet; \
+	fi
+	@# Launch 21 nodes
+	@$(MAKE) launch-mainnet-21
+
+# Deploy testnet (11 nodes with faster consensus)
+deploy-testnet: build-node
+	@echo "🚀 Deploying Lux Testnet (11 nodes)"
+	@# Generate validators if not exists
+	@if [ ! -f "$(HOME)/.luxd/keys/testnet/validators.json" ]; then \
+		echo "Generating testnet validators..."; \
+		$(HOME)/.luxd/genkeys testnet --count 11; \
+	fi
+	@# Create genesis if not exists
+	@if [ ! -f "$(HOME)/.luxd/genesis/testnet/genesis.json" ]; then \
+		echo "Creating testnet genesis..."; \
+		$(HOME)/.luxd/create_genesis_with_validators.py testnet; \
+	fi
+	@# Launch 11 nodes with testnet config
+	@$(MAKE) launch-testnet-11
+
+# Deploy local development network (5 nodes)
+deploy-local: build-node
+	@echo "🚀 Deploying Local Development Network (5 nodes)"
+	@# Generate validators if not exists
+	@if [ ! -f "$(HOME)/.luxd/keys/local/validators.json" ]; then \
+		echo "Generating local validators..."; \
+		$(HOME)/.luxd/genkeys local; \
+	fi
+	@# Create genesis if not exists
+	@if [ ! -f "$(HOME)/.luxd/genesis/local/genesis.json" ]; then \
+		echo "Creating local genesis..."; \
+		$(HOME)/.luxd/create_genesis_with_validators.py local; \
+	fi
+	@# Launch 5 nodes
+	@$(MAKE) launch-local-5
+
+# Launch mainnet with 21 nodes
+launch-mainnet-21: kill-node
+	@echo "🚀 Starting 21-node mainnet..."
+	@$(MAKE) start-nodes NETWORK=mainnet NUM_NODES=21 BASE_PORT=9650 \
+		CONSENSUS_K=21 CONSENSUS_ALPHA_PREF=13 CONSENSUS_ALPHA_CONF=18 CONSENSUS_BETA=8 \
+		CONCURRENT_REPOLLS=8 OPTIMAL_PROCESSING=10 MAX_PROCESSING_TIME=9630000000
+
+# Launch testnet with 11 nodes and faster consensus
+launch-testnet-11: kill-node
+	@echo "🚀 Starting 11-node testnet..."
+	@$(MAKE) start-nodes NETWORK=testnet NUM_NODES=11 BASE_PORT=9680 \
+		CONSENSUS_K=11 CONSENSUS_ALPHA_PREF=8 CONSENSUS_ALPHA_CONF=9 CONSENSUS_BETA=10 \
+		CONCURRENT_REPOLLS=10 OPTIMAL_PROCESSING=10 MAX_PROCESSING_TIME=6300000000
+
+# Launch local with 5 nodes
+launch-local-5: kill-node
+	@echo "🚀 Starting 5-node local network..."
+	@$(MAKE) start-nodes NETWORK=local NUM_NODES=5 BASE_PORT=9710 \
+		CONSENSUS_K=5 CONSENSUS_ALPHA_PREF=3 CONSENSUS_ALPHA_CONF=4 CONSENSUS_BETA=5 \
+		CONCURRENT_REPOLLS=5 OPTIMAL_PROCESSING=5 MAX_PROCESSING_TIME=3690000000
+
+# Generic node launcher
+start-nodes:
+	@echo "Starting $(NUM_NODES) nodes for $(NETWORK)..."
+	@mkdir -p $(HOME)/.luxd/networks/$(NETWORK)
+	@# Start bootstrap node
+	@echo "Starting bootstrap node..."
+	@$(MAKE) start-single-node NODE_ID=1 NETWORK=$(NETWORK) \
+		HTTP_PORT=$(BASE_PORT) STAKING_PORT=$$(($(BASE_PORT)+1000)) \
+		BOOTSTRAP_IPS="" BOOTSTRAP_IDS=""
+	@sleep 5
+	@# Get bootstrap info
+	@BOOTSTRAP_IP="127.0.0.1:$$(($(BASE_PORT)+1000))"
+	@BOOTSTRAP_ID=$$(cat $(HOME)/.luxd/keys/$(NETWORK)/validators.json | jq -r '.validators[0].nodeId')
+	@# Start remaining nodes
+	@for i in $$(seq 2 $(NUM_NODES)); do \
+		echo "Starting node $$i..."; \
+		$(MAKE) start-single-node NODE_ID=$$i NETWORK=$(NETWORK) \
+			HTTP_PORT=$$(($(BASE_PORT)+$$i-1)) STAKING_PORT=$$(($(BASE_PORT)+1000+$$i)) \
+			BOOTSTRAP_IPS=$$BOOTSTRAP_IP BOOTSTRAP_IDS=$$BOOTSTRAP_ID; \
+		sleep 1; \
+	done
+	@echo "✅ All $(NUM_NODES) nodes started for $(NETWORK)"
+	@echo "Primary RPC: http://localhost:$(BASE_PORT)"
+
+# Start a single node
+start-single-node:
+	@NODE_DIR="$(HOME)/.luxd/networks/$(NETWORK)/node$(NODE_ID)"
+	@mkdir -p $$NODE_DIR/logs
+	@# Copy C-Chain data for mainnet/testnet
+	@if [ "$(NETWORK)" = "mainnet" ] && [ $(NODE_ID) -eq 1 ]; then \
+		if [ -d "chaindata/lux-mainnet-96369/db/pebbledb" ]; then \
+			echo "Copying mainnet C-Chain data..."; \
+			mkdir -p $$NODE_DIR/db/C/db; \
+			cp -r chaindata/lux-mainnet-96369/db/pebbledb $$NODE_DIR/db/C/db/; \
+		fi; \
+	fi
+	@if [ "$(NETWORK)" = "testnet" ] && [ $(NODE_ID) -eq 1 ]; then \
+		if [ -d "chaindata/lux-testnet-96368/db/pebbledb" ]; then \
+			echo "Copying testnet C-Chain data..."; \
+			mkdir -p $$NODE_DIR/db/C/db; \
+			cp -r chaindata/lux-testnet-96368/db/pebbledb $$NODE_DIR/db/C/db/; \
+		fi; \
+	fi
+	@# Determine network ID
+	@if [ "$(NETWORK)" = "mainnet" ]; then NETWORK_ID=96369; \
+	elif [ "$(NETWORK)" = "testnet" ]; then NETWORK_ID=96368; \
+	else NETWORK_ID=96370; fi
+	@# Start node
+	@nohup ../node/build/luxd \
+		--network-id=$$NETWORK_ID \
+		--data-dir="$$NODE_DIR" \
+		--staking-tls-cert-file="$(HOME)/.luxd/keys/$(NETWORK)/staker$(NODE_ID).crt" \
+		--staking-tls-key-file="$(HOME)/.luxd/keys/$(NETWORK)/staker$(NODE_ID).key" \
+		--staking-signer-key-file="$(HOME)/.luxd/keys/$(NETWORK)/signer$(NODE_ID).key" \
+		--http-host=0.0.0.0 \
+		--http-port=$(HTTP_PORT) \
+		--staking-port=$(STAKING_PORT) \
+		--public-ip=127.0.0.1 \
+		--sybil-protection-enabled=false \
+		--consensus-sample-size=$(CONSENSUS_K) \
+		--consensus-quorum-size=$(CONSENSUS_ALPHA_CONF) \
+		--consensus-k=$(CONSENSUS_K) \
+		--consensus-alpha-preference=$(CONSENSUS_ALPHA_PREF) \
+		--consensus-alpha-confidence=$(CONSENSUS_ALPHA_CONF) \
+		--consensus-beta=$(CONSENSUS_BETA) \
+		--consensus-concurrent-repolls=$(CONCURRENT_REPOLLS) \
+		--consensus-optimal-processing=$(OPTIMAL_PROCESSING) \
+		--consensus-max-item-processing-time=$(MAX_PROCESSING_TIME) \
+		--api-admin-enabled \
+		--api-keystore-enabled \
+		--api-metrics-enabled \
+		--log-level=info \
+		--log-dir="$$NODE_DIR/logs" \
+		--genesis-file="$(HOME)/.luxd/genesis/$(NETWORK)/genesis.json" \
+		$(if $(BOOTSTRAP_IPS),--bootstrap-ips="$(BOOTSTRAP_IPS)",) \
+		$(if $(BOOTSTRAP_IDS),--bootstrap-ids="$(BOOTSTRAP_IDS)",) \
+		> "$$NODE_DIR/node.log" 2>&1 &
+	@echo $$! > "$$NODE_DIR/node.pid"
+	@echo "Node $(NODE_ID) started (PID: $$(cat $$NODE_DIR/node.pid))"
+
+# Stop networks
+stop:
+ifndef NETWORK
+	@echo "❌ Please specify NETWORK=mainnet|testnet|local"
+	@exit 1
+endif
+	@echo "🛑 Stopping $(NETWORK) network..."
+	@NETWORK_DIR="$(HOME)/.luxd/networks/$(NETWORK)"
+	@if [ -d "$$NETWORK_DIR" ]; then \
+		for pidfile in $$NETWORK_DIR/node*/node.pid; do \
+			if [ -f "$$pidfile" ]; then \
+				PID=$$(cat $$pidfile); \
+				if kill -0 $$PID 2>/dev/null; then \
+					echo "Stopping node (PID: $$PID)"; \
+					kill -TERM $$PID; \
+				fi; \
+				rm -f $$pidfile; \
+			fi; \
+		done; \
+		echo "✅ $(NETWORK) network stopped"; \
+	else \
+		echo "ℹ️  No $(NETWORK) network running"; \
+	fi
+
+# Network status
+network-status:
+	@echo "📊 Network Status"
+	@echo "================"
+	@for network in mainnet testnet local; do \
+		echo ""; \
+		echo "$$network:"; \
+		NETWORK_DIR="$(HOME)/.luxd/networks/$$network"; \
+		if [ -d "$$NETWORK_DIR" ]; then \
+			RUNNING=0; \
+			TOTAL=$$(ls -d $$NETWORK_DIR/node* 2>/dev/null | wc -l); \
+			for pidfile in $$NETWORK_DIR/node*/node.pid; do \
+				if [ -f "$$pidfile" ]; then \
+					PID=$$(cat $$pidfile); \
+					if kill -0 $$PID 2>/dev/null; then \
+						RUNNING=$$((RUNNING + 1)); \
+					fi; \
+				fi; \
+			done; \
+			echo "  Running: $$RUNNING/$$TOTAL nodes"; \
+		else \
+			echo "  Not deployed"; \
+		fi; \
+	done
+
 	@echo "MIGRATION COMMANDS:"
 	@echo "  make migrate                        # Migrate historic chain data"
 	@echo "  make migrate-genesis                # Extract genesis from historic data"
