@@ -21,7 +21,7 @@ The Lux Network originally ran chain 96369 as a subnet. To make it the primary C
 
 ```bash
 # 1. Build the tools
-make -C /home/z/work/lux/genesis all
+make -C $HOME/work/lux/genesis all
 
 # 2. Analyze your subnet database
 ./bin/analyze-subnet-blocks /path/to/subnet/db
@@ -39,7 +39,7 @@ make -C /home/z/work/lux/genesis all
   --tip <highest-block-number>
 
 # 5. Launch the node
-cd /home/z/work/lux/node
+cd $HOME/work/lux/node
 ./build/luxd --data-dir=/tmp/migrated-data ...
 ```
 
@@ -82,7 +82,7 @@ cd /home/z/work/lux/node
 To work on this migration:
 
 1. Ensure you have Go 1.24.5 installed
-2. Clone both `/home/z/work/lux/genesis` and `/home/z/work/lux/node`
+2. Clone both `$HOME/work/lux/genesis` and `$HOME/work/lux/node`
 3. Run tests: `go test ./...`
 4. Submit improvements via PR
 

@@ -8,8 +8,8 @@ set -e
 # Configuration
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
-LUXD_PATH="${LUXD_PATH:-/home/z/work/lux/node/build/luxd}"
-LUX_CLI_PATH="${LUX_CLI_PATH:-/home/z/work/lux/cli/bin/lux}"
+LUXD_PATH="${LUXD_PATH:-$HOME/work/lux/node/build/luxd}"
+LUX_CLI_PATH="${LUX_CLI_PATH:-$HOME/work/lux/cli/bin/lux}"
 
 # Colors
 RED='\033[0;31m'

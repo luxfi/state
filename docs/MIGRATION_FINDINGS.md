@@ -7,7 +7,7 @@ The migration pipeline has been successfully implemented and tested, but the LUX
 ## Key Findings
 
 ### 1. Archive Data Analysis
-- **Location**: `/home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/`
+- **Location**: `$HOME/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/`
 - **Total Keys**: ~10.5 million keys
 - **Key Pattern**: All keys start with `\x00` (0x00) after namespace prefix
 - **No blockchain data found**: No headers, bodies, receipts, or number->hash mappings

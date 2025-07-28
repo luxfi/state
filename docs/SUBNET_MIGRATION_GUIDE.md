@@ -45,7 +45,7 @@ For primary network C-Chain (e.g., migrating 96369 subnet to become the new C-Ch
 ```bash
 ./bin/genesis migrate subnet-to-cchain \
     ./extracted-subnet-96369 \
-    /home/z/.luxd/chainData/[blockchain-id]/db/pebbledb \
+    $HOME/.luxd/chainData/[blockchain-id]/db/pebbledb \
     --blockchain-id "2S76s9v5CCCpFkvsvnVcGiTHZ8oTnek99Pp9sTJkGKGzD1inzC" \
     --clear-dest
 ```

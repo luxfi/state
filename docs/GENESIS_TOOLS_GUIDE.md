@@ -15,17 +15,28 @@ This guide provides comprehensive documentation for all genesis generation and m
 
 ## Overview
 
-The Lux Network genesis tools are designed to:
-- Generate genesis files for P-Chain, C-Chain, and X-Chain
-- Import and process historical blockchain data
-- Manage cross-chain token migrations
-- Validate genesis configurations
+The unified `genesis` CLI tool consolidates all genesis-related functionality into a single, well-organized command structure. It replaces dozens of individual scripts and tools with predictable, discoverable commands.
 
-The primary tool is `genesis`, which provides:
-- Simple genesis generation for all chains with one command
-- Proper directory structure matching Lux node expectations
-- Integration with other specialized tools
-- A `tools` command to discover all available utilities
+**Key Features:**
+- **DRY Principle**: No duplicate functionality across different scripts
+- **Predictable**: Consistent command structure and naming conventions
+- **Discoverable**: Built-in help and command listing
+- **Comprehensive**: All genesis operations in one tool
+- **Well-Tested**: Integrated test suite for all commands
+
+**Main Commands:**
+- `generate` - Generate genesis files for all chains (P, C, X)
+- `validators` - Manage validator configurations
+- `extract` - Extract blockchain data from various sources
+- `import` - Import blockchain data and cross-chain assets
+- `analyze` - Analyze blockchain data and structures
+- `inspect` - Inspect database contents in detail
+- `scan` - Scan external blockchains for assets
+- `migrate` - Migrate data between formats and chains
+- `repair` - Fix and repair blockchain data issues
+- `launch` - Launch Lux nodes with various configurations
+- `export` - Export blockchain data in various formats
+- `validate` - Validate configurations and data
 
 ## Directory Structure
 
@@ -71,41 +82,106 @@ The `genesis` tool is now the unified interface for all genesis-related operatio
 - **Cross-chain migrations?** → Use `genesis migrate`
 - **Not sure which command?** → Run `genesis tools`
 
-### 1. genesis
+### 1. genesis - Unified CLI Tool
 
-The unified tool for all genesis-related operations. It combines functionality from all specialized tools into a single interface.
+The `genesis` tool is the single entry point for all genesis-related operations. It provides a consistent, hierarchical command structure.
 
 ```bash
 # Generate genesis files (all chains)
 ./bin/genesis generate
 
-# Generate for testnet
-./bin/genesis generate --network testnet
-
-# Generate with custom output directory
-./bin/genesis generate --output /path/to/custom/dir
-
-# Generate without standard directory structure
-./bin/genesis generate --standard-dirs=false
-
-# List all available commands
-./bin/genesis tools
-
 # Get help for any command
+./bin/genesis help
 ./bin/genesis <command> --help
+./bin/genesis <command> <subcommand> --help
+
+# See available subcommands
+./bin/genesis <command>
 ```
 
-**Main Commands:**
-- `generate`: Generate genesis files for all chains
-- `validators`: Manage validators (list, add, remove, generate)
-- `extract`: Extract blockchain data from various sources
-- `import`: Import blockchain data and allocations
-- `analyze`: Analyze extracted blockchain data
-- `scan`: Scan external blockchains for assets
-- `migrate`: Migrate cross-chain assets
-- `process`: Process historical blockchain data
-- `validate`: Validate genesis configuration
-- `tools`: List all available commands
+**Complete Command Structure:**
+
+```
+genesis
+├── generate        # Generate genesis files
+│   ├── all        # Generate P, C, X chains (default)
+│   ├── p-chain    # Generate P-Chain only
+│   ├── c-chain    # Generate C-Chain only
+│   └── x-chain    # Generate X-Chain only
+│
+├── validators      # Validator management
+│   ├── list       # List validators
+│   ├── add        # Add validator
+│   ├── remove     # Remove validator
+│   └── generate   # Generate validator keys
+│
+├── extract        # Extract blockchain data
+│   ├── state      # Extract state data
+│   ├── genesis    # Extract genesis config
+│   ├── blocks     # Extract block data
+│   └── allocations # Extract account allocations
+│
+├── import         # Import data
+│   ├── chain-data # Import blockchain data
+│   ├── genesis    # Import genesis config
+│   ├── blocks     # Import block data
+│   └── consensus  # Import consensus data
+│
+├── analyze        # Analysis operations
+│   ├── keys       # Analyze database keys
+│   ├── blocks     # Analyze block data
+│   ├── subnet     # Analyze subnet data
+│   ├── structure  # Analyze data structure
+│   └── balance    # Analyze account balances
+│
+├── inspect        # Database inspection
+│   ├── keys       # Inspect database keys
+│   ├── blocks     # Inspect block details
+│   ├── headers    # Inspect block headers
+│   ├── snowman    # Inspect Snowman consensus DB
+│   ├── prefixes   # Scan database prefixes
+│   └── tip        # Find chain tip
+│
+├── scan           # Scan external blockchains
+│   ├── tokens     # Scan for tokens
+│   ├── nfts       # Scan for NFTs
+│   ├── burns      # Scan burn events
+│   └── holders    # Scan token holders
+│
+├── migrate        # Migration operations
+│   ├── subnet     # Migrate subnet to C-Chain
+│   ├── blocks     # Migrate blocks only
+│   ├── evm        # Migrate EVM data
+│   ├── full       # Full migration pipeline
+│   ├── add-evm-prefix    # Add EVM prefix to keys
+│   ├── rebuild-canonical # Fix evmn key format
+│   ├── replay-consensus  # Create consensus state
+│   └── zoo        # ZOO-specific migration
+│
+├── repair         # Fix/repair operations
+│   ├── prefix     # Add EVM prefix to blocks
+│   ├── snowman    # Fix Snowman consensus state
+│   ├── canonical  # Rebuild canonical chain
+│   ├── mappings   # Fix block mappings
+│   └── pointers   # Set blockchain pointers
+│
+├── launch         # Launch Lux nodes
+│   ├── clean      # Launch with clean state
+│   ├── mainnet    # Launch mainnet config
+│   ├── testnet    # Launch testnet config
+│   ├── debug      # Launch with debug logging
+│   └── migrated   # Launch with migrated data
+│
+├── export         # Export data
+│   ├── state      # Export blockchain state
+│   ├── genesis    # Export genesis config
+│   ├── blocks     # Export block data
+│   └── backup     # Create backup
+│
+├── validate       # Validate configurations
+├── process        # Process historical data
+└── help           # Show help information
+```
 
 **Generate Options:**
 - `--network`: Network type (mainnet/testnet)
@@ -324,6 +400,73 @@ Located in `chaindata/configs/{network}/`:
 - `chain.json`: Chain-specific parameters
 - `node-config.json`: Node configuration
 - `subnet.json`: Subnet configuration (for L2s)
+
+## Migration from Old Scripts/Tools
+
+If you've been using the individual scripts and tools, here's how to migrate to the unified `genesis` command:
+
+### Script to Command Mapping
+
+| Old Script/Tool | New Command |
+|----------------|-------------|
+| `analyze-subnet-blocks.go` | `genesis analyze blocks --subnet` |
+| `migrate-subnet-to-cchain.go` | `genesis migrate subnet` |
+| `check-head-pointers.go` | `genesis inspect tip` |
+| `fix-snowman-ids.go` | `genesis repair snowman` |
+| `add-evm-prefix-to-blocks.go` | `genesis repair prefix` |
+| `rebuild-canonical.go` | `genesis repair canonical` |
+| `export-state-to-genesis.go` | `genesis export genesis` |
+| `import-consensus.go` | `genesis import consensus` |
+| `scan-db-prefixes.go` | `genesis inspect prefixes` |
+| `launch-mainnet-automining.sh` | `genesis launch mainnet --automining` |
+| `launch-clean-cchain.sh` | `genesis launch clean` |
+| `analyze-keys-detailed.go` | `genesis analyze keys --detailed` |
+| `find-highest-block.go` | `genesis inspect tip` |
+| `check-block-format.go` | `genesis inspect blocks` |
+| `migrate_evm.go` | `genesis migrate evm` |
+| `namespace` | `genesis extract state` |
+| `teleport` commands | `genesis scan` and `genesis migrate` |
+
+### Example Migrations
+
+**Old way:**
+```bash
+go run scripts/analyze-subnet-blocks.go
+```
+
+**New way:**
+```bash
+./bin/genesis analyze blocks --subnet
+```
+
+**Old way:**
+```bash
+./scripts/migrate-subnet-to-cchain.go /path/to/subnet/db /path/to/output
+```
+
+**New way:**
+```bash
+./bin/genesis migrate subnet /path/to/subnet/db /path/to/output
+```
+
+**Old way:**
+```bash
+./scripts/launch-mainnet-automining.sh
+```
+
+**New way:**
+```bash
+./bin/genesis launch mainnet --automining
+```
+
+### Benefits of Migration
+
+1. **Single Tool**: No need to remember dozens of script names
+2. **Consistent Flags**: All commands use the same flag conventions
+3. **Better Help**: Built-in help for every command and subcommand
+4. **Error Handling**: Consistent error messages and recovery
+5. **Logging**: Unified logging across all operations
+6. **Testing**: All commands have test coverage
 
 ## Troubleshooting
 

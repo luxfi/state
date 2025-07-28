@@ -6,7 +6,7 @@ This guide provides quick commands to import chain data into a Lux node.
 
 ## Prerequisites
 
-- Built `luxd` binary at `/home/z/work/lux/node/build/luxd`
+- Built `luxd` binary at `$HOME/work/lux/node/build/luxd`
 - Source chain data (PebbleDB format)
 - At least 500GB free disk space
 

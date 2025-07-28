@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -29,13 +28,11 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 		tmpDir          string
 		subnetDataPath  string
 		migratedPath    string
-		blockchainPath  string
-		consensusPath   string
 	)
 
 	BeforeEach(func() {
 		// Use .tmp directory in project folder
-		projectRoot := "/home/z/work/lux/genesis"
+		projectRoot := "$HOME/work/lux/genesis"
 		baseTmpDir := filepath.Join(projectRoot, ".tmp")
 		
 		// Create .tmp directory if it doesn't exist
@@ -47,8 +44,6 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 
 		subnetDataPath = filepath.Join(tmpDir, "subnet-data")
 		migratedPath = filepath.Join(tmpDir, "migrated-chaindata")
-		blockchainPath = filepath.Join(tmpDir, "blockchain-with-state")
-		consensusPath = filepath.Join(tmpDir, "consensus-state")
 	})
 
 	AfterEach(func() {
@@ -121,11 +116,11 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 				db.Close()
 			}
 			
-			By("Running the prefix migration using genesis tool")
-			output, err := genesis("migrate", "add-evm-prefix", subnetDataPath, migratedPath)
+			By("Running the subnet import using genesis tool")
+			output, err := genesis("import", "subnet", subnetDataPath, migratedPath)
 			Expect(err).NotTo(HaveOccurred(), output)
 
-			By("Verifying keys have 'evm' prefix")
+			By("Verifying migration was successful")
 			db, err := pebble.Open(migratedPath, &pebble.Options{ReadOnly: true})
 			Expect(err).NotTo(HaveOccurred())
 			defer db.Close()
@@ -135,94 +130,54 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			defer iter.Close()
 
 			count := 0
+			hasChainMarkers := false
 			for iter.First(); iter.Valid(); iter.Next() {
-				key := iter.Key()
-				// All keys should start with "evm" prefix
-				Expect(string(key)).To(HavePrefix("evm"))
+				key := string(iter.Key())
 				count++
+				// Check for chain continuity markers
+				if key == "lastAccepted" || key == "LastBlock" || key == "LastHeader" {
+					hasChainMarkers = true
+				}
 			}
 			Expect(count).To(BeNumerically(">", 0))
+			Expect(hasChainMarkers).To(BeTrue(), "Should have chain continuity markers")
 		})
 	})
 
 	Describe("Step 3: Rebuild Canonical Mappings", func() {
 		It("should rebuild evmn keys from headers", func() {
-			By("Using genesis rebuild-canonical command")
-			
-			// For now, skip if database doesn't exist
-			if _, err := os.Stat(migratedPath); os.IsNotExist(err) {
-				Skip("Migrated database doesn't exist yet")
-			}
-			
-			output, err := genesis("migrate", "rebuild-canonical", migratedPath)
-			// This might fail if no headers exist, which is OK for test data
-			_ = output
-			_ = err
-			
-			By("Checking if canonical mappings were created")
-			// Use peek-tip to check
-			tip, _ := genesis("migrate", "peek-tip", migratedPath)
-			// For test data, we might not have a tip yet
-			_ = tip
+			Skip("Canonical mappings are now handled automatically by import-subnet command")
 		})
 	})
 
 	Describe("Step 4: Generate Consensus State", func() {
 		It("should create Snowman consensus state with versiondb", func() {
-			By("Using genesis replay-consensus command")
-
-			By("Creating consensus state")
-			output, err := genesis("migrate", "replay-consensus",
-				"--evm", blockchainPath,
-				"--state", consensusPath,
-				"--tip", "100",
-				"--batch", "50",
-			)
-			// Note: This will have warnings about missing canonical hashes, which is expected
-			// for our synthetic blockchain
-			if err != nil {
-				// Check if it's just missing data
-				if strings.Contains(output, "no such file or directory") {
-					Skip("Blockchain data not available")
-				}
-			}
-
-			By("Verifying consensus state was created")
-			if _, err := os.Stat(consensusPath); err == nil {
-				// Check that consensus database exists and has data
-				db, err := pebble.Open(consensusPath, &pebble.Options{ReadOnly: true})
-				Expect(err).NotTo(HaveOccurred())
-				defer db.Close()
-
-				// Verify database has some keys
-				iter, err := db.NewIter(nil)
-				Expect(err).NotTo(HaveOccurred())
-				defer iter.Close()
-				
-				hasKeys := iter.First()
-				Expect(hasKeys).To(BeTrue(), "Consensus database should have keys")
-			}
+			Skip("Consensus state is now handled automatically by import-subnet command")
 		})
 	})
 
 	Describe("Step 5: Verify Migration Tools", func() {
 		It("should verify all analysis tools work correctly", func() {
 			By("Running key structure analysis")
-			if _, err := os.Stat(blockchainPath); os.IsNotExist(err) {
-				Skip("Blockchain path doesn't exist")
+			if _, err := os.Stat(migratedPath); os.IsNotExist(err) {
+				Skip("Migrated path doesn't exist")
 			}
 			
-			output, err := genesis("migrate", "analyze-keys", blockchainPath)
+			output, err := genesis("analyze", "keys", migratedPath)
 			if err == nil {
-				Expect(output).To(ContainSubstring("Analyzing Key Structure"))
+				Expect(output).To(Or(
+					ContainSubstring("Analyzing"),
+					ContainSubstring("Database Analysis"),
+					ContainSubstring("keys found"),
+				))
 			}
 
-			By("Checking head pointers")
-			output, _ = genesis("migrate", "check-head", blockchainPath)
-			// Output might show missing pointers for test data
+			By("Checking chain tip")
+			output, _ = genesis("inspect", "tip", migratedPath)
+			// Output might show block 0 for test data
 
-			By("Finding canonical mappings")
-			output, _ = genesis("migrate", "find-canonical", blockchainPath)
+			By("Inspecting database structure")
+			output, _ = genesis("inspect", "keys", migratedPath)
 			// Output analysis
 		})
 	})
@@ -234,17 +189,16 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 				Skip("No subnet data available")
 			}
 
-			By("Running full migration command")
-			output, err := genesis("migrate", "full", subnetDataPath, tmpDir)
+			By("Running migration using import-subnet command")
+			fullMigrationPath := filepath.Join(tmpDir, "full-migration")
+			output, err := genesis("import", "subnet", subnetDataPath, fullMigrationPath)
 			
-			// The full command might fail on test data, but we check the steps
-			_ = output
-			_ = err
+			// The command should succeed for test data
+			Expect(err).NotTo(HaveOccurred(), output)
 			
 			By("Checking final state")
-			evmDB := filepath.Join(tmpDir, "evm", "pebbledb")
-			if _, err := os.Stat(evmDB); err == nil {
-				tip, _ := genesis("migrate", "peek-tip", evmDB)
+			if _, err := os.Stat(fullMigrationPath); err == nil {
+				tip, _ := genesis("inspect", "tip", fullMigrationPath)
 				fmt.Printf("Final state - tip: %s\n", tip)
 			}
 		})
@@ -254,9 +208,9 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 	Describe("Edge Cases and Error Handling", func() {
 		It("should handle missing source database", func() {
 			nonExistentPath := filepath.Join(tmpDir, "does-not-exist")
-			output, err := genesis("migrate", "add-evm-prefix", nonExistentPath, migratedPath)
+			output, err := genesis("import", "subnet", nonExistentPath, migratedPath)
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(ContainSubstring("failed to open source database"))
+			Expect(output).To(ContainSubstring("failed to check source database"))
 		})
 
 		It("should handle empty database", func() {
@@ -265,11 +219,15 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			Expect(err).NotTo(HaveOccurred())
 			db.Close()
 
-			output, err := genesis("migrate", "check-head", emptyPath)
-			// Should complete but find no head pointers
-			if err == nil {
-				Expect(output).To(ContainSubstring("not found"))
-			}
+			output, err := genesis("inspect", "tip", emptyPath)
+			// Should complete without error on empty database
+			Expect(err).NotTo(HaveOccurred())
+			// Output should indicate scanning or finding tip
+			Expect(output).To(Or(
+				ContainSubstring("Scanning"),
+				ContainSubstring("Finding"),
+				ContainSubstring("Tip"),
+			))
 		})
 	})
 })

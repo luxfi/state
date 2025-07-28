@@ -3,7 +3,7 @@
 ## Current Situation
 
 We have successfully extracted state data from subnet 96369 using the namespace tool:
-- Location: `/home/z/work/lux/genesis/output/mainnet/C/chaindata`
+- Location: `$HOME/work/lux/genesis/output/mainnet/C/chaindata`
 - Contains: ~6.5 million keys with "evm" prefix
 - Has: Account balances, contract code, contract storage
 - Missing: Block headers, bodies, receipts, canonical hashes
@@ -17,22 +17,22 @@ We have successfully extracted state data from subnet 96369 using the namespace 
 
 ## Locations Checked
 
-1. Original subnet database: `/home/z/.avalanche-cli/runs/network_current/node1/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb`
+1. Original subnet database: `$HOME/.avalanche-cli/runs/network_current/node1/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ/db/pebbledb`
    - Result: No block data found
 
-2. Extracted chaindata: `/home/z/work/lux/genesis/chaindata/lux-mainnet-96369/db/pebbledb`
+2. Extracted chaindata: `$HOME/work/lux/genesis/chaindata/lux-mainnet-96369/db/pebbledb`
    - Result: No block data found
 
-3. Prefixed chaindata: `/home/z/work/lux/genesis/output/mainnet/C/chaindata`
+3. Prefixed chaindata: `$HOME/work/lux/genesis/output/mainnet/C/chaindata`
    - Result: Has state data with "evm" prefix, no block data
 
-4. C-Chain database: `/home/z/.avalanche-cli/nodes/node1/db/C/db`
+4. C-Chain database: `$HOME/.avalanche-cli/nodes/node1/db/C/db`
    - Result: No block data found
 
 ## Available Tools
 
 1. **chaindata-transfer**: Tool to copy block data between databases
-   - Location: `/home/z/work/lux/genesis/bin/chaindata-transfer`
+   - Location: `$HOME/work/lux/genesis/bin/chaindata-transfer`
    - Problem: No block data to transfer
 
 2. **namespace**: Tool that extracted the state data

@@ -8,7 +8,7 @@ The genesis tool provides integrated import functionality that replaces the prev
 
 ## Prerequisites
 
-- Built `luxd` binary at `/home/z/work/lux/node/build/luxd`
+- Built `luxd` binary at `$HOME/work/lux/node/build/luxd`
 - Built `genesis` tool: `make build-genesis`
 - Source chain data in PebbleDB or LevelDB format
 - At least 500GB free disk space
@@ -25,7 +25,7 @@ Import existing blockchain data from another node or backup:
 ./bin/genesis import chain-data /path/to/source/chaindata \
   --data-dir=$HOME/.luxd-import \
   --network-id=96369 \
-  --luxd-path=/home/z/work/lux/node/build/luxd
+  --luxd-path=$HOME/work/lux/node/build/luxd
 
 # Using Makefile
 make import-chain-data SRC=/path/to/source/chaindata

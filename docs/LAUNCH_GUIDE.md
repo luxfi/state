@@ -61,8 +61,8 @@ make deploy-l2s          # Deploy L2s to local network
 
 1. Build the node and CLI tools:
 ```bash
-cd /home/z/work/lux/node && ./scripts/build.sh
-cd /home/z/work/lux/cli && go build -o bin/lux cmd/main.go
+cd $HOME/work/lux/node && ./scripts/build.sh
+cd $HOME/work/lux/cli && go build -o bin/lux cmd/main.go
 ```
 
 2. Ensure you have the chaindata available:

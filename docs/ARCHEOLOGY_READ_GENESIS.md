@@ -40,12 +40,12 @@ This command can read genesis data from various blockchain databases (PebbleDB, 
 
 ### Extract from LUX mainnet data
 ```bash
-./bin/archeology read-genesis /home/z/work/lux/genesis/chaindata/lux-mainnet-96369
+./bin/archeology read-genesis $HOME/work/lux/genesis/chaindata/lux-mainnet-96369
 ```
 
 ### Extract from archived blockchain data
 ```bash
-./bin/archeology read-genesis /home/z/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ
+./bin/archeology read-genesis $HOME/archived/restored-blockchain-data/chainData/dnmzhuf6poM6PUNQCe7MWWfBdTJEnddhHRNXz2x7H6qSmyBEJ
 ```
 
 ### Save genesis and show blockchain ID

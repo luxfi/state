@@ -10,7 +10,7 @@ This analysis identified addresses that held LUX tokens on chain 7777 but were n
 - **Total LUX amount to allocate**: 2,023,306,456.547631502151489258 LUX
 
 ## Files Generated
-1. `/home/z/work/lux/genesis/chaindata/lux-genesis-7777/7777-delta-allocations-for-xchain.csv`
+1. `$HOME/work/lux/genesis/chaindata/lux-genesis-7777/7777-delta-allocations-for-xchain.csv`
    - Contains the 69 addresses and their balances that need to be allocated on X-Chain
 
 ## Key Findings

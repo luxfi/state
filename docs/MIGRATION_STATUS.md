@@ -119,8 +119,8 @@ genesis/
 
 ## Support Resources
 
-- Genesis documentation: `/home/z/work/lux/genesis/docs/`
-- Node documentation: `/home/z/work/lux/node/README.md`
+- Genesis documentation: `$HOME/work/lux/genesis/docs/`
+- Node documentation: `$HOME/work/lux/node/README.md`
 - Original issue context: Migrating subnet 96369 to C-Chain
 
 ---

@@ -14,7 +14,7 @@ var _ = Describe("Database Operations", func() {
 	var genesisDir string
 
 	BeforeEach(func() {
-		homeDir := "/home/z"
+		homeDir := "$HOME"
 		genesisDir = filepath.Join(homeDir, "work/lux/genesis")
 	})
 

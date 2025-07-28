@@ -80,8 +80,8 @@
     ]
   },
   "files_generated": [
-    "/home/z/work/lux/genesis/data/7777-airdrop-96369-mainnet.csv",
-    "/home/z/work/lux/genesis/data/7777-airdrop-96369-mainnet-no-treasury.csv",
-    "/home/z/work/lux/genesis/data/7777-airdrop-summary.json"
+    "$HOME/work/lux/genesis/data/7777-airdrop-96369-mainnet.csv",
+    "$HOME/work/lux/genesis/data/7777-airdrop-96369-mainnet-no-treasury.csv",
+    "$HOME/work/lux/genesis/data/7777-airdrop-summary.json"
   ]
 }
