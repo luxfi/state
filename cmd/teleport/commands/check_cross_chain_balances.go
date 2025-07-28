@@ -39,7 +39,7 @@ This is useful for:
   teleport check-cross-chain-balances \
     --source-chain BSC --source-rpc https://bsc-rpc \
     --source-token 0x0a6045b79151d0a54dbd5227082445750a023af2 \
-    --target-chain "Zoo Mainnet" --target-rpc http://localhost:9650/ext/bc/zoo/rpc \
+    --target-chain "Zoo Mainnet" --target-rpc http://localhost:9630/ext/bc/zoo/rpc \
     --target-token 0x... \
     --address-file burners.txt \
     --compare

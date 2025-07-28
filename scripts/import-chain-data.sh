@@ -79,7 +79,7 @@ nohup "$LUXD_PATH" \
     --data-dir="$DATA_DIR" \
     --import-chain-data="$IMPORT_SOURCE" \
     --http-host=0.0.0.0 \
-    --http-port=9650 \
+    --http-port=9630 \
     --staking-ephemeral-cert-enabled \
     --public-ip=127.0.0.1 \
     --log-level=info \
@@ -162,7 +162,7 @@ nohup "$LUXD_PATH" \
     --network-id="$NETWORK_ID" \
     --data-dir="$DATA_DIR" \
     --http-host=0.0.0.0 \
-    --http-port=9650 \
+    --http-port=9630 \
     --staking-ephemeral-cert-enabled \
     --public-ip=127.0.0.1 \
     --pruning-enabled \
@@ -181,7 +181,7 @@ sleep 20
 # Check if node is running
 if curl -s -X POST -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","id":1,"method":"info.isBootstrapped","params":{"chain":"C"}}' \
-    http://localhost:9650/ext/info > /dev/null 2>&1; then
+    http://localhost:9630/ext/info > /dev/null 2>&1; then
     log "✅ Node is running successfully!"
 else
     error "Node failed to start properly"
@@ -210,7 +210,7 @@ log "✅ Import process completed!"
 log ""
 log "Next steps:"
 log "1. Monitor the node: tail -f $NORMAL_LOG"
-log "2. Check node status: curl -X POST -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"info.isBootstrapped\",\"params\":{\"chain\":\"C\"}}' http://localhost:9650/ext/info"
+log "2. Check node status: curl -X POST -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"info.isBootstrapped\",\"params\":{\"chain\":\"C\"}}' http://localhost:9630/ext/info"
 log "3. Backup database: $LOG_DIR/backup-database.sh"
 log "4. Monitor for 48h before enabling indexing"
 log ""

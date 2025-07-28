@@ -4,7 +4,7 @@
 set -e
 
 # Configuration
-RPC_URL="${RPC_URL:-http://localhost:9650}"
+RPC_URL="${RPC_URL:-http://localhost:9630}"
 CHECK_INTERVAL="${CHECK_INTERVAL:-60}"  # Check every 60 seconds
 ALERT_THRESHOLD="${ALERT_THRESHOLD:-5}" # Alert after 5 consecutive failures
 LOG_FILE="${LOG_FILE:-./monitoring.log}"

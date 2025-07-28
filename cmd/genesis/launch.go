@@ -153,7 +153,7 @@ func launchNetwork(network string, nodes int, dataDir string, clean bool, detach
 	
 	healthy := 0
 	for i := 0; i < nodes; i++ {
-		if isNodeHealthy(9650 + i*10) {
+		if isNodeHealthy(9630 + i*10) {
 			healthy++
 		}
 	}
@@ -325,7 +325,7 @@ func createNodeConfig(dataDir string, nodeNum int, network string, genesisDir st
 	os.MkdirAll(filepath.Join(nodeDir, "logs"), 0755)
 	
 	// Calculate ports
-	httpPort := 9650 + (nodeNum-1)*10
+	httpPort := 9630 + (nodeNum-1)*10
 	stakingPort := 9651 + (nodeNum-1)*10
 	
 	config := map[string]interface{}{

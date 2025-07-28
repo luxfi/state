@@ -120,11 +120,11 @@ func main() {
 	
 	fmt.Println("# Check treasury balance on migrated subnet")
 	fmt.Println("cast balance 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714 \\")
-	fmt.Println("  --rpc-url http://localhost:9650/ext/bc/<subnet-id>/rpc")
+	fmt.Println("  --rpc-url http://localhost:9630/ext/bc/<subnet-id>/rpc")
 	fmt.Println()
 	
 	fmt.Println("# Query historical block")
-	fmt.Println("cast block 1 --rpc-url http://localhost:9650/ext/bc/<subnet-id>/rpc")
+	fmt.Println("cast block 1 --rpc-url http://localhost:9630/ext/bc/<subnet-id>/rpc")
 	fmt.Println()
 
 	// Summary

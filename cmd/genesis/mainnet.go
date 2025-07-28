@@ -188,7 +188,7 @@ func createDeploymentConfig(configDir, dbType string) error {
 		"db-type":                       dbType,
 		"log-level":                     "info",
 		"log-format":                    "json",
-		"http-port":                     9650,
+		"http-port":                     9630,
 		"staking-port":                  9651,
 		"staking-enabled":               true,
 		"health-check-frequency":        "30s",

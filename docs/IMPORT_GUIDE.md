@@ -52,7 +52,7 @@ Monitor the node for stability (recommended 48 hours):
 ./bin/genesis import monitor \
   --interval=60s \
   --duration=48h \
-  --rpc-url=http://localhost:9650 \
+  --rpc-url=http://localhost:9630 \
   --failure-threshold=5
 
 # Using Makefile
@@ -62,7 +62,7 @@ make import-monitor
 Options:
 - `--interval`: How often to check node health (default: 60s)
 - `--duration`: Total monitoring duration (default: 48h)
-- `--rpc-url`: Node RPC endpoint (default: http://localhost:9650)
+- `--rpc-url`: Node RPC endpoint (default: http://localhost:9630)
 - `--failure-threshold`: Consecutive failures before alert (default: 5)
 
 The monitor will:
@@ -78,7 +78,7 @@ Check the current node status at any time:
 
 ```bash
 # Using the CLI
-./bin/genesis import status --rpc-url=http://localhost:9650
+./bin/genesis import status --rpc-url=http://localhost:9630
 
 # Using Makefile
 make import-status
@@ -121,7 +121,7 @@ Export blockchain state to CSV:
 ```bash
 # Using the CLI
 ./bin/genesis export state output.csv \
-  --rpc-url=http://localhost:9650/ext/bc/C/rpc \
+  --rpc-url=http://localhost:9630/ext/bc/C/rpc \
   --block=0
 
 # Using Makefile

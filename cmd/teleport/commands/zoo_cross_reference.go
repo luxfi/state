@@ -50,7 +50,7 @@ The following CSVs will be generated:
   teleport zoo-cross-reference --from-block 20000000 --to-block 25000000 --output-dir ./zoo-analysis
 
   # Include mainnet cross-reference
-  teleport zoo-cross-reference --mainnet-rpc http://localhost:9650/ext/bc/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/rpc
+  teleport zoo-cross-reference --mainnet-rpc http://localhost:9630/ext/bc/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/rpc
 
   # Use known holders file for validation
   teleport zoo-cross-reference --known-holders egg-holders.json --output-dir ./zoo-analysis`,

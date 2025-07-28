@@ -206,7 +206,7 @@ The unified tool for all genesis-related operations. It combines functionality f
 
 # Import state from specific block (requires RPC)
 ./bin/genesis import block 1000000 \
-    --rpc http://localhost:9650/ext/bc/C/rpc \
+    --rpc http://localhost:9630/ext/bc/C/rpc \
     --output block-1M-state.csv
 
 # Import C-Chain data from extracted blockchain

@@ -69,13 +69,13 @@ cmd_status() {
         echo "   PID: $PID"
         
         # Check RPC
-        if curl -s http://localhost:9650/ext/health > /dev/null 2>&1; then
+        if curl -s http://localhost:9630/ext/health > /dev/null 2>&1; then
             echo "✅ RPC is accessible"
             
             # Get block height
             RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
                 -d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-                http://localhost:9650/ext/bc/C/rpc 2>/dev/null || echo "{}")
+                http://localhost:9630/ext/bc/C/rpc 2>/dev/null || echo "{}")
             
             HEX_HEIGHT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
             if [ -n "$HEX_HEIGHT" ]; then
@@ -86,7 +86,7 @@ cmd_status() {
             # Get bootstrap status
             BOOTSTRAP=$(curl -s -X POST -H "Content-Type: application/json" \
                 -d '{"jsonrpc":"2.0","id":1,"method":"info.isBootstrapped","params":{"chain":"C"}}' \
-                http://localhost:9650/ext/info 2>/dev/null || echo "{}")
+                http://localhost:9630/ext/info 2>/dev/null || echo "{}")
             
             if echo "$BOOTSTRAP" | grep -q '"isBootstrapped":true'; then
                 echo "✅ Node is bootstrapped"

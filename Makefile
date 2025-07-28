@@ -16,90 +16,80 @@ TEST_DIR=test
 # Temporary directory for tests
 TMP_DIR=.tmp
 
-# Build all tools
+# Main genesis binary
+GENESIS_BIN=$(BIN_DIR)/genesis
+
+# Build the unified genesis tool
+.PHONY: all
 all: build test
 
-# Build migration tools
+.PHONY: build
 build: clean
-	@echo "Building migration tools..."
+	@echo "Building unified genesis tool..."
 	@mkdir -p $(BIN_DIR)
-	$(GOBUILD) -o $(BIN_DIR)/add-evm-prefix-to-blocks add-evm-prefix-to-blocks.go
-	$(GOBUILD) -o $(BIN_DIR)/check-head-pointers check-head-pointers.go
-	$(GOBUILD) -o $(BIN_DIR)/create-synthetic-blockchain create-synthetic-blockchain.go
-	$(GOBUILD) -o $(BIN_DIR)/replay-consensus-pebble replay-consensus-pebble.go
-	$(GOBUILD) -o $(BIN_DIR)/analyze-key-structure analyze-key-structure.go
-	$(GOBUILD) -o $(BIN_DIR)/check-canonical-keys check-canonical-keys.go
-	$(GOBUILD) -o $(BIN_DIR)/find-canonical-mappings find-canonical-mappings.go
-	$(GOBUILD) -o $(BIN_DIR)/dump-sample-keys dump-sample-keys.go
-	@echo "Build complete!"
+	$(GOBUILD) -o $(GENESIS_BIN) ./cmd/genesis
+	@echo "Build complete! Run '$(GENESIS_BIN) --help' to see all commands."
 
 # Run Ginkgo tests with optional filter
+.PHONY: test
 test: build
 	@echo "Setting up test environment..."
 	@mkdir -p $(TMP_DIR)
 	@mkdir -p $(TEST_DIR)
-	@if [ -f migration_test.go ]; then mv migration_test.go $(TEST_DIR)/; fi
 	@echo "Running Ginkgo tests..."
 ifdef filter
 	@echo "Running tests matching: $(filter)"
-	@cd $(TEST_DIR) && $(GINKGO) run -v --focus="$(filter)" --fail-fast
+	@cd $(TEST_DIR) && $(GINKGO) -v --label-filter="$(filter)" --fail-fast
 else
 	@echo "Running all tests..."
-	@cd $(TEST_DIR) && $(GINKGO) run -v --randomize-all --randomize-suites
+	@cd $(TEST_DIR) && $(GINKGO) -v --fail-fast
 endif
 
-# Run specific test phases
-test-step1:
-	@$(MAKE) test filter="Step 1"
+# Test specific categories
+.PHONY: test-migration
+test-migration:
+	@$(MAKE) test filter="migration"
 
-test-step2:
-	@$(MAKE) test filter="Step 2"
-
-test-step3:
-	@$(MAKE) test filter="Step 3"
-
-test-step4:
-	@$(MAKE) test filter="Step 4"
-
-test-step5:
-	@$(MAKE) test filter="Step 5"
-
+.PHONY: test-integration
 test-integration:
-	@$(MAKE) test filter="Integration"
+	@$(MAKE) test filter="integration"
 
+.PHONY: test-performance
 test-performance:
-	@$(MAKE) test filter="Performance"
+	@$(MAKE) test filter="performance"
 
+.PHONY: test-edge-cases
 test-edge-cases:
-	@$(MAKE) test filter="Edge Cases"
+	@$(MAKE) test filter="edge"
 
-# Run migration pipeline step by step
-migrate-step-by-step: build
-	@echo "Running migration pipeline step by step..."
-	@$(MAKE) test-step1
-	@echo "\nPress Enter to continue to Step 2..."
-	@read dummy
-	@$(MAKE) test-step2
-	@echo "\nPress Enter to continue to Step 3..."
-	@read dummy
-	@$(MAKE) test-step3
-	@echo "\nPress Enter to continue to Step 4..."
-	@read dummy
-	@$(MAKE) test-step4
-	@echo "\nPress Enter to continue to Step 5..."
-	@read dummy
-	@$(MAKE) test-step5
-	@echo "\nPress Enter to run integration test..."
-	@read dummy
-	@$(MAKE) test-integration
+# Quick test without building
+.PHONY: test-quick
+test-quick:
+	@cd $(TEST_DIR) && $(GINKGO) -v --fail-fast
+
+# Test with coverage
+.PHONY: test-coverage
+test-coverage: build
+	@echo "Running tests with coverage..."
+	@cd $(TEST_DIR) && $(GINKGO) -v --cover --coverprofile=coverage.out
+	@$(GOCMD) tool cover -html=$(TEST_DIR)/coverage.out -o $(TEST_DIR)/coverage.html
+	@echo "Coverage report: $(TEST_DIR)/coverage.html"
+
+# Interactive test mode (step by step)
+.PHONY: test-interactive
+test-interactive: build
+	@echo "Running tests in interactive mode..."
+	@cd $(TEST_DIR) && $(GINKGO) -v --poll-progress-after=0 --poll-progress-interval=10s
 
 # Install Ginkgo if not present
+.PHONY: install-ginkgo
 install-ginkgo:
 	@echo "Installing Ginkgo test framework..."
 	@$(GOGET) github.com/onsi/ginkgo/v2/ginkgo
 	@$(GOGET) github.com/onsi/gomega/...
 
 # Clean build artifacts and temp files
+.PHONY: clean
 clean:
 	@echo "Cleaning..."
 	@rm -rf $(BIN_DIR)
@@ -109,79 +99,151 @@ clean:
 	@echo "Clean complete!"
 
 # Clean everything including test outputs
+.PHONY: clean-all
 clean-all: clean
 	@rm -rf $(TEST_DIR)/$(TMP_DIR)
 	@echo "Deep clean complete!"
 
-# Run a specific migration tool
-run-prefix-migration:
-	@if [ -z "$(src)" ] || [ -z "$(dst)" ]; then \
-		echo "Usage: make run-prefix-migration src=<source-db> dst=<destination-db>"; \
+# Migration pipeline commands using the unified tool
+.PHONY: migrate-subnet
+migrate-subnet:
+	@if [ -z "$(SRC)" ] || [ -z "$(DST)" ]; then \
+		echo "Usage: make migrate-subnet SRC=<subnet-db> DST=<destination-root>"; \
 		exit 1; \
 	fi
-	@$(BIN_DIR)/add-evm-prefix-to-blocks $(src) $(dst)
+	@echo "Running full migration pipeline..."
+	@$(GENESIS_BIN) migrate full $(SRC) $(DST)
 
-run-synthetic-blockchain:
-	@if [ -z "$(state)" ] || [ -z "$(output)" ]; then \
-		echo "Usage: make run-synthetic-blockchain state=<state-db> output=<output-db> [blocks=1082780] [chainid=96369]"; \
+# Individual migration steps
+.PHONY: add-evm-prefix
+add-evm-prefix:
+	@if [ -z "$(SRC)" ] || [ -z "$(DST)" ]; then \
+		echo "Usage: make add-evm-prefix SRC=<source-db> DST=<destination-db>"; \
 		exit 1; \
 	fi
-	@$(BIN_DIR)/create-synthetic-blockchain --state $(state) --output $(output) --blocks $${blocks:-1082780} --chainid $${chainid:-96369}
+	@$(GENESIS_BIN) migrate add-evm-prefix $(SRC) $(DST)
 
-run-consensus-replay:
-	@if [ -z "$(evm)" ] || [ -z "$(state)" ]; then \
-		echo "Usage: make run-consensus-replay evm=<evm-db> state=<state-db> [tip=1082780] [batch=10000]"; \
+.PHONY: rebuild-canonical
+rebuild-canonical:
+	@if [ -z "$(DB)" ]; then \
+		echo "Usage: make rebuild-canonical DB=<path-to-evm-pebbledb>"; \
 		exit 1; \
 	fi
-	@$(BIN_DIR)/replay-consensus-pebble --evm $(evm) --state $(state) --tip $${tip:-1082780} --batch $${batch:-10000}
+	@$(GENESIS_BIN) migrate rebuild-canonical $(DB)
 
-# Check database structure
-check-db:
-	@if [ -z "$(db)" ]; then \
-		echo "Usage: make check-db db=<database-path>"; \
+.PHONY: check-head
+check-head:
+	@if [ -z "$(DB)" ]; then \
+		echo "Usage: make check-head DB=<database-path>"; \
 		exit 1; \
 	fi
-	@echo "Checking head pointers..."
-	@$(BIN_DIR)/check-head-pointers $(db)
-	@echo "\nAnalyzing key structure..."
-	@$(BIN_DIR)/analyze-key-structure $(db) | head -50
-	@echo "\nChecking canonical keys..."
-	@$(BIN_DIR)/check-canonical-keys $(db)
+	@$(GENESIS_BIN) migrate check-head $(DB)
+
+.PHONY: peek-tip
+peek-tip:
+	@if [ -z "$(DB)" ]; then \
+		echo "Usage: make peek-tip DB=<database-path>"; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) migrate peek-tip $(DB)
+
+.PHONY: replay-consensus
+replay-consensus:
+	@if [ -z "$(EVM)" ] || [ -z "$(STATE)" ] || [ -z "$(TIP)" ]; then \
+		echo "Usage: make replay-consensus EVM=<evm-db> STATE=<state-db> TIP=<height>"; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) migrate replay-consensus --evm $(EVM) --state $(STATE) --tip $(TIP)
+
+# Generate genesis files
+.PHONY: generate
+generate:
+	@echo "Generating genesis files..."
+	@$(GENESIS_BIN) generate
+
+# Import chain data with monitoring
+.PHONY: import-chain-data
+import-chain-data:
+	@if [ -z "$(SRC)" ]; then \
+		echo "Usage: make import-chain-data SRC=/path/to/source/chaindata"; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) import chain-data $(SRC)
+
+.PHONY: import-monitor
+import-monitor:
+	@$(GENESIS_BIN) import monitor
+
+.PHONY: import-status
+import-status:
+	@$(GENESIS_BIN) import status
+
+# Export commands
+.PHONY: export-backup
+export-backup:
+	@if [ -z "$(DB)" ]; then \
+		echo "Usage: make export-backup DB=/path/to/database"; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) export backup $(DB)
+
+.PHONY: export-state
+export-state:
+	@if [ -z "$(DB)" ]; then \
+		echo "Usage: make export-state DB=/path/to/database"; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) export state $(DB)
+
+# Validator management
+.PHONY: validators-list
+validators-list:
+	@$(GENESIS_BIN) validators list
+
+.PHONY: validators-add
+validators-add:
+	@if [ -z "$(NODE_ID)" ] || [ -z "$(ETH_ADDRESS)" ]; then \
+		echo "Usage: make validators-add NODE_ID=NodeID-xxx ETH_ADDRESS=0x..."; \
+		exit 1; \
+	fi
+	@$(GENESIS_BIN) validators add --node-id $(NODE_ID) --eth-address $(ETH_ADDRESS)
 
 # Help
+.PHONY: help
 help:
 	@echo "Lux Genesis Migration Makefile"
 	@echo ""
-	@echo "Main commands:"
-	@echo "  make all                 - Build tools and run all tests"
-	@echo "  make build               - Build all migration tools"
-	@echo "  make test                - Run all Ginkgo tests"
-	@echo "  make test filter=<text>  - Run tests matching filter"
+	@echo "Build targets:"
+	@echo "  make build              - Build the unified genesis tool"
+	@echo "  make clean              - Clean build artifacts"
+	@echo "  make clean-all          - Deep clean including test outputs"
 	@echo ""
-	@echo "Step-by-step testing:"
-	@echo "  make test-step1          - Test subnet data creation"
-	@echo "  make test-step2          - Test EVM prefix migration"
-	@echo "  make test-step3          - Test synthetic blockchain creation"
-	@echo "  make test-step4          - Test consensus state generation"
-	@echo "  make test-step5          - Test verification tools"
-	@echo "  make test-integration    - Test full pipeline"
-	@echo "  make test-performance    - Run performance benchmarks"
-	@echo "  make test-edge-cases     - Test error handling"
-	@echo "  make migrate-step-by-step - Interactive step-by-step migration"
+	@echo "Test targets:"
+	@echo "  make test               - Run all tests"
+	@echo "  make test filter=X      - Run tests matching filter X"
+	@echo "  make test-migration     - Run migration tests only"
+	@echo "  make test-integration   - Run integration tests only"
+	@echo "  make test-coverage      - Run tests with coverage report"
 	@echo ""
-	@echo "Migration tools:"
-	@echo "  make run-prefix-migration src=<db> dst=<db>"
-	@echo "  make run-synthetic-blockchain state=<db> output=<db> [blocks=N] [chainid=N]"
-	@echo "  make run-consensus-replay evm=<db> state=<db> [tip=N] [batch=N]"
-	@echo "  make check-db db=<path>  - Analyze database structure"
+	@echo "Migration commands:"
+	@echo "  make migrate-subnet SRC=<db> DST=<root>  - Full migration pipeline"
+	@echo "  make add-evm-prefix SRC=<db> DST=<db>    - Add EVM prefix to keys"
+	@echo "  make rebuild-canonical DB=<db>            - Rebuild canonical mappings"
+	@echo "  make check-head DB=<db>                   - Check head pointers"
+	@echo "  make peek-tip DB=<db>                     - Find highest block"
+	@echo "  make replay-consensus EVM=<db> STATE=<db> TIP=<n> - Replay consensus"
 	@echo ""
-	@echo "Other commands:"
-	@echo "  make install-ginkgo      - Install Ginkgo test framework"
-	@echo "  make clean               - Clean build artifacts"
-	@echo "  make clean-all           - Clean everything"
+	@echo "Genesis commands:"
+	@echo "  make generate           - Generate all genesis files"
+	@echo "  make validators-list    - List validators"
+	@echo "  make validators-add     - Add a validator"
+	@echo ""
+	@echo "Import/Export commands:"
+	@echo "  make import-chain-data SRC=<path>  - Import chain data"
+	@echo "  make import-monitor                - Monitor import progress"
+	@echo "  make import-status                 - Check import status"
+	@echo "  make export-backup DB=<path>       - Create backup"
+	@echo "  make export-state DB=<path>        - Export state to CSV"
 
-.PHONY: all build test clean clean-all help install-ginkgo \
-        test-step1 test-step2 test-step3 test-step4 test-step5 \
-        test-integration test-performance test-edge-cases \
-        migrate-step-by-step run-prefix-migration \
-        run-synthetic-blockchain run-consensus-replay check-db
+# Default target
+.DEFAULT_GOAL := help

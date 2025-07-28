@@ -2,7 +2,22 @@
 
 ## Chain Data Import Process
 
-This runbook covers the complete process of importing chain data into a Lux node, monitoring it, and preparing for production deployment.
+This runbook covers the complete process of importing chain data into a Lux node, including subnet-to-C-Chain migration with canonical mapping fixes.
+
+## Quick Start: Production Migration
+
+For subnet-to-C-Chain migration, use the automated script:
+
+```bash
+# Complete migration with all fixes
+./migrate_with_rebuild.sh /subnet96369/pebbledb /data/cchain-full
+
+# Launch node
+luxd --db-dir /data/cchain-full --network-id 96369 --staking-enabled=false
+
+# Verify with RPC
+./tools/rpc_verify.sh
+```
 
 ## Prerequisites
 
@@ -68,12 +83,12 @@ Once import completes and node restarts:
 # Check node is running
 curl -X POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"info.isBootstrapped","params":{"chain":"C"}}' \
-  http://localhost:9650/ext/info
+  http://localhost:9630/ext/info
 
 # Check block height
 curl -X POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-  http://localhost:9650/ext/bc/C/rpc
+  http://localhost:9630/ext/bc/C/rpc
 ```
 
 ### 5. Backup Database
@@ -120,7 +135,7 @@ $LUXD_PATH \
   --network-id=$NETWORK_ID \
   --data-dir=$DATA_DIR \
   --http-host=0.0.0.0 \
-  --http-port=9650 \
+  --http-port=9630 \
   --index-enabled \
   --pruning-enabled \
   --state-sync-enabled=false
@@ -178,7 +193,7 @@ grep -i error logs/import-*.log
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"info.peers","params":[]}' \
-  http://localhost:9650/ext/info
+  http://localhost:9630/ext/info
 ```
 
 2. Add bootstrap nodes:
@@ -190,7 +205,7 @@ curl -X POST -H "Content-Type: application/json" \
 3. Check firewall rules:
 ```bash
 # Ensure ports are open
-sudo ufw allow 9650/tcp  # HTTP API
+sudo ufw allow 9630/tcp  # HTTP API
 sudo ufw allow 9651/tcp  # Staking
 ```
 
@@ -321,15 +336,15 @@ For emergencies:
 # Check node status
 curl -sX POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"health.health","params":[]}' \
-  http://localhost:9650/ext/health
+  http://localhost:9630/ext/health
 
 # Get network info
 curl -sX POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"info.getNetworkName","params":[]}' \
-  http://localhost:9650/ext/info
+  http://localhost:9630/ext/info
 
 # Check C-Chain sync status
 curl -sX POST -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_syncing","params":[]}' \
-  http://localhost:9650/ext/bc/C/rpc
+  http://localhost:9630/ext/bc/C/rpc
 ```

@@ -151,7 +151,7 @@ func main() {
 	fmt.Printf("\n✅ Chain continuity set! Node should now recognize %d blocks\n", targetBlock)
 	fmt.Println("\n🚀 To verify:")
 	fmt.Println("   1. Start the node")
-	fmt.Println("   2. Check RPC: curl -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_blockNumber\",\"params\":[]}' http://localhost:9650/ext/bc/C/rpc")
+	fmt.Println("   2. Check RPC: curl -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_blockNumber\",\"params\":[]}' http://localhost:9630/ext/bc/C/rpc")
 }
 
 func findHighestBlock(db *pebble.DB) (uint64, common.Hash) {

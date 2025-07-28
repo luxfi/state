@@ -55,7 +55,7 @@ Generated files:
 
   # With mainnet cross-reference
   teleport zoo-full-analysis \
-    --mainnet-rpc http://localhost:9650/ext/bc/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/rpc \
+    --mainnet-rpc http://localhost:9630/ext/bc/bXe2MhhAnXg6WGj6G8oDk55AKT1dMMsN72S8te7JdvzfZX1zM/rpc \
     --output-dir ./zoo-analysis`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Create output directory

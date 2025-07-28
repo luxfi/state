@@ -54,7 +54,7 @@ func NewTokenScanner(config TokenScannerConfig) (*TokenScanner, error) {
 			config.RPC = "https://polygon-rpc.com"
 		case "7777", "96369":
 			// Local chains
-			config.RPC = "http://localhost:9650/ext/bc/C/rpc"
+			config.RPC = "http://localhost:9630/ext/bc/C/rpc"
 		default:
 			return nil, fmt.Errorf("RPC endpoint required for chain: %s", config.Chain)
 		}

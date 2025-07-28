@@ -576,7 +576,7 @@ echo ""
 # Test C-Chain RPC
 curl -s -X POST -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    http://localhost:9650/ext/bc/C/rpc
+    http://localhost:9630/ext/bc/C/rpc
 
 echo ""
 echo "=== VERIFICATION COMPLETE ==="

@@ -15,7 +15,7 @@ make launch
 - **Chain ID**: 1 (presented to apps) + 96369 (network ID)
 - **Type**: C-Chain with POA automining
 - **Data**: Imported from existing chain data
-- **RPC**: http://localhost:9650/ext/bc/C/rpc
+- **RPC**: http://localhost:9630/ext/bc/C/rpc
 
 ### L2 Networks
 
@@ -130,7 +130,7 @@ make launch              # Try again
 ### Check if network is running
 ```bash
 curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-  -H 'content-type:application/json;' http://localhost:9650/ext/bc/C/rpc
+  -H 'content-type:application/json;' http://localhost:9630/ext/bc/C/rpc
 ```
 
 ### View logs
