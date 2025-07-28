@@ -6,7 +6,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.5
 	github.com/lib/pq v1.10.9
 	github.com/luxfi/geth v1.16.2
-	github.com/luxfi/ids v0.1.0
+	github.com/luxfi/ids v1.0.1
 	github.com/luxfi/node v1.15.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
