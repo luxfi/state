@@ -6,7 +6,7 @@ This document explains how to properly launch the Lux Network (96369) and L2 sub
 
 1. Build luxd and lux-cli:
 ```bash
-cd /home/z/work/lux
+cd $HOME/work/lux
 make build-node    # Builds luxd
 make build-cli     # Builds lux-cli
 ```

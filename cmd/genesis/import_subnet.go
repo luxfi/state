@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/luxfi/geth/common"
@@ -14,7 +16,7 @@ import (
 // importSubnetCmd imports subnet chain data as C-Chain continuation
 func importSubnetCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "import-subnet [source-db] [dest-db]",
+		Use:   "subnet [source-db] [dest-db]",
 		Short: "Import subnet chain data as C-Chain continuation",
 		Long: `Import subnet blockchain data with proper chain continuity.
 		
@@ -34,80 +36,128 @@ This command:
 }
 
 func runImportSubnet(cmd *cobra.Command, args []string) error {
-	srcPath := args[0]
-	dstPath := args[1]
+	// Resolve paths relative to work directory
+	srcPath := ResolvePath(args[0])
+	dstPath := ResolvePath(args[1])
 	
 	fmt.Printf("📦 Importing subnet data as C-Chain continuation\n")
 	fmt.Printf("   Source: %s\n", srcPath)
 	fmt.Printf("   Destination: %s\n", dstPath)
 	
-	// Open source database
+	// Check if source has namespace prefix (subnet data)
+	hasNamespace, err := checkForNamespacePrefix(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to check source database: %w", err)
+	}
+	
+	var extractedPath string
+	if hasNamespace {
+		fmt.Println("\n🔍 Detected namespaced subnet data, extracting...")
+		
+		// Extract to temporary directory
+		extractedPath = dstPath + "-extracted"
+		
+		// Run extract state command
+		extractCmd := exec.Command(os.Args[0], "extract", "state", srcPath, extractedPath, "--network", "96369")
+		extractCmd.Stdout = os.Stdout
+		extractCmd.Stderr = os.Stderr
+		
+		if err := extractCmd.Run(); err != nil {
+			return fmt.Errorf("failed to extract state: %w", err)
+		}
+		
+		// Use extracted data as source
+		srcPath = extractedPath
+		defer os.RemoveAll(extractedPath) // Clean up temp data
+	}
+	
+	// Copy all data from source to destination
+	fmt.Println("\n📋 Copying blockchain data...")
+	
 	srcDB, err := pebble.Open(srcPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open source database: %w", err)
 	}
 	defer srcDB.Close()
 	
-	// Open destination database
+	// Create destination directory
+	if err := os.MkdirAll(dstPath, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+	
 	dstDB, err := pebble.Open(dstPath, &pebble.Options{})
 	if err != nil {
 		return fmt.Errorf("failed to open destination database: %w", err)
 	}
 	defer dstDB.Close()
 	
-	// Find the highest block in source
-	highestBlock, highestHash, err := findHighestBlock(srcDB)
+	// Copy all keys
+	iter, err := srcDB.NewIter(nil)
+	if err != nil {
+		return fmt.Errorf("failed to create iterator: %w", err)
+	}
+	defer iter.Close()
+	
+	count := 0
+	batch := dstDB.NewBatch()
+	
+	for iter.First(); iter.Valid(); iter.Next() {
+		key := make([]byte, len(iter.Key()))
+		copy(key, iter.Key())
+		
+		value := make([]byte, len(iter.Value()))
+		copy(value, iter.Value())
+		
+		if err := batch.Set(key, value, nil); err != nil {
+			return fmt.Errorf("failed to set key: %w", err)
+		}
+		
+		count++
+		if count%10000 == 0 {
+			if err := batch.Commit(pebble.Sync); err != nil {
+				return fmt.Errorf("failed to commit batch: %w", err)
+			}
+			batch.Close()
+			batch = dstDB.NewBatch()
+			fmt.Printf("   Copied %d keys...\n", count)
+		}
+	}
+	
+	// Commit final batch
+	if err := batch.Commit(pebble.Sync); err != nil {
+		return fmt.Errorf("failed to commit final batch: %w", err)
+	}
+	batch.Close()
+	
+	fmt.Printf("   Total keys copied: %d\n", count)
+	
+	// Find the highest block
+	highestBlock, highestHash, err := findHighestBlock(dstDB)
 	if err != nil {
 		return fmt.Errorf("failed to find highest block: %w", err)
 	}
 	
-	fmt.Printf("📊 Found highest block: %d (0x%s)\n", highestBlock, hex.EncodeToString(highestHash[:]))
+	fmt.Printf("\n📊 Found highest block: %d (0x%s)\n", highestBlock, hex.EncodeToString(highestHash[:]))
 	
-	// Set accepted block markers
-	fmt.Println("\n⚙️  Setting chain continuity markers...")
+	// Set chain continuity markers
+	fmt.Println("\n🔗 Setting chain continuity markers...")
 	
-	// For each block, mark it as accepted
-	acceptedPrefix := []byte("a") // accepted blocks prefix
-	
-	for blockNum := uint64(0); blockNum <= highestBlock; blockNum++ {
-		// Find block hash for this number
-		hashKey := append([]byte{0x48}, encodeBlockNumber(blockNum)...) // 0x48 = 'H' for number->hash
-		hashData, closer, err := srcDB.Get(hashKey)
-		if err != nil {
-			continue // Skip if not found
-		}
-		blockHash := common.BytesToHash(hashData)
-		closer.Close()
-		
-		// Mark as accepted
-		acceptedKey := append(acceptedPrefix, blockHash[:]...)
-		acceptedValue := encodeBlockNumber(blockNum)
-		
-		if err := dstDB.Set(acceptedKey, acceptedValue, pebble.Sync); err != nil {
-			log.Printf("Failed to mark block %d as accepted: %v", blockNum, err)
-		}
-		
-		if blockNum%1000 == 0 {
-			fmt.Printf("   Marked %d blocks as accepted...\n", blockNum)
-		}
-	}
-	
-	// Set the chain head pointers
-	fmt.Println("\n🔗 Setting chain head pointers...")
-	
-	// LastAcceptedKey used by EVM
-	lastAcceptedKey := []byte("lastAcceptedKey")
-	if err := dstDB.Set(lastAcceptedKey, highestHash[:], pebble.Sync); err != nil {
-		return fmt.Errorf("failed to set lastAcceptedKey: %w", err)
-	}
-	
-	// Standard pointer keys
+	// Set all the necessary pointers for C-Chain
 	pointers := map[string][]byte{
-		"LastAccepted": highestHash[:],
-		"lastAccepted": highestHash[:],
-		"LastBlock":    highestHash[:],
-		"LastHeader":   highestHash[:],
-		"Height":       encodeBlockNumber(highestBlock),
+		// EVM pointers
+		"LastAcceptedKey": highestHash[:],
+		"lastAcceptedKey": highestHash[:],
+		"LastAccepted":    highestHash[:],
+		"lastAccepted":    highestHash[:],
+		"LastBlock":       highestHash[:],
+		"LastHeader":      highestHash[:],
+		"LastFast":        highestHash[:],
+		"Height":          encodeBlockNumber(highestBlock),
+		
+		// Geth-specific pointers
+		string(append([]byte("h"), encodeBlockNumber(highestBlock)...)): highestHash[:], // head block hash
+		string([]byte("LastFinalized")): highestHash[:],
+		string([]byte("LastSafe")):       highestHash[:],
 	}
 	
 	for key, value := range pointers {
@@ -118,19 +168,11 @@ func runImportSubnet(cmd *cobra.Command, args []string) error {
 		}
 	}
 	
-	// Also set head block hash
-	headBlockKey := []byte("LastBlock")
-	if err := dstDB.Set(headBlockKey, highestHash[:], pebble.Sync); err != nil {
-		log.Printf("Failed to set head block: %v", err)
-	}
+	fmt.Printf("\n✅ Import complete! Chain ready for C-Chain at block %d\n", highestBlock)
+	fmt.Println("\n📍 Next steps:")
+	fmt.Println("   1. Launch luxd with: ./bin/genesis launch L1")
+	fmt.Println("   2. Verify with: ./bin/genesis launch verify")
 	
-	// Set fast sync head
-	headFastKey := []byte("LastFast") 
-	if err := dstDB.Set(headFastKey, highestHash[:], pebble.Sync); err != nil {
-		log.Printf("Failed to set fast head: %v", err)
-	}
-	
-	fmt.Printf("\n✅ Import complete! Chain will continue from block %d\n", highestBlock)
 	return nil
 }
 
@@ -171,4 +213,53 @@ func encodeBlockNumber(number uint64) []byte {
 	enc := make([]byte, 8)
 	binary.BigEndian.PutUint64(enc, number)
 	return enc
+}
+
+func checkForNamespacePrefix(dbPath string) (bool, error) {
+	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+	
+	// Check first few keys to see if they have 32-byte namespace prefix
+	iter, err := db.NewIter(nil)
+	if err != nil {
+		return false, err
+	}
+	defer iter.Close()
+	
+	// Sample a few keys
+	count := 0
+	var firstPrefix []byte
+	allSamePrefix := true
+	
+	for iter.First(); iter.Valid() && count < 100; iter.Next() {
+		key := iter.Key()
+		
+		// Subnet EVM uses 33-byte prefix (32 bytes namespace + 1 byte key type)
+		if len(key) >= 33 {
+			prefix := key[:32]
+			
+			if count == 0 {
+				firstPrefix = make([]byte, 32)
+				copy(firstPrefix, prefix)
+			} else {
+				// Check if all keys have same 32-byte prefix
+				for i := 0; i < 32; i++ {
+					if prefix[i] != firstPrefix[i] {
+						allSamePrefix = false
+						break
+					}
+				}
+			}
+		} else {
+			// Key too short to have namespace
+			allSamePrefix = false
+		}
+		count++
+	}
+	
+	// If we found keys and they all have same 32-byte prefix, it's namespaced
+	return count > 0 && allSamePrefix && len(firstPrefix) == 32, nil
 }

@@ -3,7 +3,7 @@
 ## Test Database Analysis
 
 ### Database Location
-- Path: `/home/z/.tmp/cchain-mini/evm/pebbledb`
+- Path: `$HOME/.tmp/cchain-mini/evm/pebbledb`
 - Size: Contains ~2.87M keys with evm namespace prefix
 
 ### Key Findings

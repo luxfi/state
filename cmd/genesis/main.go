@@ -69,6 +69,11 @@ type GenesisConfig struct {
 var cfg = &GenesisConfig{}
 
 func main() {
+	// Initialize paths first
+	if err := InitializePaths(); err != nil {
+		log.Fatalf("Failed to initialize paths: %v", err)
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "genesis",
 		Short: "Lux Network Genesis Management Tool",
@@ -84,11 +89,35 @@ This unified tool combines all genesis-related functionality:
 
 Use 'genesis --help' to see all available commands.`,
 		Version: fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Update paths based on flags
+			workDir, _ := cmd.Flags().GetString("work-dir")
+			outputDir, _ := cmd.Flags().GetString("output")
+			chaindataDir, _ := cmd.Flags().GetString("chaindata-dir")
+			
+			SetCommandLinePaths(workDir, outputDir, chaindataDir)
+			
+			// Update cfg.OutputDir to use Paths
+			if cfg.OutputDir == "" {
+				cfg.OutputDir = Paths.OutputDir
+			}
+			
+			// Print paths in verbose mode
+			if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
+				PrintPaths()
+				fmt.Println()
+			}
+			
+			return nil
+		},
 	}
 
 	// Add global flags
 	rootCmd.PersistentFlags().StringVar(&cfg.Network, "network", "mainnet", "Network to use (mainnet, testnet, local)")
-	rootCmd.PersistentFlags().StringVar(&cfg.OutputDir, "output", "", "Output directory")
+	rootCmd.PersistentFlags().String("output", "", "Output directory (default: <work-dir>/output)")
+	rootCmd.PersistentFlags().String("work-dir", "", "Working directory (default: executable directory)")
+	rootCmd.PersistentFlags().String("chaindata-dir", "", "Chaindata directory (default: <work-dir>/chaindata)")
+	rootCmd.PersistentFlags().Bool("verbose", false, "Verbose output")
 
 	// Core genesis commands
 	generateCmd := &cobra.Command{
@@ -123,13 +152,8 @@ Use 'genesis --help' to see all available commands.`,
 	}
 	addImportSubcommands(importCmd)
 
-	// Analyze command group
-	analyzeCmd := &cobra.Command{
-		Use:   "analyze",
-		Short: "Analyze blockchain data",
-		Long:  `Analyze extracted blockchain data for accounts, balances, and contracts`,
-	}
-	addAnalyzeSubcommands(analyzeCmd)
+	// Use new analyze module
+	analyzeCmd := NewAnalyzeCommand()
 
 	// Scan command group
 	scanCmd := &cobra.Command{
@@ -139,13 +163,8 @@ Use 'genesis --help' to see all available commands.`,
 	}
 	addScanSubcommands(scanCmd)
 
-	// Migrate command group
-	migrateCmd := &cobra.Command{
-		Use:   "migrate",
-		Short: "Migrate cross-chain assets",
-		Long:  `Migrate tokens and NFTs from external chains to Lux Network`,
-	}
-	addMigrateSubcommands(migrateCmd)
+	// Use new migrate module
+	migrateCmd := NewMigrateCommand()
 
 	// Process command group
 	processCmd := &cobra.Command{
@@ -262,6 +281,17 @@ This is useful for migrating subnet data to C-Chain format while preserving all 
 	}
 	addTransferSubcommands(transferCmd)
 
+	// Launch command to run luxd with migrated data
+	launchCmd := &cobra.Command{
+		Use:   "launch",
+		Short: "Launch luxd with imported chain data",
+		Long:  `Launch luxd node with properly imported chain data for testing and verification`,
+	}
+	addLaunchSubcommands(launchCmd)
+	
+	// Create new inspect module
+	inspectCmd := NewInspectCommand()
+
 	// Build command structure
 	rootCmd.AddCommand(
 		generateCmd,
@@ -269,20 +299,19 @@ This is useful for migrating subnet data to C-Chain format while preserving all 
 		extractCmd,
 		importCmd,
 		analyzeCmd,
+		inspectCmd,
 		scanCmd,
 		migrateCmd,
 		processCmd,
 		validateCmd,
 		exportCmd,
 		toolsCmd,
+		launchCmd,
 		readCmd,
 		diagnoseCmd,
 		countCmd,
 		pointersCmd,
 		transferCmd,
-		// Additional utility commands from teleport
-		teleportCmd.NewExportCommand(),
-		teleportCmd.NewVerifyCommand(),
 	)
 
 	// Execute the root command
@@ -510,126 +539,15 @@ func addScanSubcommands(scanCmd *cobra.Command) {
 	)
 }
 
+// DEPRECATED: Old functions moved to deprecated.go
+
+// Temporary stub functions until full migration is complete
 func addMigrateSubcommands(migrateCmd *cobra.Command) {
-	// Add read command to extract genesis from chain data
-	readCmd := &cobra.Command{
-		Use:   "read [source-path]",
-		Short: "Read genesis from historic chain data and migrate to new blockchain ID",
-		Long: `Read genesis from historic chain data, derive new blockchain ID, and optionally migrate data.
-		
-This command:
-1. Extracts genesis configuration from historic chain data
-2. Derives the new blockchain ID from the genesis
-3. Writes the genesis to ~/.luxd/configs/C/genesis.json
-4. Optionally migrates the chain data with updated blockchain ID`,
-		Args: cobra.ExactArgs(1),
-		RunE: runMigrateRead,
-	}
-	
-	readCmd.Flags().StringP("dst", "d", "", "Destination path for migrated data (optional)")
-	readCmd.Flags().BoolP("genesis-only", "g", false, "Only extract genesis, don't migrate data")
-	readCmd.Flags().BoolP("write-genesis", "w", true, "Write genesis to ~/.luxd/configs/C/genesis.json")
-	
-	// Add EVM prefix command
-	addEvmPrefixCmd := &cobra.Command{
-		Use:   "add-evm-prefix [source-db] [destination-db]",
-		Short: "Add 'evm' prefix to all database keys",
-		Long:  `Migrate subnet database keys by adding 'evm' prefix for C-Chain compatibility`,
-		Args:  cobra.ExactArgs(2),
-		RunE:  runAddEvmPrefix,
-	}
-	
-	// Rebuild canonical mappings command
-	rebuildCanonicalCmd := &cobra.Command{
-		Use:   "rebuild-canonical [database-path]",
-		Short: "Rebuild canonical number→hash mappings from headers",
-		Long:  `Scan all headers in the database and rebuild the evmn (canonical) mappings`,
-		Args:  cobra.ExactArgs(1),
-		RunE:  runRebuildCanonical,
-	}
-	
-	// Replay consensus command
-	replayConsensusCmd := &cobra.Command{
-		Use:   "replay-consensus",
-		Short: "Replay consensus state from blockchain data",
-		Long:  `Create Snowman consensus state database from blockchain data`,
-		RunE:  runReplayConsensus,
-	}
-	replayConsensusCmd.Flags().String("evm", "", "Path to EVM blockchain database")
-	replayConsensusCmd.Flags().String("state", "", "Path to output consensus state database")
-	replayConsensusCmd.Flags().String("tip", "0", "Tip height to replay to")
-	replayConsensusCmd.Flags().Int("batch", 50, "Batch size for processing")
-	replayConsensusCmd.MarkFlagRequired("evm")
-	replayConsensusCmd.MarkFlagRequired("state")
-	
-	// Peek tip command
-	peekTipCmd := &cobra.Command{
-		Use:   "peek-tip [database-path]",
-		Short: "Find the highest block number in the database",
-		Long:  `Scan the database to find the maximum block height`,
-		Args:  cobra.ExactArgs(1),
-		RunE:  runPeekTip,
-	}
-	
-	// Full migration pipeline command
-	fullMigrationCmd := &cobra.Command{
-		Use:   "full [source-db] [destination-root]",
-		Short: "Run complete subnet to C-Chain migration pipeline",
-		Long:  `Execute all migration steps in sequence`,
-		Args:  cobra.ExactArgs(2),
-		RunE:  runFullMigration,
-	}
-	
-	// Analysis commands
-	analyzeKeysCmd := &cobra.Command{
-		Use:   "analyze-keys [database-path]",
-		Short: "Analyze key structure in database",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runAnalyzeKeys,
-	}
-	
-	checkHeadCmd := &cobra.Command{
-		Use:   "check-head [database-path]",
-		Short: "Check head pointer keys in database",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runCheckHead,
-	}
-	
-	findCanonicalCmd := &cobra.Command{
-		Use:   "find-canonical [database-path]",
-		Short: "Find canonical mappings in database",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runFindCanonical,
-	}
-	
-	// Add migrate-subnet command for subnet to C-Chain migration
-	migrateCmd.AddCommand(migrateSubnetCmd)
-	
-	// Add subnet migration pipeline commands
-	migrateCmd.AddCommand(
-		addEvmPrefixCmd,
-		rebuildCanonicalCmd,
-		replayConsensusCmd,
-		peekTipCmd,
-		fullMigrationCmd,
-		analyzeKeysCmd,
-		checkHeadCmd,
-		findCanonicalCmd,
-	)
-	
-	// Add teleport migrate commands
-	migrateCmd.AddCommand(
-		readCmd,
-		mainnetCmd(),                 // Prepare 2025 mainnet launch
-		subnetToCChainCmd(),          // Convert subnet EVM to C-Chain format
-		subnetToL2Cmd(),              // Convert subnet EVM to L2 format  
-		migrateSubnetToCChainCmd(),   // Migrate subnet to C-Chain with prefixes
-		teleportCmd.NewMigrateCommand(),
-		teleportCmd.NewZooMigrateCommand(),
-		teleportCmd.NewZooCrossReferenceCommand(),
-		teleportCmd.NewZooCrossReferenceV2Command(),
-	)
+	// Functionality moved to NewMigrateCommand() in migrate.go
 }
+
+// Original implementations below...
+
 
 func addProcessSubcommands(processCmd *cobra.Command) {
 	// Process historic command
@@ -2801,41 +2719,6 @@ func runFullMigration(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runAnalyzeKeys(cmd *cobra.Command, args []string) error {
-	dbPath := args[0]
-	
-	fmt.Printf("Analyzing Key Structure in %s\n", dbPath)
-	
-	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-	
-	// Analyze key patterns
-	stats := make(map[string]int)
-	iter, err := db.NewIter(nil)
-	if err != nil {
-		return fmt.Errorf("failed to create iterator: %w", err)
-	}
-	defer iter.Close()
-	
-	for iter.First(); iter.Valid(); iter.Next() {
-		key := iter.Key()
-		if len(key) > 0 {
-			// Get prefix
-			prefix := string(key[:min(4, len(key))])
-			stats[prefix]++
-		}
-	}
-	
-	fmt.Println("\nKey prefix statistics:")
-	for prefix, count := range stats {
-		fmt.Printf("  %s: %d\n", prefix, count)
-	}
-	
-	return nil
-}
 
 func runCheckHead(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]

@@ -559,7 +559,7 @@ func runComprehensiveMigrate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("   Chain config: %s\n", chainConfigPath)
 	
 	fmt.Println("\n🚀 To start the node:")
-	fmt.Println("   cd /home/z/work/lux/node")
+	fmt.Println("   cd $HOME/work/lux/node")
 	fmt.Printf("   ./build/luxd --http-port=9630\n")
 	
 	return nil

@@ -32,7 +32,7 @@ luxd --db-dir /data/cchain-full --network-id 96369 --staking-enabled=false
 
 ```bash
 # Set environment variables
-export LUXD_PATH=/home/z/work/lux/node/build/luxd
+export LUXD_PATH=$HOME/work/lux/node/build/luxd
 export DATA_DIR=$HOME/.luxd-import
 export NETWORK_ID=96369
 export LOG_DIR=./logs
