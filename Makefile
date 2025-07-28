@@ -32,7 +32,10 @@ RPC_PORT   ?= 9630
 NETWORK    ?= lux-mainnet-96369
 
 # Default source chaindata path for import-chain-data
-SRC        ?= chaindata/$(NETWORK)/db/pebbledb
+SRC            ?= chaindata/$(NETWORK)/db/pebbledb
+
+# Path to the node's bootstrappers.json (avoids bootstrap panic on import)
+BOOTSTRAPPERS  ?= $(HOME)/work/lux/node/genesis/bootstrappers.json
 
 # Build the unified genesis tool
 .PHONY: all
@@ -179,6 +182,11 @@ generate:
 # Import chain data with monitoring
 .PHONY: import-chain-data
 import-chain-data:
+	@echo "📦 Ensuring bootstrappers.json is present for luxd init..."
+	@if [ ! -f bootstrappers.json ] && [ -f $(BOOTSTRAPPERS) ]; then \
+		cp $(BOOTSTRAPPERS) bootstrappers.json; \
+		echo "✔️  Copied bootstrappers.json from $(BOOTSTRAPPERS)"; \
+	fi
 	@echo "🚀 Importing chain data for network=$(NETWORK) from $(SRC)"
 	@$(GENESIS_BIN) import chain-data $(SRC)
 
