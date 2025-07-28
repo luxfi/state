@@ -19,6 +19,21 @@ TMP_DIR=.tmp
 # Main genesis binary
 GENESIS_BIN=$(BIN_DIR)/genesis
 
+# luxd binary path (used by import-monitor/status if node not running)
+# Path to luxd (override with LUXD=... if needed)
+LUXD       ?= $(HOME)/work/lux/node/build/luxd
+
+# Default import settings
+DATA_DIR   ?= $(HOME)/.luxd-import
+NETWORK_ID ?= 96369
+RPC_PORT   ?= 9630
+
+# Target network (subdirectory under chaindata/), e.g. lux-mainnet-96369
+NETWORK    ?= lux-mainnet-96369
+
+# Default source chaindata path for import-chain-data
+SRC        ?= chaindata/$(NETWORK)/db/pebbledb
+
 # Build the unified genesis tool
 .PHONY: all
 all: build test
@@ -164,19 +179,42 @@ generate:
 # Import chain data with monitoring
 .PHONY: import-chain-data
 import-chain-data:
-	@if [ -z "$(SRC)" ]; then \
-		echo "Usage: make import-chain-data SRC=/path/to/source/chaindata"; \
-		exit 1; \
-	fi
+	@echo "🚀 Importing chain data for network=$(NETWORK) from $(SRC)"
 	@$(GENESIS_BIN) import chain-data $(SRC)
 
 .PHONY: import-monitor
 import-monitor:
-	@$(GENESIS_BIN) import monitor
+	@echo "📡 Ensuring luxd is running for import monitoring..."
+	@if ! pgrep -f 'luxd.*--data-dir=$(DATA_DIR)' >/dev/null 2>&1; then \
+		if [ ! -f $(DATA_DIR)/chains/C/genesis.json ]; then \
+			echo "⚠️  Data directory '$(DATA_DIR)' is not initialized. Running import-chain-data for network=$(NETWORK)..."; \
+			$(MAKE) import-chain-data NETWORK=$(NETWORK); \
+		fi; \
+		echo "🔄 Starting luxd in normal mode..."; \
+		$(LUXD) --network-id=$(NETWORK_ID) --data-dir=$(DATA_DIR) \
+		  --http-host=0.0.0.0 --http-port=$(RPC_PORT) \
+		  --staking-enabled=false --index-enabled=false \
+		  --pruning-enabled=false --state-sync-enabled=false & \
+		sleep 5; \
+	fi
+	@$(GENESIS_BIN) import monitor --rpc-url=http://localhost:$(RPC_PORT)
 
 .PHONY: import-status
 import-status:
-	@$(GENESIS_BIN) import status
+	@echo "📡 Ensuring luxd is running for status check..."
+	@if ! pgrep -f 'luxd.*--data-dir=$(DATA_DIR)' >/dev/null 2>&1; then \
+		if [ ! -f $(DATA_DIR)/chains/C/genesis.json ]; then \
+			echo "⚠️  Data directory '$(DATA_DIR)' is not initialized. Running import-chain-data for network=$(NETWORK)..."; \
+			$(MAKE) import-chain-data NETWORK=$(NETWORK); \
+		fi; \
+		echo "🔄 Starting luxd in normal mode..."; \
+		$(LUXD) --network-id=$(NETWORK_ID) --data-dir=$(DATA_DIR) \
+		  --http-host=0.0.0.0 --http-port=$(RPC_PORT) \
+		  --staking-enabled=false --index-enabled=false \
+		  --pruning-enabled=false --state-sync-enabled=false & \
+		sleep 5; \
+	fi
+	@$(GENESIS_BIN) import status --rpc-url=http://localhost:$(RPC_PORT)
 
 # Export commands
 .PHONY: export-backup
