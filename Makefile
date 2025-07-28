@@ -93,6 +93,13 @@ test-coverage: build
 	@$(GOCMD) tool cover -html=$(TEST_DIR)/coverage.out -o $(TEST_DIR)/coverage.html
 	@echo "Coverage report: $(TEST_DIR)/coverage.html"
 
+# Test node launch (luxd smoke test)
+.PHONY: test-node
+test-node: build
+	@echo "Running luxd smoke test for subnet 96369..."
+	@cd $(TEST_DIR) && ACK_GINKGO_DEPRECATIONS=2.23.4 GINKGO_BUILD_TOOLING=false \
+		$(GINKGO) -tags test -v --focus "luxd smoke"
+
 # Interactive test mode (step by step)
 .PHONY: test-interactive
 test-interactive: build
