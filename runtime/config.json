@@ -1,0 +1,7 @@
+{
+  "http-port": 9650,
+  "log-display-level": "info",
+  "api-admin-enabled": true,
+  "api-eth-enabled": true,
+  "coreth-admin-api-enabled": true
+}

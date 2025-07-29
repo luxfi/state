@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  luxd:
+    image: ghcr.io/luxfi/node:genesis
+    container_name: luxd-mainnet
+    restart: unless-stopped
+    ports:
+      - "9630:9630"  # HTTP RPC
+      - "9631:9631"  # Staking port
+    volumes:
+      - luxd-data:/data
+      - ./runtime/config.json:/app/config.json:ro
+    environment:
+      - LUX_IMPORTED_BLOCK_ID=646572b42a6210ac8efea0ab0df2a028acde2297c3ae07bc8dd1fc3e120b802a
+      - LUX_IMPORTED_HEIGHT=1082780
+      - LUX_IMPORTED_TIMESTAMP=1717148410
+    networks:
+      - lux-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9630/ext/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  luxd-data:
+    driver: local
+
+networks:
+  lux-network:
+    driver: bridge
