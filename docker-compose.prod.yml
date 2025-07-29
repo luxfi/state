@@ -3,7 +3,7 @@ version: '3.8'
 services:
   luxd:
     image: ghcr.io/luxfi/node:genesis
-    container_name: luxd-mainnet-prod
+    container_name: luxd-mainnet
     restart: unless-stopped
     ports:
       - "9630:9630"

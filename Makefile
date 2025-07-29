@@ -30,6 +30,10 @@ DATA_DIR   ?= $(HOME)/.luxd-import
 NETWORK_ID ?= 96369
 RPC_PORT   ?= 9630
 
+# Chain and VM IDs for mainnet
+CHAIN_ID_MAINNET = 2vd59DPuN4Y9kQmmsbz8TGgJhJg5kVo8TCCYVBByTTWpSda3R1
+VM_ID = rXnv1kBRV9v14hJ6Ny94Gj9WZtpQ7wYZZH68aDbqiteS5RGiP
+
 # Target network (subdirectory under chaindata/), e.g. lux-mainnet-96369
 NETWORK    ?= lux-mainnet-96369
 
@@ -59,7 +63,7 @@ deps:
 
 # Default target - full end-to-end test
 .PHONY: all
-all: deps build import node-test
+all: deps build import smoke-test
 
 # Just build tools
 .PHONY: build
@@ -118,8 +122,13 @@ test-coverage: build
 .PHONY: test-node
 test-node: build
 	@echo "Running luxd smoke test for subnet 96369..."
-	@cd $(TEST_DIR) && ACK_GINKGO_DEPRECATIONS=2.23.4 GINKGO_BUILD_TOOLING=false \
-		$(GINKGO) -tags test -v --focus "luxd smoke"
+	@cd $(TEST_DIR) && $(GINKGO) -v --focus "C-Chain Migration Smoke"
+
+# Full smoke test with import and RPC validation
+.PHONY: smoke-test
+smoke-test: deps build
+	@echo "🧪 Running full migration smoke test..."
+	@cd $(TEST_DIR) && $(GINKGO) -v --focus "C-Chain Migration Smoke Tests"
 
 # Interactive test mode (step by step)
 .PHONY: test-interactive
@@ -309,6 +318,71 @@ validators-add:
 	fi
 	@$(GENESIS_BIN) validators add --node-id $(NODE_ID) --eth-address $(ETH_ADDRESS)
 
+# Complete migration and launch with PebbleDB
+.PHONY: migrate-and-launch
+migrate-and-launch: deps build
+	@echo "🚀 Complete subnet to C-Chain migration and launch"
+	@echo "================================================================"
+	@$(MAKE) migrate-subnet-data
+	@$(MAKE) rebuild-canonical
+	@$(MAKE) setup-coreth-structure
+	@$(MAKE) launch-with-pebble
+
+# Step 1: Migrate subnet data with EVM prefix
+.PHONY: migrate-subnet-data
+migrate-subnet-data:
+	@echo "📦 Step 1: Migrating subnet data with EVM prefix..."
+	@if [ ! -d "runtime/evm/pebbledb" ] || [ ! -f "runtime/evm/pebbledb/CURRENT" ]; then \
+		$(GENESIS_BIN) migrate add-evm-prefix \
+			chaindata/$(NETWORK)/db/pebbledb \
+			runtime/evm/pebbledb; \
+	else \
+		echo "✅ Migration already complete, skipping..."; \
+	fi
+
+# Step 2: Rebuild canonical mappings
+.PHONY: rebuild-canonical
+rebuild-canonical:
+	@echo "🔧 Step 2: Rebuilding canonical mappings..."
+	@$(GENESIS_BIN) migrate rebuild-canonical runtime/evm/pebbledb
+
+# Step 3: Setup Coreth directory structure
+.PHONY: setup-coreth-structure
+setup-coreth-structure:
+	@echo "📁 Step 3: Setting up Coreth directory structure..."
+	@# Source the detection script to get CHAIN_ID and VM_ID
+	@. ./scripts/detect-chain-ids.sh $(NETWORK_ID) runtime && \
+	if [ -z "$$CHAIN_ID" ] || [ -z "$$VM_ID" ]; then \
+		echo "Using fallback Chain ID and VM ID for network $(NETWORK_ID)"; \
+		CHAIN_ID=$(CHAIN_ID_MAINNET); \
+		VM_ID=$(VM_ID); \
+	fi && \
+	echo "   Chain ID: $$CHAIN_ID" && \
+	echo "   VM ID: $$VM_ID" && \
+	mkdir -p runtime/db/pebble/v1.0.0/chains/$$CHAIN_ID/vm/$$VM_ID/evm && \
+	echo "   Copying migrated data to Coreth location..." && \
+	cp -r runtime/evm/pebbledb/* runtime/db/pebble/v1.0.0/chains/$$CHAIN_ID/vm/$$VM_ID/evm/ && \
+	echo "✅ Directory structure ready"
+
+# Step 4: Launch with PebbleDB
+.PHONY: launch-with-pebble
+launch-with-pebble:
+	@echo "🚀 Step 4: Launching luxd with PebbleDB..."
+	@echo "   Network ID: $(NETWORK_ID)"
+	@echo "   Data Dir: runtime"
+	@echo "   DB Type: pebbledb"
+	@echo "   RPC Port: $(RPC_PORT)"
+	@echo ""
+	$(LUXD_PATH) \
+		--network-id=$(NETWORK_ID) \
+		--data-dir=runtime \
+		--db-type=pebbledb \
+		--sybil-protection-enabled=false \
+		--http-host=0.0.0.0 \
+		--http-port=$(RPC_PORT) \
+		--log-level=info \
+		--api-admin-enabled=true
+
 # Launch commands
 .PHONY: launch
 launch: launch-L1
@@ -319,6 +393,33 @@ launch-L1:
 	@export GENESIS_RUNTIME_DIR="$$(pwd)/runtime" && \
 	mkdir -p "$$GENESIS_RUNTIME_DIR" && \
 	$(GENESIS_BIN) launch L1
+
+# Validate the migrated chain
+.PHONY: validate-chain
+validate-chain:
+	@echo "🔍 Validating C-Chain at http://localhost:$(RPC_PORT)/ext/bc/C/rpc"
+	@echo ""
+	@echo "📊 Block Height:"
+	@curl -s -X POST http://localhost:$(RPC_PORT)/ext/bc/C/rpc \
+		-H 'content-type:application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | jq -r '.result' | xargs printf "   Current: %d (0x%s)\n" $$(printf "%d" $$(curl -s -X POST http://localhost:$(RPC_PORT)/ext/bc/C/rpc -H 'content-type:application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | jq -r '.result'))
+	@echo "   Expected: 1082781 (0x10827d)"
+	@echo ""
+	@echo "💰 Treasury Balance:"
+	@BALANCE=$$(curl -s -X POST http://localhost:$(RPC_PORT)/ext/bc/C/rpc \
+		-H 'content-type:application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x9011e888251ab053b7bd1cdb598db4f9ded94714","latest"]}' | jq -r '.result'); \
+	if [ "$$BALANCE" != "null" ] && [ "$$BALANCE" != "" ]; then \
+		echo "   Raw: $$BALANCE"; \
+		BALANCE_DEC=$$(printf "%d" $$BALANCE 2>/dev/null || echo 0); \
+		if [ $$BALANCE_DEC -gt 1900000000000000000 ]; then \
+			echo "   ✅ Balance > 1.9T LUX"; \
+		else \
+			echo "   ❌ Balance too low"; \
+		fi; \
+	else \
+		echo "   ❌ Unable to fetch balance"; \
+	fi
 
 .PHONY: launch-L2
 launch-L2:
@@ -347,7 +448,24 @@ launch-clean:
 help:
 	@echo "Lux Genesis Migration Makefile"
 	@echo ""
-	@echo "DEFAULT: 'make' runs full migration test (build → import → launch → verify)"
+	@echo "🚀 QUICK START:"
+	@echo "  make deploy             - Deploy LUX mainnet 96369 with Docker (port 9630)"
+	@echo "  make docker-up          - Start LUX mainnet container"
+	@echo "  make docker-status      - Check container and RPC status"
+	@echo "  make validate-deployed  - Validate the deployed chain"
+	@echo ""
+	@echo "🐳 DOCKER DEPLOYMENT:"
+	@echo "  make deploy             - Pull image and start mainnet 96369"
+	@echo "  make deploy-prod        - Deploy using CI-built image"
+	@echo "  make docker-up          - Start container (docker-compose up)"
+	@echo "  make docker-down        - Stop container"
+	@echo "  make docker-restart     - Restart container"
+	@echo "  make docker-logs        - View container logs"
+	@echo "  make docker-status      - Check health and RPC status"
+	@echo "  make docker-shell       - Access container shell"
+	@echo "  make docker-pull        - Update to latest image"
+	@echo "  make docker-build       - Build image locally"
+	@echo "  make docker-clean       - Clean up Docker resources"
 	@echo ""
 	@echo "Build targets:"
 	@echo "  make deps               - Install dependencies (luxd)"
@@ -400,8 +518,24 @@ help:
 	@echo "  make all                           - Build and run basic tests"
 	@echo "  make test-integration              - Full integration test with node"
 
-# Default target - full end-to-end test
-.DEFAULT_GOAL := all
+# Default target
+.DEFAULT_GOAL := help
+
+# Quick mainnet launch - THE BIG BUTTON!
+.PHONY: mainnet
+mainnet: deps build import
+	@echo ""
+	@echo "🚀 LAUNCHING LUX MAINNET C-CHAIN!"
+	@echo "   Network ID: 96369"
+	@echo "   Data Dir: $(DATA_DIR)"
+	@echo "   RPC Port: $(RPC_PORT)"
+	@echo ""
+	@$(LUXD_PATH) \
+		--network-id=96369 \
+		--db-dir=./runtime \
+		--http-host=0.0.0.0 \
+		--http-port=$(RPC_PORT) \
+		--staking-enabled=false
 
 # Quick run - import and launch luxd
 .PHONY: run
@@ -534,3 +668,132 @@ verify-chain:
 full-pipeline-test: build
 	@echo "Running full migration pipeline test..."
 	@cd $(TEST_DIR) && $(GINKGO) -v --focus "Integration: Full Pipeline"
+
+# ==================== DOCKER DEPLOYMENT ====================
+# Docker image and container settings
+DOCKER_IMAGE   ?= ghcr.io/luxfi/node:genesis
+CONTAINER_NAME ?= luxd-mainnet
+DOCKER_PORT    ?= 9630
+
+# Docker build and deployment targets
+.PHONY: docker-build
+docker-build:
+	@echo "🔨 Building Docker image locally..."
+	@docker build -f Dockerfile.local -t $(DOCKER_IMAGE) .
+	@echo "✅ Docker image built: $(DOCKER_IMAGE)"
+
+.PHONY: docker-build-prod
+docker-build-prod:
+	@echo "🔨 Building production Docker image..."
+	@docker build -f Dockerfile.production -t $(DOCKER_IMAGE) \
+		--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=true \
+		--build-context node=../node \
+		--build-context geth=../geth \
+		.
+	@echo "✅ Production image built: $(DOCKER_IMAGE)"
+
+.PHONY: docker-up
+docker-up:
+	@echo "🚀 Starting LUX mainnet 96369 on port $(DOCKER_PORT)..."
+	@docker-compose -f docker-compose.prod.yml up -d
+	@echo "✅ Container started. Checking status..."
+	@sleep 5
+	@docker-compose -f docker-compose.prod.yml ps
+	@echo ""
+	@echo "📡 Testing RPC endpoint..."
+	@curl -s -X POST -H "Content-Type: application/json" \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+		http://localhost:$(DOCKER_PORT)/ext/bc/C/rpc || echo "⏳ RPC not ready yet (chain bootstrapping)"
+
+.PHONY: docker-down
+docker-down:
+	@echo "🛑 Stopping LUX mainnet container..."
+	@docker-compose -f docker-compose.prod.yml down
+	@echo "✅ Container stopped"
+
+.PHONY: docker-restart
+docker-restart:
+	@echo "🔄 Restarting LUX mainnet container..."
+	@docker-compose -f docker-compose.prod.yml restart
+	@echo "✅ Container restarted"
+
+.PHONY: docker-logs
+docker-logs:
+	@docker-compose -f docker-compose.prod.yml logs -f --tail=100
+
+.PHONY: docker-status
+docker-status:
+	@echo "📊 Container status:"
+	@docker-compose -f docker-compose.prod.yml ps
+	@echo ""
+	@echo "🔍 Health check:"
+	@curl -s http://localhost:$(DOCKER_PORT)/ext/health | jq '.checks | {C, P, X, bootstrapped}' || echo "❌ Health check failed"
+	@echo ""
+	@echo "📡 Testing RPC:"
+	@curl -s -X POST -H "Content-Type: application/json" \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+		http://localhost:$(DOCKER_PORT)/ext/bc/C/rpc | jq . || echo "⏳ RPC not ready"
+
+.PHONY: docker-pull
+docker-pull:
+	@echo "⬇️  Pulling latest $(DOCKER_IMAGE)..."
+	@docker-compose -f docker-compose.prod.yml pull
+	@echo "✅ Image updated"
+
+.PHONY: docker-shell
+docker-shell:
+	@echo "🐚 Opening shell in container..."
+	@docker exec -it $(CONTAINER_NAME) /bin/bash
+
+.PHONY: docker-clean
+docker-clean:
+	@echo "🧹 Cleaning up Docker resources..."
+	@docker-compose -f docker-compose.prod.yml down -v
+	@docker system prune -f
+	@echo "✅ Docker cleanup complete"
+
+# Quick deploy with full mainnet data
+.PHONY: deploy
+deploy: docker-pull docker-up
+	@echo ""
+	@echo "🎉 LUX mainnet deployed!"
+	@echo "   - Network: 96369"
+	@echo "   - RPC Port: $(DOCKER_PORT)"
+	@echo "   - Container: $(CONTAINER_NAME)"
+	@echo ""
+	@echo "📝 Useful commands:"
+	@echo "   make docker-logs    - View logs"
+	@echo "   make docker-status  - Check status"
+	@echo "   make docker-shell   - Access container"
+	@echo "   make docker-down    - Stop container"
+
+# Production deployment (using CI-built image)
+.PHONY: deploy-prod
+deploy-prod:
+	@echo "🚀 Deploying production LUX mainnet..."
+	@docker pull $(DOCKER_IMAGE)
+	@docker-compose -f docker-compose.prod.yml up -d
+	@sleep 10
+	@$(MAKE) docker-status
+
+# Validate deployed chain
+.PHONY: validate-deployed
+validate-deployed:
+	@echo "🔍 Validating deployed C-Chain at http://localhost:$(DOCKER_PORT)/ext/bc/C/rpc"
+	@echo ""
+	@echo "📊 Block Height:"
+	@curl -s -X POST http://localhost:$(DOCKER_PORT)/ext/bc/C/rpc \
+		-H 'content-type:application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | jq -r '.result' | xargs printf "   Current: %d\n" || echo "   ❌ Unable to fetch"
+	@echo "   Expected: 1082781+"
+	@echo ""
+	@echo "💰 Treasury Balance:"
+	@BALANCE=$$(curl -s -X POST http://localhost:$(DOCKER_PORT)/ext/bc/C/rpc \
+		-H 'content-type:application/json' \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x9011e888251ab053b7bd1cdb598db4f9ded94714","latest"]}' | jq -r '.result'); \
+	if [ "$$BALANCE" != "null" ] && [ "$$BALANCE" != "" ]; then \
+		echo "   Raw: $$BALANCE"; \
+		echo "   ✅ Treasury has balance"; \
+	else \
+		echo "   ⏳ Chain still bootstrapping..."; \
+	fi

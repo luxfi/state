@@ -1,5 +1,5 @@
 {
-  "http-port": 9650,
+  "http-port": 9630,
   "log-display-level": "info",
   "api-admin-enabled": true,
   "api-eth-enabled": true,
