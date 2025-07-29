@@ -16,6 +16,7 @@ services:
       - ./runtime/luxd-final/db:/data/db
       - ./runtime/luxd-final/configs:/data/configs
     command: [
+      "/app/luxd",
       "--network-id=96369",
       "--db-dir=/data/db",
       "--chain-config-dir=/data/configs",

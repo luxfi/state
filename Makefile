@@ -324,7 +324,7 @@ migrate-and-launch: deps build
 	@echo "🚀 Complete subnet to C-Chain migration and launch"
 	@echo "================================================================"
 	@$(MAKE) migrate-subnet-data
-	@$(MAKE) rebuild-canonical
+	@$(MAKE) rebuild-canonical-step
 	@$(MAKE) setup-coreth-structure
 	@$(MAKE) launch-with-pebble
 
@@ -341,8 +341,8 @@ migrate-subnet-data:
 	fi
 
 # Step 2: Rebuild canonical mappings
-.PHONY: rebuild-canonical
-rebuild-canonical:
+.PHONY: rebuild-canonical-step
+rebuild-canonical-step:
 	@echo "🔧 Step 2: Rebuilding canonical mappings..."
 	@$(GENESIS_BIN) migrate rebuild-canonical runtime/evm/pebbledb
 
@@ -595,8 +595,8 @@ configs: generate
 all: build test
 
 # Integration test - start node and test import
-.PHONY: test-integration  
-test-integration: node-background import verify-chain stop-node
+.PHONY: test-integration-full
+test-integration-full: node-background import verify-chain stop-node
 	@echo "✅ Integration test passed!"
 
 # Start node in background for testing
