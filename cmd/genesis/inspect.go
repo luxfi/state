@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/luxfi/geth/core/types"
@@ -408,8 +410,9 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 	}
 	defer db.Close()
 
-	// Track all unique prefixes
-	prefixMap := make(map[string]int)
+	// Track all unique prefixes with examples
+	prefixCounts := make(map[string]int)
+	prefixExamples := make(map[string]string)
 	
 	iter, err := db.NewIter(&pebble.IterOptions{})
 	if err != nil {
@@ -424,26 +427,143 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 		
 		// Get various prefix lengths
 		if len(key) >= 1 {
-			prefixMap[fmt.Sprintf("%02x", key[0])]++
+			prefix1 := fmt.Sprintf("1-byte: %02x", key[0])
+			prefixCounts[prefix1]++
+			if _, exists := prefixExamples[prefix1]; !exists {
+				prefixExamples[prefix1] = hex.EncodeToString(key)
+			}
+			
+			// Check for known single-byte prefixes
+			knownPrefix := fmt.Sprintf("Known: 0x%02x", key[0])
+			switch key[0] {
+			case 0x48:
+				knownPrefix += " (H)"
+			case 0x68:
+				knownPrefix += " (h)"
+			case 0x62:
+				knownPrefix += " (b)"
+			case 0x72:
+				knownPrefix += " (r)"
+			case 0x6e:
+				knownPrefix += " (n)"
+			default:
+				knownPrefix = ""
+			}
+			if knownPrefix != "" {
+				prefixCounts[knownPrefix]++
+				if _, exists := prefixExamples[knownPrefix]; !exists {
+					prefixExamples[knownPrefix] = hex.EncodeToString(key)
+				}
+			}
 		}
 		if len(key) >= 2 {
-			prefixMap[fmt.Sprintf("%02x%02x", key[0], key[1])]++
+			prefix2 := fmt.Sprintf("2-byte: %02x%02x", key[0], key[1])
+			prefixCounts[prefix2]++
+			if _, exists := prefixExamples[prefix2]; !exists {
+				prefixExamples[prefix2] = hex.EncodeToString(key)
+			}
 		}
-		if len(key) >= 4 && isTextPrefix(key[:4]) {
-			prefixMap[string(key[:4])]++
+		if len(key) >= 3 {
+			prefix3 := fmt.Sprintf("3-byte: %02x%02x%02x", key[0], key[1], key[2])
+			prefixCounts[prefix3]++
+			if _, exists := prefixExamples[prefix3]; !exists {
+				prefixExamples[prefix3] = hex.EncodeToString(key)
+			}
+		}
+		if len(key) >= 4 {
+			prefix4 := fmt.Sprintf("4-byte: %02x%02x%02x%02x", key[0], key[1], key[2], key[3])
+			prefixCounts[prefix4]++
+			if _, exists := prefixExamples[prefix4]; !exists {
+				prefixExamples[prefix4] = hex.EncodeToString(key)
+			}
+			
+			// Check for ASCII prefixes
+			if isTextPrefix(key[:4]) {
+				asciiPrefix := fmt.Sprintf("ASCII: %s", string(key[:4]))
+				prefixCounts[asciiPrefix]++
+				if _, exists := prefixExamples[asciiPrefix]; !exists {
+					prefixExamples[asciiPrefix] = hex.EncodeToString(key)
+				}
+			}
 		}
 	}
 
+	// Sort prefixes by count (descending)
+	type prefixInfo struct {
+		prefix  string
+		count   int
+		example string
+	}
+	
+	var prefixes []prefixInfo
+	for prefix, count := range prefixCounts {
+		prefixes = append(prefixes, prefixInfo{
+			prefix:  prefix,
+			count:   count,
+			example: prefixExamples[prefix],
+		})
+	}
+	
+	sort.Slice(prefixes, func(i, j int) bool {
+		if prefixes[i].count != prefixes[j].count {
+			return prefixes[i].count > prefixes[j].count
+		}
+		return prefixes[i].prefix < prefixes[j].prefix
+	})
+
+	// Display results
 	fmt.Printf("\nTotal Keys: %d\n", totalKeys)
+	fmt.Println("\nKey Prefix Analysis (sorted by count):")
+	fmt.Println("=====================================")
 	
-	fmt.Println("\nSingle-byte Prefixes:")
-	displayPrefixStats(prefixMap, 2)
+	for _, p := range prefixes {
+		percentage := float64(p.count) * 100.0 / float64(totalKeys)
+		fmt.Printf("%-20s: %8d keys (%6.2f%%) - Example: %s\n", 
+			p.prefix, p.count, percentage, p.example)
+		
+		// Show structure for significant 1-byte prefixes
+		if percentage > 1.0 && strings.HasPrefix(p.prefix, "1-byte:") && len(p.example) >= 24 {
+			keyBytes, _ := hex.DecodeString(p.example)
+			if len(keyBytes) >= 12 {
+				fmt.Printf("  → Structure: prefix(%02x) + ", keyBytes[0])
+				if len(keyBytes) == 41 || len(keyBytes) == 40 {
+					fmt.Printf("8-byte-num + 32-byte-hash")
+				}
+				fmt.Println()
+			}
+		}
+	}
 	
-	fmt.Println("\nTwo-byte Prefixes:")
-	displayPrefixStats(prefixMap, 4)
+	// Check for EVM patterns
+	fmt.Println("\nEVM Database Pattern Check:")
+	fmt.Println("===========================")
+	patterns := map[string]string{
+		"ASCII: evmh": "EVM Headers (hash->header)",
+		"ASCII: evmH": "EVM Hash->Number mapping", 
+		"ASCII: evmn": "EVM Canonical (number->hash)",
+		"ASCII: evmb": "EVM Bodies",
+		"ASCII: evmr": "EVM Receipts",
+		"ASCII: evmt": "EVM Transactions",
+		"Known: 0x48 (H)": "Headers (raw prefix)",
+		"Known: 0x68 (h)": "Canonical hash (raw prefix)",
+		"Known: 0x62 (b)": "Bodies (raw prefix)",
+	}
 	
-	fmt.Println("\nText Prefixes:")
-	displayTextPrefixes(prefixMap)
+	found := false
+	for pattern, description := range patterns {
+		for _, p := range prefixes {
+			if p.prefix == pattern && p.count > 0 {
+				fmt.Printf("✓ Found %s: %d keys\n", description, p.count)
+				found = true
+				break
+			}
+		}
+	}
+	
+	if !found {
+		fmt.Println("⚠ No standard EVM database patterns found")
+		fmt.Println("  This might be a namespaced or non-EVM database")
+	}
 
 	return nil
 }

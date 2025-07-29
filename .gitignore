@@ -62,5 +62,4 @@ lux-cli-genesis
 archaeology-plugin.json
 
 output
-# runtime - temporarily commented to commit essential data
-# runtime
+runtime

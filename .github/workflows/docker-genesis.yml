@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Dockerfile.production'
-      - 'runtime/luxd-final/**'
+      - 'dockerfile/Dockerfile'
+      - 'runtime/lux-mainnet-96369/**'
       - '.github/workflows/docker-genesis.yml'
   workflow_dispatch:
 
@@ -63,13 +63,16 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./genesis/Dockerfile.production
+          context: genesis
+          file: docker/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-contexts: |
+            node=node
+            geth=geth
           build-args: |
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VCS_REF=${{ github.sha }}

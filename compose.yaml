@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  luxd:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: luxd-mainnet
+    restart: unless-stopped
+    ports:
+      - "9630:9630"  # HTTP RPC
+      - "9631:9631"  # Staking
+    volumes:
+      # Mount genesis configs
+      - ./configs/mainnet:/app/configs:ro
+      # Mount runtime data for persistence
+      - ./runtime/luxd-mainnet:/app/data
+      # Mount the built luxd binary
+      - ../../node/build/luxd:/app/luxd:ro
+    environment:
+      - NETWORK_ID=96369
+      - LOG_LEVEL=info
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=9630
+    command: |
+      /app/luxd
+      --dev
+      --network-id=96369
+      --data-dir=/app/data
+      --chain-config-dir=/app/configs
+      --http-host=0.0.0.0
+      --http-port=9630
+      --staking-port=9631
+      --api-admin-enabled=true
+      --api-keystore-enabled=true
+      --api-metrics-enabled=true
+      --http-allowed-hosts="*"
+      --log-level=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9630/ext/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-api
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ../sites-available/api.lux.network:/etc/nginx/conf.d/api.lux.network.conf:ro
+    depends_on:
+      - luxd
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
