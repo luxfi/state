@@ -51,8 +51,7 @@ if [ ! -d "$DATA_DIR/state/pebbledb" ]; then
     $GENESIS_DIR/bin/genesis migrate replay-consensus \
         --evm $DATA_DIR/evm/pebbledb \
         --state $DATA_DIR/state/pebbledb \
-        --tip $TIP \
-        --batch 1000
+        --tip $TIP
 else
     echo "Consensus state already exists, skipping..."
 fi
@@ -75,15 +74,13 @@ $NODE_BIN \
     --network-id=96369 \
     --db-dir="$DATA_DIR" \
     --data-dir="$MIGRATION_DIR" \
-    --staking-enabled=false \
+    --dev \
     --http-port=$PORT_HTTP \
     --staking-port=9651 \
     --log-level=info \
-    --sybil-protection-enabled=false \
     --public-ip=127.0.0.1 \
     --http-host=0.0.0.0 \
     --api-admin-enabled=true \
-    --api-ipcs-enabled=true \
     --api-keystore-enabled=false \
     --api-metrics-enabled=true \
     --chain-config-dir=$GENESIS_DIR/configs/lux-mainnet-96369 \
