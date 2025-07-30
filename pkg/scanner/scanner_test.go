@@ -60,7 +60,7 @@ func TestTokenBurnScanner(t *testing.T) {
 		// Filter by minimum 1 token
 		minAmount := big.NewInt(1e18)
 		filtered := scanner.FilterBurnsByAmount(burns, minAmount)
-		
+
 		assert.Equal(t, 2, len(filtered))
 		assert.Equal(t, "0xaddr1", filtered[0].From)
 		assert.Equal(t, "0xaddr2", filtered[1].From)
@@ -101,7 +101,7 @@ func TestTokenTransferScanner(t *testing.T) {
 		}
 
 		balances := scanner.GetBalanceChanges(transfers)
-		
+
 		// addr1: -3 tokens
 		addr1Balance := balances["0xaddr1"]
 		expectedAddr1 := new(big.Int).Mul(big.NewInt(-3), big.NewInt(1e18))
@@ -145,7 +145,7 @@ func TestNFTHolderScanner(t *testing.T) {
 		}
 
 		distribution := scanner.GetHolderDistribution(holders)
-		
+
 		assert.Equal(t, 2, distribution["1 token"])
 		assert.Equal(t, 1, distribution["2-5 tokens"])
 		assert.Equal(t, 1, distribution["11-20 tokens"])
@@ -216,7 +216,7 @@ func TestExportFunctions(t *testing.T) {
 
 	t.Run("ExportToJSON", func(t *testing.T) {
 		data := map[string]interface{}{
-			"test": "data",
+			"test":  "data",
 			"count": 123,
 			"items": []string{"a", "b", "c"},
 		}
@@ -276,7 +276,7 @@ func TestExportFunctions(t *testing.T) {
 
 		content, err := os.ReadFile(reportPath)
 		require.NoError(t, err)
-		
+
 		contentStr := string(content)
 		assert.Contains(t, contentStr, "Summary")
 		assert.Contains(t, contentStr, "This is a test summary")
@@ -349,7 +349,7 @@ func TestZooAnalysisIntegration(t *testing.T) {
 	t.Run("CompleteZooAnalysisFlow", func(t *testing.T) {
 		// This test would require a mock RPC or real connection
 		// For now, we test the data structures and flow
-		
+
 		// Test burn aggregation
 		burns := []scanner.TokenBurn{
 			{From: "0xaddr1", Amount: "1000000000000000000"},
@@ -363,7 +363,7 @@ func TestZooAnalysisIntegration(t *testing.T) {
 			addr := burn.From
 			amount := new(big.Int)
 			amount.SetString(burn.Amount, 10)
-			
+
 			if existing, ok := burnsByAddress[addr]; ok {
 				existing.Add(existing, amount)
 			} else {
@@ -373,7 +373,7 @@ func TestZooAnalysisIntegration(t *testing.T) {
 
 		// Verify aggregation
 		assert.Equal(t, 2, len(burnsByAddress))
-		
+
 		addr1Total := burnsByAddress["0xaddr1"]
 		expectedAddr1 := new(big.Int).Mul(big.NewInt(3), big.NewInt(1e18))
 		assert.Equal(t, 0, addr1Total.Cmp(expectedAddr1))

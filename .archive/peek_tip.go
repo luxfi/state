@@ -28,7 +28,7 @@ func main() {
 	// Key format: "evm" + "n" + data
 	// The actual number is at the end of the key based on the sample data
 	prefix := []byte("evmn")
-	
+
 	var maxHeight uint64
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: prefix,

@@ -30,7 +30,7 @@ func (b *Builder) CreateSimpleAllocation(ethAddr string, amount *big.Int) (*Allo
 	if amount.Sign() < 0 {
 		return nil, fmt.Errorf("negative allocation amount not allowed")
 	}
-	
+
 	luxAddr, err := b.converter.ETHToLux(ethAddr, "X")
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert address: %w", err)
@@ -68,7 +68,7 @@ func (b *Builder) createUnlockSchedule(config *UnlockScheduleConfig) []LockedAmo
 	}
 
 	schedule := make([]LockedAmount, 0, config.Periods-config.CliffPeriods)
-	
+
 	// Calculate amount per unlock period (not including cliff)
 	unlockPeriods := config.Periods - config.CliffPeriods
 	amountPerPeriod := new(big.Int).Div(config.TotalAmount, big.NewInt(int64(unlockPeriods)))
@@ -77,7 +77,7 @@ func (b *Builder) createUnlockSchedule(config *UnlockScheduleConfig) []LockedAmo
 	// Start after cliff
 	for i := config.CliffPeriods; i < config.Periods; i++ {
 		unlockTime := config.StartDate.Add(periodDuration * time.Duration(i+1))
-		
+
 		amount := new(big.Int).Set(amountPerPeriod)
 		// Add remainder to last period
 		if i == config.Periods-1 {
@@ -109,10 +109,10 @@ func (b *Builder) CreateStakingAllocation(ethAddr string, stakeAmount *big.Int, 
 
 // Constants for LUX token amounts (with 9 decimals)
 var (
-	OneLUX        = big.NewInt(1_000_000_000)
-	ThousandLUX   = big.NewInt(1_000_000_000_000)
-	MillionLUX    = big.NewInt(1_000_000_000_000_000)
-	BillionLUX    = big.NewInt(1_000_000_000_000_000_000)
+	OneLUX      = big.NewInt(1_000_000_000)
+	ThousandLUX = big.NewInt(1_000_000_000_000)
+	MillionLUX  = big.NewInt(1_000_000_000_000_000)
+	BillionLUX  = big.NewInt(1_000_000_000_000_000_000)
 )
 
 // ParseLUXAmount parses a LUX amount string with support for suffixes (T, B, M, K)
@@ -122,20 +122,20 @@ func ParseLUXAmount(amountStr string) (*big.Int, error) {
 	if amountStr == "" {
 		return nil, fmt.Errorf("empty amount")
 	}
-	
+
 	// Check for suffix
 	suffix := ""
 	numStr := amountStr
-	
+
 	lastChar := amountStr[len(amountStr)-1]
 	if !unicode.IsDigit(rune(lastChar)) {
 		suffix = strings.ToUpper(string(lastChar))
 		numStr = amountStr[:len(amountStr)-1]
 	}
-	
+
 	// Parse the numeric part (supports decimals)
 	parts := strings.Split(numStr, ".")
-	
+
 	// Parse integer part
 	intPart := new(big.Int)
 	if parts[0] != "" {
@@ -147,7 +147,7 @@ func ParseLUXAmount(amountStr string) (*big.Int, error) {
 			return nil, fmt.Errorf("negative amounts not allowed")
 		}
 	}
-	
+
 	// Handle decimal part if present
 	decimalPlaces := 0
 	if len(parts) > 1 {
@@ -155,16 +155,16 @@ func ParseLUXAmount(amountStr string) (*big.Int, error) {
 			return nil, fmt.Errorf("multiple decimal points")
 		}
 		decimalPlaces = len(parts[1])
-		
+
 		// Append decimal digits to integer
 		if _, ok := intPart.SetString(parts[0]+parts[1], 10); !ok {
 			return nil, fmt.Errorf("invalid decimal number")
 		}
 	}
-	
+
 	// Apply multiplier based on suffix
 	multiplier := new(big.Int).Set(OneLUX) // Base unit with 9 decimals
-	
+
 	switch suffix {
 	case "T": // Trillion
 		multiplier.Mul(multiplier, big.NewInt(1_000_000_000_000))
@@ -180,12 +180,12 @@ func ParseLUXAmount(amountStr string) (*big.Int, error) {
 	default:
 		return nil, fmt.Errorf("unknown suffix: %s", suffix)
 	}
-	
+
 	// Adjust for decimal places
 	for i := 0; i < decimalPlaces; i++ {
 		multiplier.Div(multiplier, big.NewInt(10))
 	}
-	
+
 	// Calculate final amount
 	return intPart.Mul(intPart, multiplier), nil
 }
@@ -194,11 +194,11 @@ func ParseLUXAmount(amountStr string) (*big.Int, error) {
 func FormatLUXAmount(amount *big.Int) string {
 	lux := new(big.Int).Div(amount, OneLUX)
 	remainder := new(big.Int).Mod(amount, OneLUX)
-	
+
 	if remainder.Sign() == 0 {
 		return fmt.Sprintf("%s LUX", lux.String())
 	}
-	
+
 	// Show up to 9 decimal places
 	return fmt.Sprintf("%s.%09d LUX", lux.String(), remainder.Int64())
 }

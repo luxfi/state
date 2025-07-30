@@ -11,11 +11,11 @@ import (
 
 // XChainGenesis represents X-Chain genesis configuration
 type XChainGenesis struct {
-	NetworkID             uint32         `json:"networkID"`
-	Allocations          []interface{}   `json:"allocations"`
-	StartTime            uint64          `json:"startTime"`
-	InitialStakeDuration uint64          `json:"initialStakeDuration"`
-	Message              string          `json:"message"`
+	NetworkID            uint32        `json:"networkID"`
+	Allocations          []interface{} `json:"allocations"`
+	StartTime            uint64        `json:"startTime"`
+	InitialStakeDuration uint64        `json:"initialStakeDuration"`
+	Message              string        `json:"message"`
 }
 
 // XChainAllocation represents an X-Chain allocation
@@ -27,12 +27,12 @@ type XChainAllocation struct {
 // BuildXChainGenesis creates X-Chain genesis for a network
 func BuildXChainGenesis(network string, airdropCSVPath string) (*XChainGenesis, error) {
 	networkID := GetNetworkID(network)
-	
+
 	genesis := &XChainGenesis{
-		NetworkID:             networkID,
+		NetworkID:            networkID,
 		Allocations:          make([]interface{}, 0),
-		StartTime:            1577836800,  // Jan 1, 2020
-		InitialStakeDuration: 31536000,    // 1 year
+		StartTime:            1577836800, // Jan 1, 2020
+		InitialStakeDuration: 31536000,   // 1 year
 		Message:              fmt.Sprintf("Lux Network X-Chain Genesis - %s", network),
 	}
 
@@ -42,7 +42,7 @@ func BuildXChainGenesis(network string, airdropCSVPath string) (*XChainGenesis, 
 		if err != nil {
 			return nil, fmt.Errorf("failed to load airdrops: %w", err)
 		}
-		
+
 		// Convert to interface{} for JSON marshaling
 		for _, alloc := range allocations {
 			genesis.Allocations = append(genesis.Allocations, alloc)
@@ -61,9 +61,9 @@ func LoadXChainAirdrops(csvPath string) ([]XChainAllocation, error) {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	reader.Comment = '#'  // Skip comment lines
-	reader.FieldsPerRecord = -1  // Variable number of fields
-	
+	reader.Comment = '#'        // Skip comment lines
+	reader.FieldsPerRecord = -1 // Variable number of fields
+
 	allocations := make([]XChainAllocation, 0)
 	headerFound := false
 
@@ -73,7 +73,7 @@ func LoadXChainAirdrops(csvPath string) ([]XChainAllocation, error) {
 			break
 		}
 		if err != nil {
-			continue  // Skip problematic lines
+			continue // Skip problematic lines
 		}
 
 		// Skip until we find the header
@@ -103,7 +103,7 @@ func LoadXChainAirdrops(csvPath string) ([]XChainAllocation, error) {
 		// Parse LUX amount
 		luxAmount := new(big.Float)
 		if _, ok := luxAmount.SetString(balanceLux); !ok {
-			continue  // Skip invalid amounts
+			continue // Skip invalid amounts
 		}
 
 		// Convert to wei (9 decimals)

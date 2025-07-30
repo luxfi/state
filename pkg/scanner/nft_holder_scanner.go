@@ -202,7 +202,7 @@ func (s *NFTHolderScanner) buildOwnershipMap() (map[string][]string, error) {
 	}
 
 	log.Printf("Total transfers processed: %d", totalTransfers)
-	
+
 	// Count total NFTs currently held
 	totalNFTs := 0
 	for _, tokenIDs := range ownership {
@@ -242,14 +242,14 @@ func (s *NFTHolderScanner) parseTransferLog(vLog types.Log) (from, to, tokenID s
 func (s *NFTHolderScanner) addTokenToOwner(ownership map[string][]string, owner, tokenID string) {
 	owner = strings.ToLower(owner)
 	tokens := ownership[owner]
-	
+
 	// Check if already owned (shouldn't happen but be safe)
 	for _, id := range tokens {
 		if id == tokenID {
 			return
 		}
 	}
-	
+
 	ownership[owner] = append(tokens, tokenID)
 }
 
@@ -257,14 +257,14 @@ func (s *NFTHolderScanner) addTokenToOwner(ownership map[string][]string, owner,
 func (s *NFTHolderScanner) removeTokenFromOwner(ownership map[string][]string, owner, tokenID string) {
 	owner = strings.ToLower(owner)
 	tokens := ownership[owner]
-	
+
 	newTokens := []string{}
 	for _, id := range tokens {
 		if id != tokenID {
 			newTokens = append(newTokens, id)
 		}
 	}
-	
+
 	if len(newTokens) > 0 {
 		ownership[owner] = newTokens
 	} else {
@@ -286,13 +286,13 @@ func FilterHoldersByMinTokens(holders []NFTHolder, minTokens int) []NFTHolder {
 // GetHolderDistribution returns distribution of token holdings
 func GetHolderDistribution(holders []NFTHolder) map[string]int {
 	distribution := map[string]int{
-		"1 token":     0,
-		"2-5 tokens":  0,
-		"6-10 tokens": 0,
-		"11-20 tokens": 0,
-		"21-50 tokens": 0,
+		"1 token":       0,
+		"2-5 tokens":    0,
+		"6-10 tokens":   0,
+		"11-20 tokens":  0,
+		"21-50 tokens":  0,
 		"51-100 tokens": 0,
-		"100+ tokens": 0,
+		"100+ tokens":   0,
 	}
 
 	for _, holder := range holders {

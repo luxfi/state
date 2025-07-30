@@ -15,7 +15,7 @@ func main() {
 	}
 
 	dbPath := os.Args[1]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
 		fmt.Printf("Failed to open database: %v\n", err)
@@ -60,7 +60,7 @@ func main() {
 	fmt.Println("\nSample keys in database:")
 	iter, _ := db.NewIter(nil)
 	defer iter.Close()
-	
+
 	count := 0
 	for iter.First(); iter.Valid() && count < 10; iter.Next() {
 		key := iter.Key()

@@ -22,11 +22,11 @@ type EggNFTHolder struct {
 
 // EggNFTSummary contains the complete EGG NFT analysis
 type EggNFTSummary struct {
-	TotalEggs       int             `json:"totalEggs"`
-	TotalZooValue   int64           `json:"totalZooValue"`
-	UniqueHolders   int             `json:"uniqueHolders"`
-	Holders         []EggNFTHolder  `json:"holders"`
-	SpecialHolders  map[string]string `json:"specialHolders"`
+	TotalEggs      int               `json:"totalEggs"`
+	TotalZooValue  int64             `json:"totalZooValue"`
+	UniqueHolders  int               `json:"uniqueHolders"`
+	Holders        []EggNFTHolder    `json:"holders"`
+	SpecialHolders map[string]string `json:"specialHolders"`
 }
 
 // AnalyzeEggNFTs analyzes EGG NFT holdings and calculates ZOO equivalents
@@ -92,10 +92,10 @@ func CalculateZooAllocation(eggCount int) *big.Int {
 	// Convert to wei (assuming 18 decimals)
 	zooPerEgg := new(big.Int).SetInt64(ZooPerEgg)
 	decimals := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-	
+
 	allocation := new(big.Int).Mul(zooPerEgg, decimals)
 	allocation.Mul(allocation, big.NewInt(int64(eggCount)))
-	
+
 	return allocation
 }
 
@@ -160,7 +160,7 @@ func FormatEggHolderReport(summary *EggNFTSummary) string {
 
 	report.WriteString("EGG NFT Holdings Report\n")
 	report.WriteString("======================\n\n")
-	
+
 	report.WriteString(fmt.Sprintf("Total EGGs: %d\n", summary.TotalEggs))
 	report.WriteString(fmt.Sprintf("Total ZOO Value: %d\n", summary.TotalZooValue))
 	report.WriteString(fmt.Sprintf("Unique Holders: %d\n\n", summary.UniqueHolders))
@@ -180,7 +180,7 @@ func FormatEggHolderReport(summary *EggNFTSummary) string {
 		if holder.IsSpecial {
 			label = fmt.Sprintf(" [%s]", holder.SpecialLabel)
 		}
-		report.WriteString(fmt.Sprintf("%2d. %s: %d EGGs (%d ZOO)%s\n", 
+		report.WriteString(fmt.Sprintf("%2d. %s: %d EGGs (%d ZOO)%s\n",
 			i+1, holder.Address, holder.EggCount, holder.ZooAmount, label))
 	}
 

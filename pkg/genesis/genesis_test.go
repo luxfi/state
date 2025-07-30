@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/luxfi/genesis/pkg/genesis/allocation"
 	"github.com/luxfi/node/genesis"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewBuilder(t *testing.T) {
@@ -97,8 +97,8 @@ func TestAddStaker(t *testing.T) {
 		ETHAddress:        "0x1234567890123456789012345678901234567890",
 		PublicKey:         "0x" + strings.Repeat("00", 48), // 48 bytes hex
 		ProofOfPossession: "0x" + strings.Repeat("00", 96), // 96 bytes hex
-		Weight:            1000000000000000000, // 1M LUX
-		DelegationFee:     20000, // 2%
+		Weight:            1000000000000000000,             // 1M LUX
+		DelegationFee:     20000,                           // 2%
 	}
 
 	builder.AddStaker(validStaker)
@@ -214,11 +214,11 @@ func TestAddVestedAllocation(t *testing.T) {
 	genesis, err := builder.Build()
 	require.NoError(t, err)
 	assert.Len(t, genesis.Allocations, 1)
-	
+
 	// Verify vesting schedule
 	alloc := genesis.Allocations[0]
 	assert.Equal(t, uint64(0), alloc.InitialAmount) // All locked initially
-	assert.Len(t, alloc.UnlockSchedule, 9) // 12 periods - 3 cliff = 9 unlocks
+	assert.Len(t, alloc.UnlockSchedule, 9)          // 12 periods - 3 cliff = 9 unlocks
 }
 
 func TestGetTotalSupply(t *testing.T) {
@@ -307,11 +307,11 @@ func TestParseAmount(t *testing.T) {
 		expected *big.Int
 		hasError bool
 	}{
-		{"1000000", big.NewInt(1000000000000000), false}, // 1M LUX
+		{"1000000", big.NewInt(1000000000000000), false},                                                            // 1M LUX
 		{"2T", func() *big.Int { v, _ := new(big.Int).SetString("2000000000000000000000", 10); return v }(), false}, // 2T LUX
-		{"1.5B", big.NewInt(1500000000000000000), false}, // 1.5B LUX
-		{"500M", big.NewInt(500000000000000000), false}, // 500M LUX
-		{"100K", big.NewInt(100000000000000), false}, // 100K LUX
+		{"1.5B", big.NewInt(1500000000000000000), false},                                                            // 1.5B LUX
+		{"500M", big.NewInt(500000000000000000), false},                                                             // 500M LUX
+		{"100K", big.NewInt(100000000000000), false},                                                                // 100K LUX
 		{"invalid", nil, true},
 		{"", nil, true},
 		{"-100", nil, true},

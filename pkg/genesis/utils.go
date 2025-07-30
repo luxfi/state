@@ -82,15 +82,15 @@ func ValidateGenesis(g *Genesis) error {
 	if g == nil {
 		return fmt.Errorf("genesis is nil")
 	}
-	
+
 	if g.NetworkID == 0 {
 		return fmt.Errorf("invalid network ID: must be non-zero")
 	}
-	
+
 	if g.StartTime == 0 {
 		return fmt.Errorf("invalid start time: must be non-zero")
 	}
-	
+
 	// Validate allocations
 	for i, alloc := range g.Allocations {
 		if alloc.ETHAddr == "" {
@@ -100,7 +100,7 @@ func ValidateGenesis(g *Genesis) error {
 			return fmt.Errorf("allocation %d has no funds", i)
 		}
 	}
-	
+
 	// Validate stakers
 	for i, staker := range g.InitialStakers {
 		if staker.NodeID.String() == "" {
@@ -109,6 +109,6 @@ func ValidateGenesis(g *Genesis) error {
 		// UnparsedStaker doesn't have a Weight field directly
 		// The validation happens when converting to parsed staker
 	}
-	
+
 	return nil
 }

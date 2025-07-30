@@ -49,7 +49,7 @@ func main() {
 			// Key format: evmh + 8-byte number + 32-byte hash
 			num := binary.BigEndian.Uint64(key[4:12])
 			copy(tipHash[:], key[12:44])
-			
+
 			if num > tipNum {
 				tipNum = num
 			}
@@ -83,12 +83,12 @@ func main() {
 		key := append([]byte("evmh"), make([]byte, 40)...)
 		binary.BigEndian.PutUint64(key[4:12], num)
 		copy(key[12:44], hash[:])
-		
+
 		val, closer, err := db.Get(key)
 		if err != nil {
 			log.Fatalf("Missing header at height %d, hash %s", num, hex.EncodeToString(hash[:]))
 		}
-		
+
 		// Extract parent hash from RLP-encoded header
 		// The header is RLP encoded, but we can extract parent hash directly
 		// Parent hash is the first field in the header, typically after RLP prefix
@@ -96,7 +96,7 @@ func main() {
 			closer.Close()
 			log.Fatalf("Header too short at height %d", num)
 		}
-		
+
 		// Simple extraction: for most headers, parent hash starts at offset 3
 		// This works for headers where the RLP list prefix is 2-3 bytes
 		parentHashOffset := 3
@@ -105,7 +105,7 @@ func main() {
 		} else if val[0] == 0xfa { // Even longer list
 			parentHashOffset = 3
 		}
-		
+
 		copy(hash[:], val[parentHashOffset:parentHashOffset+32])
 		closer.Close()
 
@@ -128,11 +128,11 @@ func main() {
 		key := make([]byte, 12)
 		copy(key[:4], []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], num)
-		
+
 		if err := batch.Set(key, hash[:], nil); err != nil {
 			log.Fatalf("Failed to write mapping for height %d: %v", num, err)
 		}
-		
+
 		written++
 		if written%10000 == 0 {
 			// Flush batch periodically
@@ -151,13 +151,13 @@ func main() {
 
 	log.Printf("Successfully wrote %d canonical mappings", written)
 	log.Printf("Canonical chain tip: height=%d, hash=%s", tipNum, hex.EncodeToString(tipHash[:]))
-	
+
 	// Verify by reading back a sample
 	testNum := tipNum
 	testKey := make([]byte, 12)
 	copy(testKey[:4], []byte("evmn"))
 	binary.BigEndian.PutUint64(testKey[4:], testNum)
-	
+
 	if val, closer, err := db.Get(testKey); err == nil {
 		defer closer.Close()
 		log.Printf("Verification: height %d -> hash %s", testNum, hex.EncodeToString(val))

@@ -1,12 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 )
 
 func main() {
-    patch := `--- a/node/vms/cchainvm/vm.go
+	patch := `--- a/node/vms/cchainvm/vm.go
 +++ b/node/vms/cchainvm/vm.go
 @@ -85,6 +85,25 @@ func (vm *VM) Initialize(
  	vm.shutdownChan = make(chan struct{})
@@ -132,10 +132,10 @@ func main() {
  // NewMinimalEthBackend creates a new minimal Ethereum backend
  func NewMinimalEthBackend(db ethdb.Database, config *ethconfig.Config, genesis *gethcore.Genesis) (*MinimalEthBackend, error) {`
 
-    if err := os.WriteFile("improved-load-migrated.patch", []byte(patch), 0644); err != nil {
-        fmt.Printf("Error writing patch: %v\n", err)
-        return
-    }
-    
-    fmt.Println("Created improved-load-migrated.patch")
+	if err := os.WriteFile("improved-load-migrated.patch", []byte(patch), 0644); err != nil {
+		fmt.Printf("Error writing patch: %v\n", err)
+		return
+	}
+
+	fmt.Println("Created improved-load-migrated.patch")
 }

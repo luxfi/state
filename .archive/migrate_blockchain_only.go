@@ -14,8 +14,8 @@ import (
 
 func main() {
 	var (
-		src = flag.String("src", "", "source subnet database path")
-		dst = flag.String("dst", "", "destination directory for C-Chain data")
+		src     = flag.String("src", "", "source subnet database path")
+		dst     = flag.String("dst", "", "destination directory for C-Chain data")
 		verbose = flag.Bool("v", false, "verbose output")
 	)
 	flag.Parse()
@@ -28,7 +28,7 @@ func main() {
 	// Create output directories
 	evmDB := filepath.Join(*dst, "evm", "pebbledb")
 	stateDB := filepath.Join(*dst, "state", "pebbledb")
-	
+
 	if err := os.MkdirAll(evmDB, 0755); err != nil {
 		log.Fatalf("Failed to create EVM directory: %v", err)
 	}
@@ -90,13 +90,13 @@ func migrateBlockchainKeys(src, dst string, verbose bool) error {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) < 41 {
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
-		
+
+		logicalKey := key[33 : len(key)-8]
+
 		// Look for 'H' keys (hash->number)
 		if len(logicalKey) > 1 && logicalKey[0] == 'H' {
 			if len(value) == 8 {
@@ -139,13 +139,13 @@ func migrateBlockchainKeys(src, dst string, verbose bool) error {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) < 41 {
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
-		
+
+		logicalKey := key[33 : len(key)-8]
+
 		if len(logicalKey) == 0 {
 			continue
 		}
@@ -187,14 +187,14 @@ func migrateBlockchainKeys(src, dst string, verbose bool) error {
 				newKey := make([]byte, 12) // "evmn" + 8 bytes
 				copy(newKey, []byte("evmn"))
 				binary.BigEndian.PutUint64(newKey[4:], number)
-				
+
 				if err := batch.Set(newKey, value, nil); err != nil {
 					return fmt.Errorf("failed to set key: %w", err)
 				}
-				
+
 				fixedNKeys++
 				stats['n']++
-				
+
 				if verbose && fixedNKeys <= 5 {
 					fmt.Printf("Fixed 'n' key for block %d: hash=%x\n", number, hashPart)
 				}
@@ -250,7 +250,7 @@ func findMaxHeight(dbPath string) (uint64, error) {
 	// Look for evmn keys (number->hash mappings)
 	prefix := []byte("evmn")
 	var maxHeight uint64
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: prefix,
 		UpperBound: append(prefix, 0xff),
@@ -263,7 +263,7 @@ func findMaxHeight(dbPath string) (uint64, error) {
 	count := 0
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		
+
 		// evmn key format: "evm" + "n" + 8-byte number
 		if len(key) == 12 { // 4 ("evmn") + 8 (number)
 			height := binary.BigEndian.Uint64(key[4:])
@@ -284,16 +284,16 @@ func findMaxHeight(dbPath string) (uint64, error) {
 
 func createConsensusState(evmDB, stateDB string, maxHeight uint64) error {
 	fmt.Printf("\n=== Step 2: Creating Consensus State Marker ===\n")
-	
+
 	// Create a marker file
 	markerFile := filepath.Join(stateDB, "CONSENSUS_MARKER")
 	data := fmt.Sprintf("max_height=%d\ncreated=%s\n", maxHeight, time.Now())
-	
+
 	if err := os.WriteFile(markerFile, []byte(data), 0644); err != nil {
 		return fmt.Errorf("failed to write marker: %w", err)
 	}
-	
+
 	fmt.Printf("Created consensus state marker for height %d\n", maxHeight)
-	
+
 	return nil
 }

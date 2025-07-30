@@ -17,12 +17,12 @@ func NewExporter(outputPath string) (*Exporter, error) {
 	if outputPath == "" {
 		outputPath = "./output"
 	}
-	
+
 	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(outputPath, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	return &Exporter{outputPath: outputPath}, nil
 }
 
@@ -31,10 +31,10 @@ func (e *Exporter) ExportNFTScan(result *NFTScanResult, format string) (string, 
 	if result == nil {
 		return "", fmt.Errorf("scan result is nil")
 	}
-	
+
 	filename := fmt.Sprintf("nft-scan-%s.%s", result.ContractAddress[:8], format)
 	filepath := filepath.Join(e.outputPath, filename)
-	
+
 	switch format {
 	case "json":
 		return e.exportJSON(filepath, result)
@@ -50,10 +50,10 @@ func (e *Exporter) ExportTokenScan(result *TokenScanResult, format string) (stri
 	if result == nil {
 		return "", fmt.Errorf("scan result is nil")
 	}
-	
+
 	filename := fmt.Sprintf("token-scan-%s.%s", result.ContractAddress[:8], format)
 	filepath := filepath.Join(e.outputPath, filename)
-	
+
 	switch format {
 	case "json":
 		return e.exportJSON(filepath, result)
@@ -69,10 +69,10 @@ func (e *Exporter) ExportGenesisData(data *GenesisData) (string, error) {
 	if data == nil {
 		return "", fmt.Errorf("genesis data is nil")
 	}
-	
+
 	filename := fmt.Sprintf("genesis-%s.json", data.NetworkName)
 	filepath := filepath.Join(e.outputPath, filename)
-	
+
 	return e.exportJSON(filepath, data)
 }
 
@@ -83,14 +83,14 @@ func (e *Exporter) exportJSON(filepath string, data interface{}) (string, error)
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	
+
 	if err := encoder.Encode(data); err != nil {
 		return "", fmt.Errorf("failed to encode JSON: %w", err)
 	}
-	
+
 	return filepath, nil
 }
 
@@ -101,20 +101,20 @@ func (e *Exporter) exportNFTCSV(filepath string, result *NFTScanResult) (string,
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// Write header
 	fmt.Fprintln(file, "TokenID,Owner,URI,StakingPower")
-	
+
 	// Write data
 	for _, nft := range result.NFTs {
-		fmt.Fprintf(file, "%s,%s,%s,%s\n", 
-			nft.TokenID, 
-			nft.Owner, 
+		fmt.Fprintf(file, "%s,%s,%s,%s\n",
+			nft.TokenID,
+			nft.Owner,
 			nft.URI,
 			nft.StakingPower,
 		)
 	}
-	
+
 	return filepath, nil
 }
 
@@ -125,19 +125,19 @@ func (e *Exporter) exportTokenCSV(filepath string, result *TokenScanResult) (str
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// Write header
 	fmt.Fprintln(file, "Address,Balance,Percentage")
-	
+
 	// Write data
 	for _, holder := range result.Holders {
-		fmt.Fprintf(file, "%s,%s,%.4f\n", 
-			holder.Address, 
+		fmt.Fprintf(file, "%s,%s,%.4f\n",
+			holder.Address,
 			holder.Balance,
 			holder.Percentage,
 		)
 	}
-	
+
 	return filepath, nil
 }
 

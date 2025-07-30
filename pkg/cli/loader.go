@@ -74,9 +74,9 @@ func (pl *PluginLoader) loadPlugin(pluginPath string) error {
 
 	// Create command for the plugin
 	pluginCmd := &cobra.Command{
-		Use:   plugin.Name,
-		Short: plugin.Description,
-		Long:  fmt.Sprintf("%s\n\nThis is a plugin command that extends lux-cli functionality.", plugin.Description),
+		Use:                plugin.Name,
+		Short:              plugin.Description,
+		Long:               fmt.Sprintf("%s\n\nThis is a plugin command that extends lux-cli functionality.", plugin.Description),
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Execute the plugin with all arguments
@@ -84,14 +84,14 @@ func (pl *PluginLoader) loadPlugin(pluginPath string) error {
 			pluginExec.Stdout = os.Stdout
 			pluginExec.Stderr = os.Stderr
 			pluginExec.Stdin = os.Stdin
-			
+
 			return pluginExec.Run()
 		},
 	}
 
 	// Add the plugin command to the root command
 	pl.RootCmd.AddCommand(pluginCmd)
-	
+
 	return nil
 }
 

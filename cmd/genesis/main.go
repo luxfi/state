@@ -19,7 +19,6 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/luxfi/node/ids"
 	"github.com/spf13/cobra"
-
 	// Comment out unused imports for now
 	// archaeologyCmd "github.com/luxfi/genesis/cmd/archeology/commands"
 	// teleportCmd "github.com/luxfi/genesis/cmd/teleport/commands"
@@ -92,20 +91,20 @@ Use 'genesis --help' to see all available commands.`,
 			workDir, _ := cmd.Flags().GetString("work-dir")
 			outputDir, _ := cmd.Flags().GetString("output")
 			chaindataDir, _ := cmd.Flags().GetString("chaindata-dir")
-			
+
 			SetCommandLinePaths(workDir, outputDir, chaindataDir)
-			
+
 			// Update cfg.OutputDir to use Paths
 			if cfg.OutputDir == "" {
 				cfg.OutputDir = Paths.OutputDir
 			}
-			
+
 			// Print paths in verbose mode
 			if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 				PrintPaths()
 				fmt.Println()
 			}
-			
+
 			return nil
 		},
 	}
@@ -161,7 +160,7 @@ Use 'genesis --help' to see all available commands.`,
 	}
 	addScanSubcommands(scanCmd)
 
-	// Use new migrate module  
+	// Use new migrate module
 	migrateCmd := NewMigrateSubCommands()
 
 	// Process command group
@@ -199,13 +198,13 @@ This command extracts the genesis from a blockchain database and can optionally:
 		Args: cobra.ExactArgs(1),
 		RunE: runReadGenesis,
 	}
-	
+
 	readCmd.Flags().StringP("output", "o", "", "Output path for genesis file (default: stdout)")
 	readCmd.Flags().BoolP("write-config", "w", false, "Write genesis to ~/.luxd/configs/C/genesis.json")
 	readCmd.Flags().BoolP("show-id", "i", true, "Show derived blockchain ID")
 	readCmd.Flags().BoolP("raw", "r", false, "Save raw genesis bytes as genesis.blob")
 	readCmd.Flags().BoolP("pointers", "p", false, "Show pointer keys (Height, LastAccepted, etc)")
-	
+
 	// Diagnose command to check database health
 	diagnoseCmd := &cobra.Command{
 		Use:   "diagnose [db-path]",
@@ -218,7 +217,7 @@ This command extracts the genesis from a blockchain database and can optionally:
 		Args: cobra.ExactArgs(1),
 		RunE: runDiagnose,
 	}
-	
+
 	// Count command to count database keys
 	countCmd := &cobra.Command{
 		Use:   "count [db-path]",
@@ -227,10 +226,10 @@ This command extracts the genesis from a blockchain database and can optionally:
 		Args:  cobra.ExactArgs(1),
 		RunE:  runCount,
 	}
-	
+
 	countCmd.Flags().StringP("prefix", "p", "68", "Key prefix in hex (68=headers, 62=bodies)")
 	countCmd.Flags().BoolP("all", "a", false, "Count all keys (no prefix filter)")
-	
+
 	// Pointers command to manage pointer keys
 	pointersCmd := &cobra.Command{
 		Use:   "pointers [db-path]",
@@ -238,28 +237,28 @@ This command extracts the genesis from a blockchain database and can optionally:
 		Long:  `View or update pointer keys (Height, LastAccepted, LastBlock, LastHeader)`,
 		Args:  cobra.ExactArgs(1),
 	}
-	
+
 	// Sub-commands for pointers
 	pointersShowCmd := &cobra.Command{
 		Use:   "show",
 		Short: "Show pointer keys",
 		RunE:  runPointersShow,
 	}
-	
+
 	pointersSetCmd := &cobra.Command{
 		Use:   "set [db-path] [key] [value]",
 		Short: "Set a pointer key",
 		Args:  cobra.ExactArgs(3),
 		RunE:  runPointersSet,
 	}
-	
+
 	pointersCopyCmd := &cobra.Command{
 		Use:   "copy [source-db] [dest-db]",
 		Short: "Copy pointer keys between databases",
 		Args:  cobra.ExactArgs(2),
 		RunE:  runPointersCopy,
 	}
-	
+
 	pointersCmd.AddCommand(pointersShowCmd, pointersSetCmd, pointersCopyCmd)
 
 	// Export command for backing up data
@@ -274,7 +273,7 @@ This command extracts the genesis from a blockchain database and can optionally:
 	transferCmd := &cobra.Command{
 		Use:   "transfer",
 		Short: "Transfer blockchain data between databases",
-		Long:  `Transfer block data (headers, bodies, receipts, etc.) from one database to another.
+		Long: `Transfer block data (headers, bodies, receipts, etc.) from one database to another.
 This is useful for migrating subnet data to C-Chain format while preserving all historic blocks.`,
 	}
 	addTransferSubcommands(transferCmd)
@@ -286,7 +285,7 @@ This is useful for migrating subnet data to C-Chain format while preserving all 
 		Long:  `Launch luxd node with properly imported chain data for testing and verification`,
 	}
 	addLaunchSubcommands(launchCmd)
-	
+
 	// Rebuild canonical command
 	rebuildCanonicalCmd := &cobra.Command{
 		Use:   "rebuild-canonical [db-path]",
@@ -296,7 +295,7 @@ This fixes the key format to use 9-byte keys: 0x68 + 8-byte height.`,
 		Args: cobra.ExactArgs(1),
 		RunE: runRebuildCanonical,
 	}
-	
+
 	// Convert to geth format command
 	convertToGethCmd := &cobra.Command{
 		Use:   "convert-to-geth [src-db] [dst-db]",
@@ -306,7 +305,7 @@ This is needed for luxd/coreth compatibility.`,
 		Args: cobra.ExactArgs(2),
 		RunE: runConvertToGeth,
 	}
-	
+
 	// Create new inspect module
 	inspectCmd := NewInspectCommand()
 
@@ -525,7 +524,7 @@ Checks node health every 60 seconds and alerts on failures.`,
 		blockCmd,
 		cchainCmd,
 		allocationsCmd,
-		importSubnetCmd(),  // Import subnet as C-Chain fork
+		importSubnetCmd(), // Import subnet as C-Chain fork
 		chainDataCmd,
 		monitorCmd,
 		statusCmd,
@@ -561,7 +560,6 @@ func addMigrateSubcommands(migrateCmd *cobra.Command) {
 }
 
 // Original implementations below...
-
 
 func addProcessSubcommands(processCmd *cobra.Command) {
 	// Process historic command
@@ -1212,14 +1210,14 @@ func runReadGenesis(cmd *cobra.Command, args []string) error {
 	showID, _ := cmd.Flags().GetBool("show-id")
 	saveRaw, _ := cmd.Flags().GetBool("raw")
 	showPointers, _ := cmd.Flags().GetBool("pointers")
-	
+
 	// Extract genesis from historic data
 	fmt.Printf("📖 Reading genesis from: %s\n", srcPath)
 	genesis, genesisBytes, err := extractHistoricGenesis(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to extract genesis: %w", err)
 	}
-	
+
 	// Save raw genesis bytes if requested
 	if saveRaw {
 		blobPath := "genesis.blob"
@@ -1231,20 +1229,20 @@ func runReadGenesis(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("💾 Saved raw genesis bytes to: %s (%d bytes)\n", blobPath, len(genesisBytes))
 	}
-	
+
 	// Show pointer keys if requested
 	if showPointers {
 		if err := showPointerKeys(srcPath); err != nil {
 			log.Printf("Warning: Could not read pointer keys: %v", err)
 		}
 	}
-	
+
 	// Format the genesis nicely
 	formattedGenesis, err := json.MarshalIndent(genesis, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to format genesis: %w", err)
 	}
-	
+
 	// Show blockchain ID if requested
 	if showID {
 		blockchainID, err := deriveBlockchainID(genesisBytes)
@@ -1254,22 +1252,22 @@ func runReadGenesis(cmd *cobra.Command, args []string) error {
 		fmt.Printf("📌 Blockchain ID: %s\n", blockchainID.String())
 		fmt.Printf("📌 Chain ID: %v\n", genesis.Config["chainId"])
 	}
-	
+
 	// Write to config if requested
 	if writeConfig {
 		genesisDir := filepath.Join(os.Getenv("HOME"), ".luxd", "configs", "C")
 		if err := os.MkdirAll(genesisDir, 0755); err != nil {
 			return fmt.Errorf("failed to create genesis directory: %w", err)
 		}
-		
+
 		genesisPath := filepath.Join(genesisDir, "genesis.json")
 		if err := ioutil.WriteFile(genesisPath, formattedGenesis, 0644); err != nil {
 			return fmt.Errorf("failed to write genesis: %w", err)
 		}
-		
+
 		fmt.Printf("✅ Wrote genesis to: %s\n", genesisPath)
 	}
-	
+
 	// Write to output file or stdout
 	if outputPath != "" {
 		if err := ioutil.WriteFile(outputPath, formattedGenesis, 0644); err != nil {
@@ -1281,7 +1279,7 @@ func runReadGenesis(cmd *cobra.Command, args []string) error {
 		fmt.Println("\n📄 Genesis Configuration:")
 		fmt.Println(string(formattedGenesis))
 	}
-	
+
 	return nil
 }
 
@@ -1291,64 +1289,64 @@ func runMigrateRead(cmd *cobra.Command, args []string) error {
 	dstPath, _ := cmd.Flags().GetString("dst")
 	genesisOnly, _ := cmd.Flags().GetBool("genesis-only")
 	writeGenesis, _ := cmd.Flags().GetBool("write-genesis")
-	
+
 	// Extract genesis from historic data
 	fmt.Printf("📖 Reading genesis from historic chain data at %s\n", srcPath)
 	genesis, genesisBytes, err := extractHistoricGenesis(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to extract genesis: %w", err)
 	}
-	
+
 	// Derive the blockchain ID from genesis
 	blockchainID, err := deriveBlockchainID(genesisBytes)
 	if err != nil {
 		return fmt.Errorf("failed to derive blockchain ID: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Derived blockchain ID: %s\n", blockchainID.String())
 	fmt.Printf("   Chain ID: %v\n", genesis.Config["chainId"])
-	
+
 	// Write genesis if requested
 	if writeGenesis {
 		genesisDir := filepath.Join(os.Getenv("HOME"), ".luxd", "configs", "C")
 		if err := os.MkdirAll(genesisDir, 0755); err != nil {
 			return fmt.Errorf("failed to create genesis directory: %w", err)
 		}
-		
+
 		genesisPath := filepath.Join(genesisDir, "genesis.json")
 		formattedGenesis, err := json.MarshalIndent(genesis, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to format genesis: %w", err)
 		}
-		
+
 		if err := ioutil.WriteFile(genesisPath, formattedGenesis, 0644); err != nil {
 			return fmt.Errorf("failed to write genesis: %w", err)
 		}
-		
+
 		fmt.Printf("📝 Wrote genesis to %s\n", genesisPath)
 	}
-	
+
 	if genesisOnly {
 		fmt.Println("✅ Genesis extraction complete")
 		return nil
 	}
-	
+
 	if dstPath == "" {
 		// Default destination path
 		dstPath = filepath.Join(os.Getenv("HOME"), ".luxd", "chainData", blockchainID.String())
 	}
-	
+
 	// Migrate the data
 	fmt.Printf("🔄 Migrating chain data to %s\n", dstPath)
 	if err := migrateChainData(srcPath, dstPath, blockchainID); err != nil {
 		return fmt.Errorf("failed to migrate data: %w", err)
 	}
-	
+
 	fmt.Println("✅ Migration complete!")
 	fmt.Printf("   Blockchain ID: %s\n", blockchainID.String())
 	fmt.Printf("   Genesis: ~/.luxd/configs/C/genesis.json\n")
 	fmt.Printf("   Chain data: %s\n", dstPath)
-	
+
 	return nil
 }
 
@@ -1356,13 +1354,13 @@ func runMigrateRead(cmd *cobra.Command, args []string) error {
 func deriveBlockchainID(genesisBytes []byte) (ids.ID, error) {
 	// Create a hash of the genesis bytes
 	hash := sha256.Sum256(genesisBytes)
-	
+
 	// Create an ID from the hash
 	id, err := ids.ToID(hash[:])
 	if err != nil {
 		return ids.Empty, err
 	}
-	
+
 	return id, nil
 }
 
@@ -1375,15 +1373,15 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		
+
 		var genesis Genesis
 		if err := json.Unmarshal(genesisBytes, &genesis); err != nil {
 			return nil, nil, fmt.Errorf("failed to parse genesis: %w", err)
 		}
-		
+
 		return &genesis, genesisBytes, nil
 	}
-	
+
 	// If not found, try to read from the database
 	// First check if it's a direct pebbledb path
 	dbPath := filepath.Join(srcPath, "db", "pebbledb")
@@ -1394,7 +1392,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 			dbPath = altPath
 		}
 	}
-	
+
 	// Check if CURRENT file exists (required for pebbledb)
 	currentFile := filepath.Join(dbPath, "CURRENT")
 	if _, err := os.Stat(currentFile); os.IsNotExist(err) {
@@ -1403,7 +1401,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		log.Printf("Warning: Database metadata not found, creating minimal genesis")
 		return createMinimalGenesis()
 	}
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{
 		ReadOnly: true,
 	})
@@ -1411,7 +1409,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to open database at %s: %w", dbPath, err)
 	}
 	defer db.Close()
-	
+
 	// Try to read genesis from database
 	// First try to get the genesis key directly (no prefix)
 	genesisValue, closer, err := db.Get([]byte("genesis"))
@@ -1419,7 +1417,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		defer closer.Close()
 		value := make([]byte, len(genesisValue))
 		copy(value, genesisValue)
-		
+
 		log.Printf("Found genesis blob in database (raw key)")
 		// This is likely the compressed genesis blob, try to decode it
 		// For now, return it as-is since we need the exact bytes
@@ -1430,7 +1428,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		}
 		return genesis, value, nil
 	}
-	
+
 	// Also check for pointer keys
 	heightValue, closer2, err := db.Get([]byte("Height"))
 	if err == nil {
@@ -1439,7 +1437,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		copy(height, heightValue)
 		log.Printf("Found Height pointer: %x", height)
 	}
-	
+
 	lastAcceptedValue, closer3, err := db.Get([]byte("LastAccepted"))
 	if err == nil {
 		defer closer3.Close()
@@ -1447,21 +1445,21 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 		copy(lastAccepted, lastAcceptedValue)
 		log.Printf("Found LastAccepted pointer: %x", lastAccepted)
 	}
-	
+
 	// Try iterating for other genesis-related keys
 	iter, err := db.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		// Look for genesis-related keys
 		if bytes.Equal(key, []byte("genesis")) || bytes.Contains(key, []byte("genesis")) {
 			value := make([]byte, len(iter.Value()))
 			copy(value, iter.Value())
-			
+
 			log.Printf("Found genesis-related key: %x = %d bytes", key, len(value))
 			// Return the raw genesis bytes
 			genesis := &Genesis{
@@ -1472,7 +1470,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 			return genesis, value, nil
 		}
 	}
-	
+
 	// If we still can't find genesis, create a minimal one
 	return createMinimalGenesis()
 }
@@ -1480,7 +1478,7 @@ func extractHistoricGenesis(srcPath string) (*Genesis, []byte, error) {
 // createMinimalGenesis creates a minimal genesis configuration
 func createMinimalGenesis() (*Genesis, []byte, error) {
 	log.Printf("Creating minimal genesis configuration")
-	
+
 	genesis := &Genesis{
 		Config: map[string]interface{}{
 			"chainId":        96369,
@@ -1501,12 +1499,12 @@ func createMinimalGenesis() (*Genesis, []byte, error) {
 		GasUsed:    "0x0",
 		ParentHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
 	}
-	
+
 	genesisBytes, err := json.Marshal(genesis)
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	return genesis, genesisBytes, nil
 }
 
@@ -1522,7 +1520,7 @@ func migrateChainData(srcPath, dstPath string, newBlockchainID ids.ID) error {
 			log.Printf("Could not parse blockchain ID from path, will migrate without ID translation")
 		}
 	}
-	
+
 	// Open source database
 	srcDB, err := pebble.Open(filepath.Join(srcPath, "db", "pebbledb"), &pebble.Options{
 		ReadOnly: true,
@@ -1531,70 +1529,70 @@ func migrateChainData(srcPath, dstPath string, newBlockchainID ids.ID) error {
 		return fmt.Errorf("failed to open source database: %w", err)
 	}
 	defer srcDB.Close()
-	
+
 	// Create destination directory
 	dstDir := filepath.Join(dstPath, "db")
 	if err := os.MkdirAll(dstDir, 0755); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
-	
+
 	// Open destination database
 	dstDB, err := pebble.Open(filepath.Join(dstDir, "pebbledb"), &pebble.Options{})
 	if err != nil {
 		return fmt.Errorf("failed to open destination database: %w", err)
 	}
 	defer dstDB.Close()
-	
+
 	// Migrate data
 	if oldBlockchainID != ids.Empty {
 		log.Printf("Translating blockchain ID from %s to %s", oldBlockchainID.String(), newBlockchainID.String())
 	}
-	
+
 	iter, err := srcDB.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	count := 0
 	start := time.Now()
 	oldIDBytes := oldBlockchainID[:]
 	newIDBytes := newBlockchainID[:]
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := make([]byte, len(iter.Key()))
 		copy(key, iter.Key())
-		
+
 		value := make([]byte, len(iter.Value()))
 		copy(value, iter.Value())
-		
+
 		// Translate blockchain ID in keys if needed
 		if oldBlockchainID != ids.Empty && len(key) >= 32 && bytes.HasPrefix(key, oldIDBytes) {
 			newKey := make([]byte, len(key))
 			copy(newKey, newIDBytes)
 			copy(newKey[32:], key[32:])
 			key = newKey
-			
+
 			// Also replace blockchain ID in values if present
 			if bytes.Contains(value, oldIDBytes) {
 				value = bytes.ReplaceAll(value, oldIDBytes, newIDBytes)
 			}
 		}
-		
+
 		if err := dstDB.Set(key, value, pebble.Sync); err != nil {
 			return fmt.Errorf("failed to write key: %w", err)
 		}
-		
+
 		count++
 		if count%100000 == 0 {
 			log.Printf("Migrated %d keys...", count)
 		}
 	}
-	
+
 	if err := iter.Error(); err != nil {
 		return fmt.Errorf("iterator error: %w", err)
 	}
-	
+
 	log.Printf("Migration complete! Migrated %d keys in %v", count, time.Since(start))
 	return nil
 }
@@ -1609,13 +1607,13 @@ func showPointerKeys(srcPath string) error {
 			dbPath = altPath
 		}
 	}
-	
+
 	// Check if CURRENT file exists
 	currentFile := filepath.Join(dbPath, "CURRENT")
 	if _, err := os.Stat(currentFile); os.IsNotExist(err) {
 		return fmt.Errorf("database metadata not found")
 	}
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{
 		ReadOnly: true,
 	})
@@ -1623,9 +1621,9 @@ func showPointerKeys(srcPath string) error {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
-	
+
 	fmt.Println("\n🔍 Pointer Keys:")
-	
+
 	// Check each pointer key
 	pointerKeys := []string{"Height", "LastAccepted", "LastBlock", "LastHeader"}
 	for _, key := range pointerKeys {
@@ -1635,11 +1633,11 @@ func showPointerKeys(srcPath string) error {
 			continue
 		}
 		defer closer.Close()
-		
+
 		// Copy the value
 		val := make([]byte, len(value))
 		copy(val, value)
-		
+
 		// Format based on key type
 		if key == "Height" {
 			// Height is uint64 big-endian
@@ -1657,7 +1655,7 @@ func showPointerKeys(srcPath string) error {
 			fmt.Printf("   %-15s: 0x%x\n", key, val)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1769,7 +1767,7 @@ func runImportChainData(cmd *cobra.Command, args []string) error {
 
 	if autoRestart {
 		fmt.Printf("\n🔄 Restarting node in normal mode...\n")
-		
+
 		// Start in normal mode
 		normalLogFile := filepath.Join(logDir, fmt.Sprintf("normal-%s.log", timestamp))
 		normalLog, err := os.Create(normalLogFile)
@@ -1837,26 +1835,26 @@ func runImportMonitor(cmd *cobra.Command, args []string) error {
 		healthCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
 			"-d", `{"jsonrpc":"2.0","id":1,"method":"health.health","params":[]}`,
 			rpcURL+"/ext/health")
-		
+
 		_, err := healthCmd.Output()
 		if err != nil {
 			consecutiveFailures++
-			fmt.Printf("❌ [%s] Health check failed (failure %d/%d)\n", 
+			fmt.Printf("❌ [%s] Health check failed (failure %d/%d)\n",
 				time.Now().Format("15:04:05"), consecutiveFailures, failureThreshold)
-			
+
 			if consecutiveFailures >= failureThreshold {
 				fmt.Printf("\n⚠️  ALERT: Node appears to be down after %d consecutive failures!\n", consecutiveFailures)
-				log.WriteString(fmt.Sprintf("[%s] ALERT: Node down after %d failures\n", 
+				log.WriteString(fmt.Sprintf("[%s] ALERT: Node down after %d failures\n",
 					time.Now().Format(time.RFC3339), consecutiveFailures))
 			}
 		} else {
 			consecutiveFailures = 0
-			
+
 			// Get block height
 			heightCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
 				"-d", `{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}`,
 				rpcURL+"/ext/bc/C/rpc")
-			
+
 			heightOutput, err := heightCmd.Output()
 			if err == nil {
 				// Parse height from response
@@ -1866,15 +1864,15 @@ func runImportMonitor(cmd *cobra.Command, args []string) error {
 						// Convert hex to uint64
 						var height uint64
 						fmt.Sscanf(hexHeight, "0x%x", &height)
-						
+
 						if height > lastHeight {
-							fmt.Printf("✅ [%s] Node healthy - Block height: %d (+%d)\n", 
+							fmt.Printf("✅ [%s] Node healthy - Block height: %d (+%d)\n",
 								time.Now().Format("15:04:05"), height, height-lastHeight)
-							log.WriteString(fmt.Sprintf("[%s] Height: %d\n", 
+							log.WriteString(fmt.Sprintf("[%s] Height: %d\n",
 								time.Now().Format(time.RFC3339), height))
 							lastHeight = height
 						} else {
-							fmt.Printf("⚠️  [%s] Node healthy but not progressing - Height: %d\n", 
+							fmt.Printf("⚠️  [%s] Node healthy but not progressing - Height: %d\n",
 								time.Now().Format("15:04:05"), height)
 						}
 					}
@@ -1910,7 +1908,7 @@ func runImportStatus(cmd *cobra.Command, args []string) error {
 	// Check if node process is running
 	checkCmd := exec.Command("pgrep", "-f", "luxd.*data-dir")
 	output, err := checkCmd.Output()
-	
+
 	if err != nil {
 		fmt.Printf("❌ Node is not running\n")
 		return nil
@@ -1933,7 +1931,7 @@ func runImportStatus(cmd *cobra.Command, args []string) error {
 	heightCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
 		"-d", `{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}`,
 		rpcURL+"/ext/bc/C/rpc")
-	
+
 	heightOutput, err := heightCmd.Output()
 	if err == nil {
 		var result map[string]interface{}
@@ -1950,7 +1948,7 @@ func runImportStatus(cmd *cobra.Command, args []string) error {
 	bootstrapCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
 		"-d", `{"jsonrpc":"2.0","id":1,"method":"info.isBootstrapped","params":{"chain":"C"}}`,
 		rpcURL+"/ext/info")
-	
+
 	bootstrapOutput, err := bootstrapCmd.Output()
 	if err == nil {
 		if bytes.Contains(bootstrapOutput, []byte(`"isBootstrapped":true`)) {
@@ -1964,7 +1962,7 @@ func runImportStatus(cmd *cobra.Command, args []string) error {
 	peersCmd := exec.Command("curl", "-s", "-X", "POST", "-H", "Content-Type: application/json",
 		"-d", `{"jsonrpc":"2.0","id":1,"method":"info.peers","params":[]}`,
 		rpcURL+"/ext/info")
-	
+
 	peersOutput, err := peersCmd.Output()
 	if err == nil {
 		var result map[string]interface{}
@@ -2053,14 +2051,14 @@ func runExportBackup(cmd *cobra.Command, args []string) error {
 
 	timestamp := time.Now().Format("20060102-150405")
 	backupName := fmt.Sprintf("luxd-backup-%s", timestamp)
-	
+
 	fmt.Printf("📦 Creating backup...\n")
 	fmt.Printf("   Source: %s\n", dataDir)
 	fmt.Printf("   Backup: %s\n", backupDir)
 
 	if compress {
 		backupFile := filepath.Join(backupDir, backupName+".tar.gz")
-		
+
 		// Create tar.gz archive
 		cmd := exec.Command("tar", "-czf", backupFile, "-C", filepath.Dir(dataDir), filepath.Base(dataDir))
 		if output, err := cmd.CombinedOutput(); err != nil {
@@ -2076,7 +2074,7 @@ func runExportBackup(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		backupPath := filepath.Join(backupDir, backupName)
-		
+
 		// Copy directory
 		cmd := exec.Command("cp", "-r", dataDir, backupPath)
 		if output, err := cmd.CombinedOutput(); err != nil {
@@ -2094,7 +2092,7 @@ func runExportBackup(cmd *cobra.Command, args []string) error {
 	info += fmt.Sprintf("Created: %s\n", time.Now().Format(time.RFC3339))
 	info += fmt.Sprintf("Source: %s\n", dataDir)
 	info += fmt.Sprintf("Type: %s\n", map[bool]string{true: "compressed", false: "uncompressed"}[compress])
-	
+
 	if err := ioutil.WriteFile(infoFile, []byte(info), 0644); err != nil {
 		fmt.Printf("⚠️  Warning: Failed to create info file: %v\n", err)
 	}
@@ -2146,7 +2144,7 @@ func runExportGenesis(cmd *cobra.Command, args []string) error {
 
 	// This would use the extract functionality to export genesis
 	// For now, we'll call the existing extract-genesis tool
-	
+
 	extractArgs := []string{
 		dataDir,
 		"--type", "pebble",
@@ -2181,14 +2179,14 @@ func addTransferSubcommands(transferCmd *cobra.Command) {
 		Args:  cobra.NoArgs,
 		RunE:  runTransferChaindata,
 	}
-	
+
 	chaindataCmd.Flags().String("src", "", "Source database path")
 	chaindataCmd.Flags().String("dst", "", "Destination database path")
 	chaindataCmd.Flags().Bool("include-state", true, "Include state data (accounts, storage)")
 	chaindataCmd.Flags().Bool("dry-run", false, "Show what would be transferred without actually doing it")
 	chaindataCmd.MarkFlagRequired("src")
 	chaindataCmd.MarkFlagRequired("dst")
-	
+
 	transferCmd.AddCommand(chaindataCmd)
 }
 
@@ -2198,7 +2196,7 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 	dstPath, _ := cmd.Flags().GetString("dst")
 	includeState, _ := cmd.Flags().GetBool("include-state")
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
-	
+
 	fmt.Printf("🚀 Transferring blockchain data...\n")
 	fmt.Printf("   Source: %s\n", srcPath)
 	fmt.Printf("   Destination: %s\n", dstPath)
@@ -2207,7 +2205,7 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   Mode: DRY RUN (no changes will be made)\n")
 	}
 	fmt.Println()
-	
+
 	// Open source database
 	srcDB, err := pebble.Open(srcPath, &pebble.Options{
 		ReadOnly: true,
@@ -2216,8 +2214,8 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to open source database: %w", err)
 	}
 	defer srcDB.Close()
-	
-	// Open destination database  
+
+	// Open destination database
 	var dstDB *pebble.DB
 	if !dryRun {
 		dstDB, err = pebble.Open(dstPath, &pebble.Options{})
@@ -2226,55 +2224,55 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 		}
 		defer dstDB.Close()
 	}
-	
+
 	// Key prefixes we want to transfer (based on geth rawdb prefixes)
 	prefixes := map[byte]string{
-		0x68: "headers",        // 'h' - block headers
-		0x62: "bodies",         // 'b' - block bodies  
-		0x72: "receipts",       // 'r' - receipts
-		0x6e: "canonical",      // 'n' - canonical hash
-		0x48: "hash->number",   // 'H' - hash to number mapping
-		0x74: "difficulty",     // 't' - total difficulty
-		0x6c: "tx-lookup",      // 'l' - transaction lookup
+		0x68: "headers",      // 'h' - block headers
+		0x62: "bodies",       // 'b' - block bodies
+		0x72: "receipts",     // 'r' - receipts
+		0x6e: "canonical",    // 'n' - canonical hash
+		0x48: "hash->number", // 'H' - hash to number mapping
+		0x74: "difficulty",   // 't' - total difficulty
+		0x6c: "tx-lookup",    // 'l' - transaction lookup
 	}
-	
+
 	if includeState {
 		// Add state-related prefixes
-		prefixes[0x00] = "accounts"      // Account data (may have different prefix)
-		prefixes[0x73] = "storage"       // 's' - storage data
-		prefixes[0x63] = "code"          // 'c' - contract code
+		prefixes[0x00] = "accounts" // Account data (may have different prefix)
+		prefixes[0x73] = "storage"  // 's' - storage data
+		prefixes[0x63] = "code"     // 'c' - contract code
 	}
-	
+
 	// Count keys by prefix
 	counts := make(map[byte]int)
 	transferred := 0
-	
+
 	// Create iterator
 	iter, err := srcDB.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	// Create batch for efficient writes
 	var batch *pebble.Batch
 	if !dryRun && dstDB != nil {
 		batch = dstDB.NewBatch()
 	}
-	
+
 	// Iterate through all keys
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if len(key) == 0 {
 			continue
 		}
-		
+
 		prefix := key[0]
-		
+
 		// Check if this is a prefix we want to transfer
 		if name, ok := prefixes[prefix]; ok {
 			counts[prefix]++
-			
+
 			if !dryRun && batch != nil {
 				// Copy key-value pair
 				val := iter.Value()
@@ -2282,7 +2280,7 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 					return fmt.Errorf("failed to set key: %w", err)
 				}
 				transferred++
-				
+
 				// Commit batch every 10000 entries
 				if transferred%10000 == 0 {
 					if err := batch.Commit(nil); err != nil {
@@ -2292,21 +2290,21 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 					fmt.Printf("   Transferred %d entries...\n", transferred)
 				}
 			}
-			
+
 			// Show sample keys for each prefix (first 3)
 			if counts[prefix] <= 3 {
 				fmt.Printf("   Found %s key: %x (len=%d)\n", name, key[:min(len(key), 32)], len(key))
 			}
 		}
 	}
-	
+
 	// Commit final batch
 	if !dryRun && batch != nil && transferred%10000 != 0 {
 		if err := batch.Commit(nil); err != nil {
 			return fmt.Errorf("failed to commit final batch: %w", err)
 		}
 	}
-	
+
 	// Show summary
 	fmt.Println("\n📊 Transfer Summary:")
 	for prefix, name := range prefixes {
@@ -2314,22 +2312,22 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   %s: %d entries\n", name, count)
 		}
 	}
-	
+
 	if dryRun {
 		fmt.Printf("\n✅ Dry run completed. Would transfer %d entries.\n", transferred)
 	} else {
 		fmt.Printf("\n✅ Transfer completed. Transferred %d entries.\n", transferred)
-		
+
 		// Also copy pointer keys if they exist
 		pointerKeys := []string{
 			"LastBlock",
-			"LastHeader", 
+			"LastHeader",
 			"LastFast",
 			"LastPivot",
 			"Height",
 			"LastAccepted",
 		}
-		
+
 		fmt.Println("\n📍 Copying pointer keys...")
 		for _, key := range pointerKeys {
 			if val, closer, err := srcDB.Get([]byte(key)); err == nil {
@@ -2341,7 +2339,7 @@ func runTransferChaindata(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -2356,57 +2354,57 @@ func min(a, b int) int {
 func runAddEvmPrefix(cmd *cobra.Command, args []string) error {
 	srcPath := args[0]
 	dstPath := args[1]
-	
+
 	fmt.Printf("Adding EVM prefix: %s -> %s\n", srcPath, dstPath)
-	
+
 	// Open source database
 	srcDB, err := pebble.Open(srcPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open source database: %w", err)
 	}
 	defer srcDB.Close()
-	
+
 	// Create destination directory
 	if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
-	
+
 	// Open destination database
 	dstDB, err := pebble.Open(dstPath, &pebble.Options{})
 	if err != nil {
 		return fmt.Errorf("failed to open destination database: %w", err)
 	}
 	defer dstDB.Close()
-	
+
 	// Copy all keys with "evm" prefix
 	iter, err := srcDB.NewIter(nil)
 	if err != nil {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	batch := dstDB.NewBatch()
 	count := 0
-	
+
 	// Count keys by type
 	stats := make(map[string]int)
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		val := iter.Value()
-		
+
 		// Add "evm" prefix
 		newKey := append([]byte("evm"), key...)
 		if err := batch.Set(newKey, val, nil); err != nil {
 			return fmt.Errorf("failed to set key: %w", err)
 		}
-		
+
 		// Track statistics
 		if len(key) > 0 {
 			prefix := string(key[0])
 			stats[prefix]++
 		}
-		
+
 		count++
 		if count%10000 == 0 {
 			if err := batch.Commit(nil); err != nil {
@@ -2416,21 +2414,21 @@ func runAddEvmPrefix(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Migrated %d keys...\n", count)
 		}
 	}
-	
+
 	// Commit final batch
 	if count%10000 != 0 {
 		if err := batch.Commit(nil); err != nil {
 			return fmt.Errorf("failed to commit final batch: %w", err)
 		}
 	}
-	
+
 	fmt.Printf("\nMigration complete! Migrated %d keys\n", count)
 	fmt.Println("\nKey statistics:")
-	
+
 	// Map single-byte prefixes to names
 	prefixNames := map[string]string{
 		"h": "Headers",
-		"b": "Bodies", 
+		"b": "Bodies",
 		"r": "Receipts",
 		"t": "Total Difficulty",
 		"n": "Numbers",
@@ -2445,28 +2443,28 @@ func runAddEvmPrefix(cmd *cobra.Command, args []string) error {
 		"a": "Account",
 		"A": "Account Storage",
 	}
-	
+
 	for prefix, name := range prefixNames {
 		if c, ok := stats[prefix]; ok && c > 0 {
 			fmt.Printf("  %s (%s): %d\n", name, prefix, c)
 		}
 	}
-	
+
 	return nil
 }
 
 func runRebuildCanonicalOld(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	fmt.Printf("Rebuilding canonical mappings in %s\n", dbPath)
-	
+
 	// Open database
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
-	
+
 	// First, delete all existing evmn keys
 	fmt.Println("Deleting existing evmn keys...")
 	prefix := []byte("evmn")
@@ -2478,22 +2476,22 @@ func runRebuildCanonicalOld(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	batch := db.NewBatch()
 	deleteCount := 0
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		if err := batch.Delete(iter.Key(), nil); err != nil {
 			return fmt.Errorf("failed to delete key: %w", err)
 		}
 		deleteCount++
 	}
-	
+
 	if err := batch.Commit(nil); err != nil {
 		return fmt.Errorf("failed to commit deletions: %w", err)
 	}
 	fmt.Printf("Deleted %d existing evmn keys\n", deleteCount)
-	
+
 	// Now scan headers and rebuild mappings
 	fmt.Println("\nScanning headers to rebuild mappings...")
 	headerPrefix := []byte("evmh")
@@ -2505,34 +2503,34 @@ func runRebuildCanonicalOld(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create header iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	batch = db.NewBatch()
 	rebuiltCount := 0
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if len(key) != 36 { // evmh(4) + hash(32)
 			continue
 		}
-		
+
 		// Extract hash and get header
-		hash := key[4:] // Skip "evmh" prefix
+		hash := key[4:]  // Skip "evmh" prefix
 		_ = iter.Value() // headerData - would decode RLP in production
-		
+
 		// Decode RLP to get block number
 		// This is a simplified version - in production, use proper RLP decoding
 		// For now, we'll create evmn entries based on header hash
-		
+
 		// We need to extract block number from header
 		// For testing, create sequential numbers
 		canonicalKey := make([]byte, 12) // evmn(4) + number(8)
 		copy(canonicalKey, []byte("evmn"))
 		binary.BigEndian.PutUint64(canonicalKey[4:], uint64(rebuiltCount))
-		
+
 		if err := batch.Set(canonicalKey, hash, nil); err != nil {
 			return fmt.Errorf("failed to set canonical key: %w", err)
 		}
-		
+
 		rebuiltCount++
 		if rebuiltCount%1000 == 0 {
 			if err := batch.Commit(nil); err != nil {
@@ -2542,14 +2540,14 @@ func runRebuildCanonicalOld(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Rebuilt %d canonical mappings...\n", rebuiltCount)
 		}
 	}
-	
+
 	// Commit final batch
 	if rebuiltCount%1000 != 0 {
 		if err := batch.Commit(nil); err != nil {
 			return fmt.Errorf("failed to commit final batch: %w", err)
 		}
 	}
-	
+
 	fmt.Printf("\nFix Complete! Rebuilt %d canonical mappings\n", rebuiltCount)
 	return nil
 }
@@ -2559,70 +2557,70 @@ func runReplayConsensus(cmd *cobra.Command, args []string) error {
 	statePath, _ := cmd.Flags().GetString("state")
 	tipStr, _ := cmd.Flags().GetString("tip")
 	batchSize, _ := cmd.Flags().GetInt("batch")
-	
+
 	tip, _ := strconv.ParseUint(tipStr, 10, 64)
-	
-	fmt.Printf("Replaying consensus: evm=%s state=%s tip=%d batch=%d\n", 
+
+	fmt.Printf("Replaying consensus: evm=%s state=%s tip=%d batch=%d\n",
 		evmPath, statePath, tip, batchSize)
-	
+
 	// Open EVM database
 	evmDB, err := pebble.Open(evmPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open EVM database: %w", err)
 	}
 	defer evmDB.Close()
-	
+
 	// Create state database directory
 	if err := os.MkdirAll(statePath, 0755); err != nil {
 		return fmt.Errorf("failed to create state directory: %w", err)
 	}
-	
+
 	// Open state database
 	stateDB, err := pebble.Open(statePath, &pebble.Options{})
 	if err != nil {
 		return fmt.Errorf("failed to open state database: %w", err)
 	}
 	defer stateDB.Close()
-	
+
 	// Process blocks in batches
 	fmt.Println("\nCreating consensus state...")
 	processed := 0
-	
+
 	for height := uint64(0); height <= tip; height += uint64(batchSize) {
 		endHeight := height + uint64(batchSize) - 1
 		if endHeight > tip {
 			endHeight = tip
 		}
-		
+
 		// Create synthetic state for this batch
 		// In a real implementation, this would create proper Snowman consensus state
 		batch := stateDB.NewBatch()
-		
+
 		for h := height; h <= endHeight; h++ {
 			// Create state key
 			stateKey := fmt.Sprintf("state_%d", h)
 			stateVal := fmt.Sprintf("block_%d_state", h)
-			
+
 			if err := batch.Set([]byte(stateKey), []byte(stateVal), nil); err != nil {
 				return fmt.Errorf("failed to set state: %w", err)
 			}
 			processed++
 		}
-		
+
 		if err := batch.Commit(nil); err != nil {
 			return fmt.Errorf("failed to commit batch: %w", err)
 		}
-		
+
 		fmt.Printf("Processed blocks %d-%d (%d total)\n", height, endHeight, processed)
 	}
-	
+
 	fmt.Printf("\nReplay Complete! Processed %d blocks\n", processed)
 	return nil
 }
 
 func runPeekTip(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	// Try namespace-aware approach first
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
@@ -2634,10 +2632,10 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 		}
 	}
 	defer db.Close()
-	
+
 	// Find maximum block number - try both with and without evm prefix
 	var maxHeight uint64
-	
+
 	// First try with "evmn" prefix (already has evm namespace)
 	prefix := []byte("evmn")
 	iter, err := db.NewIter(&pebble.IterOptions{
@@ -2648,7 +2646,7 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if len(key) == 12 { // evmn(4) + number(8)
@@ -2658,7 +2656,7 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	// If no evmn keys found, try with just "n" prefix (raw subnet data)
 	if maxHeight == 0 {
 		prefix = []byte("n")
@@ -2670,7 +2668,7 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to create iterator: %w", err)
 		}
 		defer iter.Close()
-		
+
 		for iter.First(); iter.Valid(); iter.Next() {
 			key := iter.Key()
 			if len(key) == 9 { // n(1) + number(8)
@@ -2681,7 +2679,7 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	fmt.Printf("Maximum block number: %d\n", maxHeight)
 	return nil
 }
@@ -2689,26 +2687,26 @@ func runPeekTip(cmd *cobra.Command, args []string) error {
 func runFullMigration(cmd *cobra.Command, args []string) error {
 	srcDB := args[0]
 	dstRoot := args[1]
-	
+
 	fmt.Printf("Running full migration pipeline: %s -> %s\n", srcDB, dstRoot)
-	
+
 	// Step 1: Add EVM prefix
 	evmDB := filepath.Join(dstRoot, "evm", "pebbledb")
 	if err := runAddEvmPrefix(cmd, []string{srcDB, evmDB}); err != nil {
 		return fmt.Errorf("step 1 failed: %w", err)
 	}
-	
+
 	// Step 2: Rebuild canonical mappings
 	if err := runRebuildCanonical(cmd, []string{evmDB}); err != nil {
 		return fmt.Errorf("step 2 failed: %w", err)
 	}
-	
+
 	// Step 3: Find tip
 	tipCmd := &cobra.Command{}
 	if err := runPeekTip(tipCmd, []string{evmDB}); err != nil {
 		return fmt.Errorf("failed to find tip: %w", err)
 	}
-	
+
 	// Step 4: Create consensus state
 	stateDB := filepath.Join(dstRoot, "state", "pebbledb")
 	replayCmd := &cobra.Command{}
@@ -2716,27 +2714,26 @@ func runFullMigration(cmd *cobra.Command, args []string) error {
 	replayCmd.Flags().String("state", stateDB, "")
 	replayCmd.Flags().String("tip", "100", "") // Default tip
 	replayCmd.Flags().Int("batch", 50, "")
-	
+
 	if err := runReplayConsensus(replayCmd, []string{}); err != nil {
 		return fmt.Errorf("step 4 failed: %w", err)
 	}
-	
+
 	fmt.Println("\n✅ Full migration pipeline completed successfully!")
 	return nil
 }
 
-
 func runCheckHead(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	fmt.Printf("Checking head pointers in %s\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
-	
+
 	// Check various head pointer keys
 	headKeys := []string{
 		"LastBlock",
@@ -2746,7 +2743,7 @@ func runCheckHead(cmd *cobra.Command, args []string) error {
 		"evmLastHeader",
 		"evmLastFast",
 	}
-	
+
 	for _, key := range headKeys {
 		if val, closer, err := db.Get([]byte(key)); err == nil {
 			fmt.Printf("%s: %x\n", key, val)
@@ -2755,21 +2752,21 @@ func runCheckHead(cmd *cobra.Command, args []string) error {
 			fmt.Printf("%s: not found\n", key)
 		}
 	}
-	
+
 	return nil
 }
 
 func runFindCanonical(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	fmt.Printf("Finding canonical mappings in %s\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
-	
+
 	// Look for evmn keys
 	prefix := []byte("evmn")
 	iter, err := db.NewIter(&pebble.IterOptions{
@@ -2780,10 +2777,10 @@ func runFindCanonical(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create iterator: %w", err)
 	}
 	defer iter.Close()
-	
+
 	count := 0
 	wrongFormat := 0
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if len(key) == 12 { // evmn(4) + number(8)
@@ -2798,7 +2795,7 @@ func runFindCanonical(cmd *cobra.Command, args []string) error {
 			wrongFormat++
 		}
 	}
-	
+
 	fmt.Printf("\nFound %d canonical mappings (%d wrong format)\n", count, wrongFormat)
 	return nil
 }
@@ -2979,7 +2976,7 @@ func runRebuildCanonical(cmd *cobra.Command, args []string) error {
 	if count > 0 {
 		fmt.Printf("  Height range: %d to %d\n", minHeight, maxHeight)
 	}
-	
+
 	return nil
 }
 
@@ -3017,7 +3014,7 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 	// Process each prefix type
 	for evmPrefix, gethPrefix := range prefixMapping {
 		fmt.Printf("\nProcessing %s -> 0x%02x\n", evmPrefix, gethPrefix)
-		
+
 		iter, err := srcDB.NewIter(&pebble.IterOptions{
 			LowerBound: []byte(evmPrefix),
 			UpperBound: append([]byte(evmPrefix), 0xff),
@@ -3035,7 +3032,7 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 
 			// Skip the evm prefix (4 bytes) and build new key
 			var newKey []byte
-			
+
 			switch evmPrefix {
 			case "evmh": // Headers: evmh + number(8) + hash(32) -> 0x48 + number(8) + hash(32)
 				if len(srcKey) == 44 {
@@ -3100,7 +3097,7 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		
+
 		// Skip if it starts with any known evm prefix
 		isEVMKey := false
 		for evmPrefix := range prefixMapping {
@@ -3109,13 +3106,13 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 				break
 			}
 		}
-		
+
 		if !isEVMKey {
 			if err := batch.Set(key, iter.Value(), nil); err != nil {
 				return fmt.Errorf("failed to write other key: %w", err)
 			}
 			otherCount++
-			
+
 			if otherCount%10000 == 0 {
 				fmt.Printf("  Copied %d other keys...\n", otherCount)
 				if err := batch.Commit(pebble.Sync); err != nil {
@@ -3138,7 +3135,7 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 	canonicalKey := make([]byte, 9)
 	canonicalKey[0] = 0x68
 	binary.BigEndian.PutUint64(canonicalKey[1:], 1082780)
-	
+
 	if value, closer, err := dstDB.Get(canonicalKey); err == nil {
 		defer closer.Close()
 		fmt.Printf("  ✓ Found canonical hash: 0x%x\n", value)
@@ -3148,4 +3145,3 @@ func runConvertToGeth(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-

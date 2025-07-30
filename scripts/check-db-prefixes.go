@@ -15,7 +15,7 @@ func main() {
 	}
 
 	dbPath := os.Args[1]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{
 		ReadOnly: true,
 	})
@@ -27,7 +27,7 @@ func main() {
 	// Count prefixes
 	prefixCounts := make(map[string]int)
 	totalKeys := 0
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
@@ -37,16 +37,16 @@ func main() {
 	for iter.First(); iter.Valid() && totalKeys < 100000; iter.Next() {
 		key := iter.Key()
 		totalKeys++
-		
+
 		// Get prefix (first 4 bytes or less)
 		prefixLen := 4
 		if len(key) < 4 {
 			prefixLen = len(key)
 		}
-		
+
 		prefix := string(key[:prefixLen])
 		prefixCounts[prefix]++
-		
+
 		// Also check single byte prefix
 		if len(key) > 0 {
 			singleByte := fmt.Sprintf("0x%02x", key[0])
@@ -57,7 +57,7 @@ func main() {
 	log.Printf("Database: %s", dbPath)
 	log.Printf("Analyzed %d keys", totalKeys)
 	log.Printf("\nTop prefixes:")
-	
+
 	// Print most common prefixes
 	for prefix, count := range prefixCounts {
 		if count > 100 {

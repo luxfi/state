@@ -13,7 +13,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	
+
 	"github.com/cockroachdb/pebble"
 )
 
@@ -22,32 +22,32 @@ import (
 
 var _ = Describe("Mini-Lab Migration Pipeline", func() {
 	var (
-		tmpDir        string
-		srcDB         string
-		migratedDB    string
-		syntheticDB   string
-		projectRoot   string
+		tmpDir      string
+		srcDB       string
+		migratedDB  string
+		syntheticDB string
+		projectRoot string
 	)
 
 	BeforeEach(func() {
 		// Get actual project root (where we're running from)
 		wd, err := os.Getwd()
 		Expect(err).NotTo(HaveOccurred())
-		
+
 		// When running from test dir, project root is parent
 		if filepath.Base(wd) == "test" {
 			projectRoot = filepath.Dir(wd)
 		} else {
 			projectRoot = wd
 		}
-		
+
 		tmpDir = filepath.Join(projectRoot, ".tmp", fmt.Sprintf("test-%d", time.Now().UnixNano()))
 		Expect(os.MkdirAll(tmpDir, 0755)).To(Succeed())
-		
+
 		// Always use test database for reproducible tests
 		fmt.Printf("Creating test database in %s\n", tmpDir)
 		srcDB = createMiniTestDB(tmpDir)
-		
+
 		migratedDB = filepath.Join(tmpDir, "migrated")
 		syntheticDB = filepath.Join(tmpDir, "synthetic", "pebbledb")
 	})
@@ -61,7 +61,7 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 			By("Running genesis import subnet")
 			output, err := genesis("import", "subnet", srcDB, migratedDB)
 			Expect(err).NotTo(HaveOccurred(), output)
-			
+
 			By("Verifying import was successful")
 			Expect(output).To(ContainSubstring("Import complete!"))
 			Expect(output).To(ContainSubstring("Chain ready for C-Chain"))
@@ -75,11 +75,11 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 				output, err := genesis("import", "subnet", srcDB, migratedDB)
 				Expect(err).NotTo(HaveOccurred(), output)
 			}
-			
+
 			By("Finding tip height")
 			output, err := genesis("inspect", "tip", migratedDB)
 			Expect(err).NotTo(HaveOccurred(), output)
-			
+
 			By("Verifying height was found")
 			// The output format may vary, just check that the command succeeded
 			Expect(err).NotTo(HaveOccurred())
@@ -100,12 +100,12 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 				output, err := genesis("import", "subnet", srcDB, migratedDB)
 				Expect(err).NotTo(HaveOccurred(), output)
 			}
-			
+
 			By("Opening migrated database")
 			db, err := pebble.Open(migratedDB, &pebble.Options{ReadOnly: true})
 			Expect(err).NotTo(HaveOccurred())
 			defer db.Close()
-			
+
 			By("Checking evmn key format")
 			// The subnet database has evmn keys in format: evmn<hash>
 			// But C-Chain expects: evmn<8-byte-number>
@@ -116,10 +116,10 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			defer iter.Close()
-			
+
 			wrongFormatCount := 0
 			correctFormatCount := 0
-			
+
 			for iter.First(); iter.Valid(); iter.Next() {
 				key := iter.Key()
 				if len(key) == 12 { // evmn(4) + number(8)
@@ -128,9 +128,9 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 					wrongFormatCount++
 				}
 			}
-			
+
 			// After initial migration, keys are in wrong format
-			fmt.Printf("Found %d wrong format evmn keys, %d correct format\n", 
+			fmt.Printf("Found %d wrong format evmn keys, %d correct format\n",
 				wrongFormatCount, correctFormatCount)
 		})
 	})
@@ -150,14 +150,14 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 				output, err := genesis("import", "subnet", srcDB, migratedDB)
 				Expect(err).NotTo(HaveOccurred(), output)
 			}
-			
+
 			// Consensus replay is now handled automatically by import-subnet
 			Skip("Consensus state is now handled automatically by import-subnet command")
 		})
-		
+
 		It("returns the correct block height over RPC", func() {
 			Skip("Requires running node - enable when testing with live node")
-			
+
 			By("Getting expected tip from database")
 			tipOutput, _ := genesis("inspect", "tip", migratedDB)
 			// Extract just the number from output like "Maximum block number: 475"
@@ -169,74 +169,74 @@ var _ = Describe("Mini-Lab Migration Pipeline", func() {
 				}
 			}
 			expectedTipNum, _ := strconv.ParseUint(expectedTip, 10, 64)
-			
+
 			By("Waiting for RPC to be available")
 			err := waitRPC("9630")
 			Expect(err).NotTo(HaveOccurred(), "RPC port never came up")
-			
+
 			By("Calling eth_blockNumber RPC")
 			rpcURL := "http://localhost:9630/ext/bc/C/rpc"
-			
+
 			cmd := exec.Command("curl", "-s", "--data",
 				`{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}`,
 				rpcURL,
 			)
 			output, err := cmd.Output()
 			Expect(err).NotTo(HaveOccurred(), "RPC eth_blockNumber failed")
-			
+
 			By("Parsing JSON response")
 			var resp struct {
 				Result string `json:"result"`
 			}
 			Expect(json.Unmarshal(output, &resp)).To(Succeed(), "invalid JSON: "+string(output))
-			
+
 			By("Converting hex to uint64")
 			num, err := strconv.ParseUint(strings.TrimPrefix(resp.Result, "0x"), 16, 64)
 			Expect(err).NotTo(HaveOccurred(), "invalid hex: "+resp.Result)
-			
+
 			// Check against expected tip from database
-			Expect(num).To(Equal(expectedTipNum), 
+			Expect(num).To(Equal(expectedTipNum),
 				fmt.Sprintf("node should report tip %d (0x%x)", expectedTipNum, expectedTipNum))
 		})
-		
+
 		It("has the treasury balance > 1.9 T LUX", func() {
 			Skip("Requires running node - enable when testing with live node")
-			
+
 			By("Waiting for RPC to be available")
 			err := waitRPC("9630")
 			Expect(err).NotTo(HaveOccurred(), "RPC port never came up")
-			
+
 			By("Checking treasury balance via RPC")
 			treasury := "0x9011e888251ab053b7bd1cdb598db4f9ded94714" // all lowercase
 			rpcURL := "http://localhost:9630/ext/bc/C/rpc"
-			
+
 			cmd := exec.Command("curl", "-s", "--data",
 				fmt.Sprintf(`{"jsonrpc":"2.0","method":"eth_getBalance","params":["%s","latest"],"id":1}`, treasury),
 				rpcURL,
 			)
 			output, err := cmd.Output()
 			Expect(err).NotTo(HaveOccurred(), "RPC eth_getBalance failed")
-			
+
 			By("Parsing balance response")
 			var resp struct {
 				Result string `json:"result"`
 			}
 			Expect(json.Unmarshal(output, &resp)).To(Succeed(), "invalid JSON: "+string(output))
-			
+
 			bal := new(big.Int)
 			_, ok := bal.SetString(strings.TrimPrefix(resp.Result, "0x"), 16)
 			Expect(ok).To(BeTrue(), "could not parse balance hex: "+resp.Result)
-			
+
 			By("Verifying balance > 1.9T")
 			// 1.9 * 10^18 wei (1.9 T with 18 decimals)
 			threshold := new(big.Int)
 			threshold.SetString("1900000000000000000", 10)
-			
+
 			Expect(bal.Cmp(threshold)).To(BeNumerically(">", 0),
-				fmt.Sprintf("treasury %s balance %s is below threshold %s", 
+				fmt.Sprintf("treasury %s balance %s is below threshold %s",
 					treasury, bal.String(), threshold.String()),
 			)
-			
+
 			// Log the actual balance for confirmation
 			fmt.Printf("Treasury balance: %s wei (hex: %s)\n", bal.String(), resp.Result)
 		})

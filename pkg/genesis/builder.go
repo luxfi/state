@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/node/genesis"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/vms/platformvm/signer"
-	
+
 	"github.com/luxfi/genesis/pkg/genesis/address"
 	"github.com/luxfi/genesis/pkg/genesis/allocation"
 	"github.com/luxfi/genesis/pkg/genesis/cchain"
@@ -109,7 +109,7 @@ func (b *Builder) ImportCChainAllocations(allocPath string) error {
 		return err
 	}
 	b.cchainGenesis = string(genesisJSON)
-	
+
 	return nil
 }
 
@@ -121,7 +121,7 @@ func (b *Builder) ImportCSVAllocations(csvPath string) error {
 	}
 
 	lines := strings.Split(string(data), "\n")
-	
+
 	// Skip header lines (lines starting with #) and column headers
 	dataStartIdx := 0
 	for i, line := range lines {
@@ -192,7 +192,7 @@ func (b *Builder) Build() (*MainGenesis, error) {
 			stakedFunds = append(stakedFunds, alloc.LuxAddr)
 		}
 	}
-	
+
 	// For networks with initial stakers, ensure staked funds are set
 	if len(b.stakers) > 0 && len(stakedFunds) == 0 {
 		// Use treasury address for staked funds if no locked allocations
@@ -233,7 +233,7 @@ func (b *Builder) Build() (*MainGenesis, error) {
 			}
 			var pubKey [48]byte
 			copy(pubKey[:], pubKeyBytes)
-			
+
 			// Decode hex proof of possession (96 bytes)
 			popHex := strings.TrimPrefix(staker.ProofOfPossession, "0x")
 			popBytes, err := hex.DecodeString(popHex)
@@ -242,7 +242,7 @@ func (b *Builder) Build() (*MainGenesis, error) {
 			}
 			var pop [96]byte
 			copy(pop[:], popBytes)
-			
+
 			unparsedStaker.Signer = &signer.ProofOfPossession{
 				PublicKey:         pubKey,
 				ProofOfPossession: pop,
@@ -309,10 +309,10 @@ func (b *Builder) GetAllocationCount() int {
 func parseDecimalAmount(amount string) (*big.Int, error) {
 	// Remove any spaces
 	amount = strings.TrimSpace(amount)
-	
+
 	// Split by decimal point
 	parts := strings.Split(amount, ".")
-	
+
 	// Parse integer part
 	intPart := new(big.Int)
 	if parts[0] != "" {
@@ -320,17 +320,17 @@ func parseDecimalAmount(amount string) (*big.Int, error) {
 			return nil, fmt.Errorf("invalid integer part: %s", parts[0])
 		}
 	}
-	
+
 	// If no decimal part, return integer part
 	if len(parts) == 1 {
 		return intPart, nil
 	}
-	
+
 	// If there's a decimal part, we need to handle it
 	if len(parts) > 2 {
 		return nil, fmt.Errorf("invalid amount format: multiple decimal points")
 	}
-	
+
 	// For the decimal part, we'll just parse the integer value
 	// The caller will multiply by 10^9 for Lux's 9 decimal places
 	return intPart, nil

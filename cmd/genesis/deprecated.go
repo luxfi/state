@@ -10,7 +10,7 @@ func addMigrateSubcommands(migrateCmd *cobra.Command) {
 	// Now handled by migrate.go module
 }
 
-// DEPRECATED: Replaced by NewAnalyzeCommand() in analyze.go  
+// DEPRECATED: Replaced by NewAnalyzeCommand() in analyze.go
 func addAnalyzeSubcommands(analyzeCmd *cobra.Command) {
 	// Old analyze subcommands implementation
 	// Now handled by analyze.go module

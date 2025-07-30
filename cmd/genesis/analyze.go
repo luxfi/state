@@ -11,11 +11,11 @@ import (
 
 // Analysis flags
 var (
-	analyzeLimit     int
-	analyzeDetailed  bool
-	analyzeSubnet    bool
-	analyzeNetwork   int
-	analyzeAccount   string
+	analyzeLimit    int
+	analyzeDetailed bool
+	analyzeSubnet   bool
+	analyzeNetwork  int
+	analyzeAccount  string
 )
 
 // NewAnalyzeCommand creates the analyze command with all subcommands
@@ -152,7 +152,7 @@ This includes:
 
 func runAnalyzeKeys(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	fmt.Printf("=== Analyzing Keys in %s ===\n", dbPath)
 	fmt.Printf("Limit: %d keys\n", analyzeLimit)
 	fmt.Printf("Detailed: %v\n", analyzeDetailed)
@@ -168,7 +168,7 @@ func runAnalyzeKeys(cmd *cobra.Command, args []string) error {
 	prefixCount := make(map[string]int)
 	lengthCount := make(map[int]int)
 	evmnCount := 0
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func runAnalyzeKeys(cmd *cobra.Command, args []string) error {
 
 	// Display results
 	fmt.Printf("\nAnalyzed %d keys\n", count)
-	
+
 	fmt.Println("\nKey Prefixes:")
 	displaySortedMap(prefixCount)
 
@@ -262,7 +262,7 @@ func runAnalyzeBlocks(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Block Range: %d - %d\n", minBlock, maxBlock)
 	fmt.Printf("Total Blocks: %d\n", blockCount)
 	fmt.Printf("Expected Blocks: %d\n", maxBlock-minBlock+1)
-	
+
 	if blockCount < int(maxBlock-minBlock+1) {
 		fmt.Printf("Missing Blocks: %d\n", int(maxBlock-minBlock+1)-blockCount)
 	}
@@ -278,7 +278,7 @@ func runAnalyzeSubnet(cmd *cobra.Command, args []string) error {
 
 	// Subnet-specific analysis
 	fmt.Println("Checking for subnet-specific patterns...")
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -331,14 +331,14 @@ func runAnalyzeStructure(cmd *cobra.Command, args []string) error {
 
 	// Key categories
 	categories := map[string]string{
-		"h": "Headers",
-		"b": "Bodies",
-		"r": "Receipts",
-		"H": "Hash->Number",
-		"n": "Number->Hash",
-		"t": "Transactions",
-		"s": "State",
-		"c": "Code",
+		"h":    "Headers",
+		"b":    "Bodies",
+		"r":    "Receipts",
+		"H":    "Hash->Number",
+		"n":    "Number->Hash",
+		"t":    "Transactions",
+		"s":    "State",
+		"c":    "Code",
 		"evmn": "Canonical",
 	}
 
@@ -374,7 +374,7 @@ func getKeyPrefix(key []byte) string {
 	if len(key) == 0 {
 		return "<empty>"
 	}
-	
+
 	// Check for text prefixes
 	if len(key) >= 4 {
 		prefix := string(key[:4])
@@ -382,7 +382,7 @@ func getKeyPrefix(key []byte) string {
 			return "evmn"
 		}
 	}
-	
+
 	// Return hex of first byte
 	return fmt.Sprintf("%02x", key[0])
 }

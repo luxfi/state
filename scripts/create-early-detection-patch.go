@@ -51,6 +51,6 @@ func main() {
 		fmt.Printf("Error writing patch: %v\n", err)
 		return
 	}
-	
+
 	fmt.Println("Created early-detection.patch")
 }

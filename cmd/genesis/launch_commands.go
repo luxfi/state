@@ -78,25 +78,25 @@ This command:
 func runLaunchL1(cmd *cobra.Command, args []string) error {
 	// L1 always uses network ID 96369 for C-Chain
 	networkID := "96369"
-	
+
 	fmt.Println("🚀 Launching L1 (C-Chain) with network ID", networkID)
-	
+
 	// Check if we already have migrated data
 	migratedDataPath := filepath.Join(Paths.RuntimeDir, "lux-96369-migrated")
 	if _, err := os.Stat(migratedDataPath); err == nil {
 		fmt.Println("✅ Found existing migrated data at:", migratedDataPath)
 		return launchWithExistingData(networkID, migratedDataPath)
 	}
-	
+
 	// Otherwise use the standard flow
 	return launchWithNetworkID(networkID)
 }
 
 func runLaunchL2(cmd *cobra.Command, args []string) error {
 	networkID := args[0]
-	
+
 	fmt.Printf("🚀 Launching L2 with network ID %s\n", networkID)
-	
+
 	// L2 launch would involve subnet-specific configuration
 	// For now, this is a placeholder that uses similar logic
 	return launchWithNetworkID(networkID)
@@ -110,37 +110,37 @@ func runLaunchCChain(cmd *cobra.Command, args []string) error {
 func launchWithNetworkID(networkID string) error {
 	// First, import the subnet data to C-Chain format
 	fmt.Println("🔄 Importing Subnet EVM data as C-Chain...")
-	
+
 	sourceData := filepath.Join(Paths.ChaindataDir, fmt.Sprintf("lux-mainnet-%s", networkID), "db", "pebbledb")
 	outputDir := filepath.Join(Paths.RuntimeDir, fmt.Sprintf("lux-%s-cchain", networkID))
-	
+
 	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %v", err)
 	}
-	
+
 	// Run the import subnet command
 	importCmd := exec.Command(os.Args[0], "import", "subnet", sourceData, outputDir)
 	importCmd.Stdout = os.Stdout
 	importCmd.Stderr = os.Stderr
-	
+
 	if err := importCmd.Run(); err != nil {
 		return fmt.Errorf("import failed: %v", err)
 	}
-	
+
 	fmt.Println("✅ Import complete!")
-	
+
 	// Now set up for launching luxd
 	chainDataDir := outputDir
 	chainConfigDir := Paths.ConfigsDir
-	
+
 	// Verify chain data exists - check both possible locations
 	evmPath := filepath.Join(chainDataDir, "db", "pebbledb")
 	if _, err := os.Stat(evmPath); os.IsNotExist(err) {
 		// Try with evm subdirectory
 		evmPath = filepath.Join(chainDataDir, "db", "evm", "pebbledb")
 		if _, err := os.Stat(evmPath); os.IsNotExist(err) {
-			return fmt.Errorf("chain data not found at %s or %s", 
+			return fmt.Errorf("chain data not found at %s or %s",
 				filepath.Join(chainDataDir, "db", "pebbledb"),
 				filepath.Join(chainDataDir, "db", "evm", "pebbledb"))
 		}
@@ -148,7 +148,7 @@ func launchWithNetworkID(networkID string) error {
 
 	// Use configured luxd path
 	luxdPath := Paths.LuxdPath
-	
+
 	// Verify it exists
 	if _, err := os.Stat(luxdPath); err != nil {
 		// Try to find it in PATH
@@ -167,7 +167,7 @@ func launchWithNetworkID(networkID string) error {
 		"--network-id="+networkID,
 		"--chain-config-dir="+chainConfigDir,
 		"--chain-data-dir="+chainDataDir,
-		"--dev",  // Enables single-node mode with no sybil protection
+		"--dev", // Enables single-node mode with no sybil protection
 		"--http-host=0.0.0.0",
 		"--log-level=info",
 	)
@@ -206,7 +206,7 @@ func launchWithNetworkID(networkID string) error {
 func launchWithExistingData(networkID string, chainDataDir string) error {
 	// Use configured paths
 	chainConfigDir := Paths.ConfigsDir
-	
+
 	// Verify chain data exists
 	evmPath := filepath.Join(chainDataDir, "db", "evm", "pebbledb")
 	if _, err := os.Stat(evmPath); os.IsNotExist(err) {
@@ -219,7 +219,7 @@ func launchWithExistingData(networkID string, chainDataDir string) error {
 
 	// Use configured luxd path
 	luxdPath := Paths.LuxdPath
-	
+
 	// Verify it exists
 	if _, err := os.Stat(luxdPath); err != nil {
 		// Try to find it in PATH
@@ -239,7 +239,7 @@ func launchWithExistingData(networkID string, chainDataDir string) error {
 		"--network-id="+networkID,
 		"--chain-config-dir="+chainConfigDir,
 		"--chain-data-dir="+chainDataDir,
-		"--dev",  // Enables single-node mode with no sybil protection
+		"--dev", // Enables single-node mode with no sybil protection
 		"--http-host=0.0.0.0",
 		"--log-level=info",
 	)

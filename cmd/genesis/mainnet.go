@@ -64,13 +64,13 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 	// Step 2: Extract state using existing extract command
 	fmt.Println("📊 Step 2: Extracting blockchain state...")
 	extractedDir := filepath.Join(outputDir, "extracted")
-	
+
 	// Use the existing extract state functionality
 	extractStateCmd := &cobra.Command{}
 	extractStateCmd.SetArgs([]string{pebbleDBPath, extractedDir})
 	extractStateCmd.Flags().Int("network", 96369, "")
 	extractStateCmd.Flags().Bool("state", true, "")
-	
+
 	if err := runExtractState(extractStateCmd, []string{pebbleDBPath, extractedDir}); err != nil {
 		return fmt.Errorf("state extraction failed: %w", err)
 	}
@@ -79,12 +79,12 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 	// Step 3: Prepare genesis files
 	fmt.Println("📄 Step 3: Preparing genesis files...")
 	genesisDir := filepath.Join(outputDir, "genesis")
-	
+
 	// Use existing generate command
 	generateCmd := &cobra.Command{}
 	generateCmd.Flags().String("network", "mainnet", "")
 	generateCmd.Flags().String("output", genesisDir, "")
-	
+
 	if err := runGenerate(generateCmd, []string{}); err != nil {
 		return fmt.Errorf("genesis generation failed: %w", err)
 	}
@@ -93,7 +93,7 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 	// Step 4: Update bootstrap configuration
 	fmt.Println("🌐 Step 4: Configuring bootstrap network...")
 	bootstrapFile := filepath.Join(outputDir, "bootstrappers.json")
-	
+
 	if err := updateBootstrapNodes(bootstrapFile, nodeCount); err != nil {
 		return fmt.Errorf("bootstrap configuration failed: %w", err)
 	}
@@ -102,7 +102,7 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 	// Step 5: Create deployment configuration
 	fmt.Println("⚙️  Step 5: Creating deployment configuration...")
 	configDir := filepath.Join(outputDir, "config")
-	
+
 	if err := createDeploymentConfig(configDir, dbType); err != nil {
 		return fmt.Errorf("deployment config creation failed: %w", err)
 	}
@@ -113,7 +113,7 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 		fmt.Println("✓ Step 6: Verifying configuration...")
 		validateCmd := &cobra.Command{}
 		validateCmd.Flags().String("network", "mainnet", "")
-		
+
 		if err := runValidate(validateCmd, []string{}); err != nil {
 			fmt.Printf("⚠️  Warning: Validation failed: %v\n", err)
 		} else {
@@ -129,7 +129,7 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 	fmt.Printf("  - %s/genesis/       # Genesis files (P/C/X chains)\n", outputDir)
 	fmt.Printf("  - %s/config/        # Node configuration\n", outputDir)
 	fmt.Printf("  - %s/bootstrappers.json  # Bootstrap nodes\n", outputDir)
-	
+
 	fmt.Println("\n🚀 Next steps:")
 	fmt.Println("1. Review configuration in", outputDir)
 	fmt.Println("2. Copy to node deployments")
@@ -142,7 +142,7 @@ func prepareMainnet(dataDir, outputDir, dbType string, nodeCount int, skipVerify
 func updateBootstrapNodes(outputFile string, nodeCount int) error {
 	// Ensure we have the updated bootstrappers from the main genesis
 	bootstrapSrc := "bootstrappers.json"
-	
+
 	// Check if source exists
 	if _, err := os.Stat(bootstrapSrc); err == nil {
 		// Copy existing bootstrappers
@@ -150,15 +150,15 @@ func updateBootstrapNodes(outputFile string, nodeCount int) error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Ensure output directory exists
 		if err := os.MkdirAll(filepath.Dir(outputFile), 0755); err != nil {
 			return err
 		}
-		
+
 		return os.WriteFile(outputFile, data, 0644)
 	}
-	
+
 	// If no source, use the node genesis bootstrappers
 	nodeSrc := filepath.Join("..", "..", "node", "genesis", "bootstrappers.json")
 	if _, err := os.Stat(nodeSrc); err == nil {
@@ -166,14 +166,14 @@ func updateBootstrapNodes(outputFile string, nodeCount int) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if err := os.MkdirAll(filepath.Dir(outputFile), 0755); err != nil {
 			return err
 		}
-		
+
 		return os.WriteFile(outputFile, data, 0644)
 	}
-	
+
 	return fmt.Errorf("no bootstrappers.json found")
 }
 
@@ -184,31 +184,31 @@ func createDeploymentConfig(configDir, dbType string) error {
 
 	// Node configuration
 	nodeConfig := map[string]interface{}{
-		"network-id":                     1,
-		"db-type":                       dbType,
-		"log-level":                     "info",
-		"log-format":                    "json",
-		"http-port":                     9630,
-		"staking-port":                  9651,
-		"staking-enabled":               true,
-		"health-check-frequency":        "30s",
-		"network-compression-type":      "zstd",
-		"network-max-reconnect-delay":   "1m",
-		"network-initial-reconnect-delay": "5s",
+		"network-id":                           1,
+		"db-type":                              dbType,
+		"log-level":                            "info",
+		"log-format":                           "json",
+		"http-port":                            9630,
+		"staking-port":                         9651,
+		"staking-enabled":                      true,
+		"health-check-frequency":               "30s",
+		"network-compression-type":             "zstd",
+		"network-max-reconnect-delay":          "1m",
+		"network-initial-reconnect-delay":      "5s",
 		"network-require-validator-to-connect": false,
 	}
 
 	// EVM configuration for BadgerDB
 	evmConfig := map[string]interface{}{
-		"database-type":              dbType,
-		"log-level":                  "info",
-		"rpc-gas-cap":                50000000,
-		"rpc-tx-fee-cap":             100,
-		"api-max-duration":           30000000000,
-		"transaction-history":        0,
-		"accepted-cache-size":        32,
-		"use-standalone-database":    true,
-		"http-body-limit":            33554432,
+		"database-type":           dbType,
+		"log-level":               "info",
+		"rpc-gas-cap":             50000000,
+		"rpc-tx-fee-cap":          100,
+		"api-max-duration":        30000000000,
+		"transaction-history":     0,
+		"accepted-cache-size":     32,
+		"use-standalone-database": true,
+		"http-body-limit":         33554432,
 	}
 
 	// Write configurations
@@ -242,7 +242,7 @@ exec luxd \
     --data-dir="$DATA_DIR" \
     --plugin-dir="$DATA_DIR/plugins"
 `
-	
+
 	scriptFile := filepath.Join(configDir, "..", "launch.sh")
 	if err := os.WriteFile(scriptFile, []byte(scriptContent), 0755); err != nil {
 		return fmt.Errorf("failed to write launch script: %w", err)
@@ -257,7 +257,7 @@ func writeJSON(filename string, data interface{}) error {
 		return err
 	}
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(data)

@@ -35,7 +35,7 @@ func main() {
 	// Create iterator for headers with namespace prefix
 	// evmh in hex is 65766d68
 	headerPrefix := []byte("evmh")
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: headerPrefix,
 		UpperBound: append(headerPrefix, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff),
@@ -52,7 +52,7 @@ func main() {
 			// Key format: evmh + 8-byte number + 32-byte hash
 			num := binary.BigEndian.Uint64(key[4:12])
 			copy(tipHash[:], key[12:44])
-			
+
 			if num > tipNum {
 				tipNum = num
 			}
@@ -86,19 +86,19 @@ func main() {
 		key := append([]byte("evmh"), make([]byte, 40)...)
 		binary.BigEndian.PutUint64(key[4:12], num)
 		copy(key[12:44], hash[:])
-		
+
 		val, closer, err := db.Get(key)
 		if err != nil {
 			log.Fatalf("Missing header at height %d, hash %s", num, hex.EncodeToString(hash[:]))
 		}
-		
+
 		// Extract parent hash from RLP-encoded header
 		// Parent hash is typically at offset 3-4 after RLP prefix
 		if len(val) < 35 {
 			closer.Close()
 			log.Fatalf("Header too short at height %d", num)
 		}
-		
+
 		// For RLP-encoded headers, parent hash position depends on prefix
 		parentHashOffset := 3
 		if val[0] >= 0xf8 { // Long list prefix
@@ -111,7 +111,7 @@ func main() {
 				parentHashOffset = 4
 			}
 		}
-		
+
 		copy(hash[:], val[parentHashOffset:parentHashOffset+32])
 		closer.Close()
 
@@ -134,11 +134,11 @@ func main() {
 		key := make([]byte, 12)
 		copy(key[:4], []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], num)
-		
+
 		if err := batch.Set(key, hash[:], nil); err != nil {
 			log.Fatalf("Failed to write mapping for height %d: %v", num, err)
 		}
-		
+
 		written++
 		if written%100000 == 0 {
 			// Flush batch periodically
@@ -157,12 +157,12 @@ func main() {
 
 	log.Printf("Successfully wrote %d canonical mappings", written)
 	log.Printf("Canonical chain tip: height=%d, hash=%s", tipNum, hex.EncodeToString(tipHash[:]))
-	
+
 	// Verify by reading back the tip
 	testKey := make([]byte, 12)
 	copy(testKey[:4], []byte("evmn"))
 	binary.BigEndian.PutUint64(testKey[4:], tipNum)
-	
+
 	if val, closer, err := db.Get(testKey); err == nil {
 		defer closer.Close()
 		log.Printf("Verification: height %d -> hash %s", tipNum, hex.EncodeToString(val))

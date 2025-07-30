@@ -193,7 +193,7 @@ func (s *TokenTransferScanner) scanTargetedTransfers() ([]TokenTransfer, error) 
 					Addresses: []common.Address{s.tokenAddress},
 					Topics: [][]common.Hash{
 						{transferEventSig},
-						nil, // from (any)
+						nil,          // from (any)
 						targetHashes, // to (target addresses)
 					},
 				}
@@ -205,7 +205,7 @@ func (s *TokenTransferScanner) scanTargetedTransfers() ([]TokenTransfer, error) 
 					Topics: [][]common.Hash{
 						{transferEventSig},
 						targetHashes, // from (target addresses)
-						nil, // to (any)
+						nil,          // to (any)
 					},
 				}
 			}

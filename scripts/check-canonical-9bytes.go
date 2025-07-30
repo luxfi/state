@@ -16,7 +16,7 @@ func main() {
 	}
 
 	dbPath := os.Args[1]
-	
+
 	// Open database
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
@@ -29,12 +29,12 @@ func main() {
 	key9 := make([]byte, 9)
 	key9[0] = 0x68
 	binary.BigEndian.PutUint64(key9[1:], 1082780)
-	
+
 	// Check for the old 10-byte key
 	key10, _ := hex.DecodeString("68000000000010859c6e")
-	
+
 	fmt.Println("Checking for canonical keys:")
-	
+
 	// Check 9-byte key
 	value9, closer9, err9 := db.Get(key9)
 	if err9 == nil {
@@ -43,7 +43,7 @@ func main() {
 	} else {
 		fmt.Printf("✗ 9-byte key not found: %x (error: %v)\n", key9, err9)
 	}
-	
+
 	// Check 10-byte key
 	value10, closer10, err10 := db.Get(key10)
 	if err10 == nil {
@@ -52,7 +52,7 @@ func main() {
 	} else {
 		fmt.Printf("✓ Old 10-byte key not found (good)\n")
 	}
-	
+
 	// List all keys starting with 0x68
 	fmt.Println("\nAll keys starting with 0x68:")
 	iter, _ := db.NewIter(&pebble.IterOptions{

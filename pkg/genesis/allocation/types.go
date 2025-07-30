@@ -9,10 +9,10 @@ import (
 
 // Allocation represents an initial allocation of LUX tokens
 type Allocation struct {
-	ETHAddr        string          `json:"ethAddr"`
-	LuxAddr        string          `json:"luxAddr"`
-	InitialAmount  *big.Int        `json:"-"` // Use big.Int internally
-	UnlockSchedule []LockedAmount  `json:"unlockSchedule"`
+	ETHAddr        string         `json:"ethAddr"`
+	LuxAddr        string         `json:"luxAddr"`
+	InitialAmount  *big.Int       `json:"-"` // Use big.Int internally
+	UnlockSchedule []LockedAmount `json:"unlockSchedule"`
 }
 
 // MarshalJSON custom marshaller to handle big.Int
@@ -23,7 +23,7 @@ func (a Allocation) MarshalJSON() ([]byte, error) {
 		*Alias
 	}{
 		InitialAmount: a.InitialAmount.String(),
-		Alias:        (*Alias)(&a),
+		Alias:         (*Alias)(&a),
 	})
 }
 
@@ -36,16 +36,16 @@ func (a *Allocation) UnmarshalJSON(data []byte) error {
 	}{
 		Alias: (*Alias)(a),
 	}
-	
+
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	
+
 	a.InitialAmount = new(big.Int)
 	if _, ok := a.InitialAmount.SetString(aux.InitialAmount, 10); !ok {
 		return fmt.Errorf("invalid initial amount: %s", aux.InitialAmount)
 	}
-	
+
 	return nil
 }
 
@@ -76,16 +76,16 @@ func (l *LockedAmount) UnmarshalJSON(data []byte) error {
 	}{
 		Alias: (*Alias)(l),
 	}
-	
+
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	
+
 	l.Amount = new(big.Int)
 	if _, ok := l.Amount.SetString(aux.Amount, 10); !ok {
 		return fmt.Errorf("invalid locked amount: %s", aux.Amount)
 	}
-	
+
 	return nil
 }
 
@@ -117,15 +117,15 @@ func (as *AllocationSet) Add(alloc *Allocation) error {
 	if _, exists := as.allocations[alloc.ETHAddr]; exists {
 		return fmt.Errorf("allocation already exists for address %s", alloc.ETHAddr)
 	}
-	
+
 	as.allocations[alloc.ETHAddr] = alloc
 	as.totalSupply.Add(as.totalSupply, alloc.InitialAmount)
-	
+
 	// Add locked amounts to total supply
 	for _, locked := range alloc.UnlockSchedule {
 		as.totalSupply.Add(as.totalSupply, locked.Amount)
 	}
-	
+
 	return nil
 }
 

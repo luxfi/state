@@ -6,7 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	
+
 	"github.com/cockroachdb/pebble"
 )
 
@@ -21,11 +21,11 @@ var _ = Describe("Database Operations", func() {
 	Describe("Chain Data Validation", func() {
 		Context("7777 Chain Data", func() {
 			It("should have valid PebbleDB structure", func() {
-	dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
-				
+				dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
+
 				// Check if it exists
 				Expect(dbPath).To(BeADirectory())
-				
+
 				// Open and validate
 				db, err := pebble.Open(dbPath, &pebble.Options{
 					ReadOnly: true,
@@ -51,7 +51,7 @@ var _ = Describe("Database Operations", func() {
 
 				// Validate we have data
 				Expect(keyCount).To(BeNumerically(">", 1000), "Database should have substantial data")
-				
+
 				// Check for expected key prefixes
 				Expect(prefixCounts).To(HaveKey("68")) // headers
 				Expect(prefixCounts).To(HaveKey("62")) // bodies
@@ -59,8 +59,8 @@ var _ = Describe("Database Operations", func() {
 			})
 
 			It("should have correct genesis block", func() {
-	dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
-				
+				dbPath := filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db")
+
 				db, err := pebble.Open(dbPath, &pebble.Options{
 					ReadOnly: true,
 				})
@@ -102,7 +102,7 @@ var _ = Describe("Database Operations", func() {
 		Context("96369 Chain Data", func() {
 			It("should validate mainnet data structure", func() {
 				dbPath := filepath.Join(genesisDir, "chaindata/lux-mainnet-96369/db/pebbledb")
-				
+
 				// Check if it exists
 				if _, err := filepath.Glob(filepath.Join(dbPath, "*.sst")); err != nil {
 					Skip("96369 mainnet data not available")
@@ -124,7 +124,7 @@ var _ = Describe("Database Operations", func() {
 	Describe("Data Conversion", func() {
 		It("should convert LevelDB to PebbleDB maintaining data integrity", func() {
 			Skip("Requires test data setup")
-			
+
 			// This would test the conversion process
 			// Create a small test LevelDB, convert it, verify all keys match
 		})
@@ -134,14 +134,14 @@ var _ = Describe("Database Operations", func() {
 		It("should have valid mainnet genesis", func() {
 			genesisPath := filepath.Join(genesisDir, "deployments/configs/mainnet/lux/genesis.json")
 			Expect(genesisPath).To(BeAnExistingFile())
-			
+
 			// Could parse and validate JSON structure here
 		})
 
 		It("should have valid testnet genesis", func() {
 			genesisPath := filepath.Join(genesisDir, "deployments/configs/testnet/lux/genesis.json")
 			Expect(genesisPath).To(BeAnExistingFile())
-			
+
 			// Could verify account migration here
 		})
 	})

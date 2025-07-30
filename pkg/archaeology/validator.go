@@ -14,7 +14,7 @@ func NewValidator(config ValidatorConfig) (*Validator, error) {
 	if config.DatabasePath == "" {
 		return nil, fmt.Errorf("database path is required")
 	}
-	
+
 	return &Validator{config: config}, nil
 }
 
@@ -22,7 +22,7 @@ func NewValidator(config ValidatorConfig) (*Validator, error) {
 func (v *Validator) Validate() (*ValidationResult, error) {
 	// TODO: Implement actual validation logic
 	// This is a stub implementation
-	
+
 	result := &ValidationResult{
 		Status:            "VALID",
 		BlocksValidated:   1000,
@@ -30,7 +30,7 @@ func (v *Validator) Validate() (*ValidationResult, error) {
 		Errors:            []string{},
 		Warnings:          []string{},
 	}
-	
+
 	if v.config.CheckBlocks {
 		result.BlockchainIntegrity = &BlockchainIntegrity{
 			Continuous:     true,
@@ -40,7 +40,7 @@ func (v *Validator) Validate() (*ValidationResult, error) {
 			MissingBlocks:  []int64{},
 		}
 	}
-	
+
 	if v.config.CheckState {
 		result.StateIntegrity = &StateIntegrity{
 			StateRootValid:     true,
@@ -48,6 +48,6 @@ func (v *Validator) Validate() (*ValidationResult, error) {
 			StorageHashesValid: true,
 		}
 	}
-	
+
 	return result, nil
 }

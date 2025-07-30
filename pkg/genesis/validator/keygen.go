@@ -42,63 +42,63 @@ type ValidatorKeys struct {
 func (kg *KeyGenerator) GenerateFromSeedWithTLS(seedPhrase string, accountNum int) (*ValidatorKeysWithTLS, error) {
 	// Use deterministic derivation
 	seedData := fmt.Sprintf("%s-luxnode-%d", seedPhrase, accountNum)
-	
+
 	// Create deterministic private key using HKDF-like approach
 	h := sha256.New()
 	h.Write([]byte("lux-bls-key"))
 	h.Write([]byte(seedData))
 	seed := h.Sum(nil)
-	
+
 	// BLS12-381 curve order
 	curveOrder, _ := new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
-	
+
 	// Convert seed to big int and reduce modulo curve order
 	keyInt := new(big.Int).SetBytes(seed)
 	keyInt.Mod(keyInt, curveOrder)
-	
+
 	// Ensure non-zero
 	if keyInt.Sign() == 0 {
 		keyInt.SetInt64(1)
 	}
-	
+
 	// Convert back to 32 bytes
 	keyBytes := make([]byte, 32)
 	keyInt.FillBytes(keyBytes)
-	
+
 	// Create signer from the deterministic key
 	signer, err := localsigner.FromBytes(keyBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate BLS signer: %w", err)
 	}
-	
+
 	pk := signer.PublicKey()
-	
+
 	// Generate proof of possession
 	pop, err := signer.SignProofOfPossession(bls.PublicKeyToCompressedBytes(pk))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign proof of possession: %w", err)
 	}
-	
+
 	// Generate TLS certificate for NodeID (deterministic based on account)
 	// For production, you'd want proper deterministic TLS generation
 	tlsCertPEM, tlsKeyPEM, err := staking.NewCertAndKeyBytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate TLS cert: %w", err)
 	}
-	
+
 	// Decode PEM to get DER bytes
 	block, _ := pem.Decode(tlsCertPEM)
 	if block == nil {
 		return nil, fmt.Errorf("failed to decode certificate PEM")
 	}
-	
+
 	cert, err := staking.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse certificate: %w", err)
 	}
-	
+
 	nodeID := ids.NodeIDFromCert(cert)
-	
+
 	// Create validator keys
 	keys := &ValidatorKeys{
 		NodeID:            nodeID.String(),
@@ -106,7 +106,7 @@ func (kg *KeyGenerator) GenerateFromSeedWithTLS(seedPhrase string, accountNum in
 		ProofOfPossession: "0x" + hex.EncodeToString(bls.SignatureToBytes(pop)),
 		PrivateKey:        "0x" + hex.EncodeToString(signer.ToBytes()),
 	}
-	
+
 	return &ValidatorKeysWithTLS{
 		ValidatorKeys: keys,
 		TLSKeyBytes:   tlsKeyPEM,
@@ -189,50 +189,50 @@ func (kg *KeyGenerator) GenerateCompatibleKeys() (*ValidatorKeysWithTLS, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate BLS signer: %w", err)
 	}
-	
+
 	pk := signer.PublicKey()
-	
+
 	// Generate proof of possession
 	pop, err := signer.SignProofOfPossession(bls.PublicKeyToCompressedBytes(pk))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign proof of possession: %w", err)
 	}
-	
+
 	// Generate TLS certificate for NodeID
 	tlsCertBytes, tlsKeyBytes, err := staking.NewCertAndKeyBytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate TLS cert: %w", err)
 	}
-	
+
 	// Decode PEM to get DER bytes for parsing
 	block, _ := pem.Decode(tlsCertBytes)
 	if block == nil {
 		return nil, fmt.Errorf("failed to decode certificate PEM")
 	}
-	
+
 	cert, err := staking.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse certificate: %w", err)
 	}
-	
+
 	nodeID := ids.NodeIDFromCert(cert)
-	
+
 	// X-Chain address can be derived from NodeID when needed
 	// _, err = address.FormatBech32("X", nodeID.Bytes())
 	// if err != nil {
 	//     return nil, fmt.Errorf("failed to format X-Chain address: %w", err)
 	// }
-	
+
 	keys := &ValidatorKeys{
 		NodeID:            nodeID.String(),
 		PublicKey:         "0x" + hex.EncodeToString(bls.PublicKeyToCompressedBytes(pk)),
 		ProofOfPossession: "0x" + hex.EncodeToString(bls.SignatureToBytes(pop)),
 		PrivateKey:        "0x" + hex.EncodeToString(signer.ToBytes()), // Include private key for secure storage
 	}
-	
+
 	// Just use the clean NodeID without extra information
 	// The X-Chain address can be derived when needed
-	
+
 	return &ValidatorKeysWithTLS{
 		ValidatorKeys: keys,
 		TLSKeyBytes:   tlsKeyBytes,
@@ -246,24 +246,24 @@ func SaveKeys(keys *ValidatorKeys, outputDir string) error {
 	if err := os.MkdirAll(outputDir, 0700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	// Save validator info
 	info := map[string]interface{}{
 		"nodeID":            keys.NodeID,
 		"publicKey":         keys.PublicKey,
 		"proofOfPossession": keys.ProofOfPossession,
 	}
-	
+
 	infoData, err := json.MarshalIndent(info, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal validator info: %w", err)
 	}
-	
+
 	infoPath := filepath.Join(outputDir, "validator.json")
 	if err := os.WriteFile(infoPath, infoData, 0644); err != nil {
 		return fmt.Errorf("failed to write validator info: %w", err)
 	}
-	
+
 	// If private key is available, save it separately with restricted permissions
 	if keys.PrivateKey != "" {
 		// Convert hex string to binary
@@ -272,13 +272,13 @@ func SaveKeys(keys *ValidatorKeys, outputDir string) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode private key hex: %w", err)
 		}
-		
+
 		privKeyPath := filepath.Join(outputDir, "bls.key")
 		if err := os.WriteFile(privKeyPath, privKeyBytes, 0600); err != nil {
 			return fmt.Errorf("failed to write private key: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -289,19 +289,19 @@ func SaveStakingFiles(tlsKeyBytes, tlsCertBytes []byte, outputDir string) error 
 	if err := os.MkdirAll(stakingDir, 0700); err != nil {
 		return fmt.Errorf("failed to create staking directory: %w", err)
 	}
-	
+
 	// Save TLS key
 	keyPath := filepath.Join(stakingDir, "staker.key")
 	if err := os.WriteFile(keyPath, tlsKeyBytes, 0600); err != nil {
 		return fmt.Errorf("failed to write staking key: %w", err)
 	}
-	
+
 	// Save TLS certificate
 	certPath := filepath.Join(stakingDir, "staker.crt")
 	if err := os.WriteFile(certPath, tlsCertBytes, 0644); err != nil {
 		return fmt.Errorf("failed to write staking cert: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -313,40 +313,40 @@ func (kg *KeyGenerator) GenerateFromPrivateKey(privateKeyHex string) (*Validator
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key hex: %w", err)
 	}
-	
+
 	// Create signer from private key
 	signer, err := localsigner.FromBytes(privKeyBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signer from private key: %w", err)
 	}
-	
+
 	pk := signer.PublicKey()
-	
+
 	// Generate proof of possession
 	pop, err := signer.SignProofOfPossession(bls.PublicKeyToCompressedBytes(pk))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign proof of possession: %w", err)
 	}
-	
+
 	// Generate TLS certificate for NodeID
 	tlsCertPEM, tlsKeyPEM, err := staking.NewCertAndKeyBytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate TLS cert: %w", err)
 	}
-	
+
 	// Decode PEM to get DER bytes
 	block, _ := pem.Decode(tlsCertPEM)
 	if block == nil {
 		return nil, fmt.Errorf("failed to decode certificate PEM")
 	}
-	
+
 	cert, err := staking.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse certificate: %w", err)
 	}
-	
+
 	nodeID := ids.NodeIDFromCert(cert)
-	
+
 	// Create validator keys
 	keys := &ValidatorKeys{
 		NodeID:            nodeID.String(),
@@ -354,7 +354,7 @@ func (kg *KeyGenerator) GenerateFromPrivateKey(privateKeyHex string) (*Validator
 		ProofOfPossession: "0x" + hex.EncodeToString(bls.SignatureToBytes(pop)),
 		PrivateKey:        "0x" + privateKeyHex,
 	}
-	
+
 	return &ValidatorKeysWithTLS{
 		ValidatorKeys: keys,
 		TLSKeyBytes:   tlsKeyPEM,

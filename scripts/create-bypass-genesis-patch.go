@@ -8,7 +8,7 @@ import (
 func main() {
 	// This patch creates a special initialization path for migrated data
 	// that completely bypasses normal genesis initialization
-	
+
 	patch := `--- a/node/vms/cchainvm/vm.go
 +++ b/node/vms/cchainvm/vm.go
 @@ -85,6 +85,27 @@ func (vm *VM) Initialize(
@@ -155,7 +155,7 @@ func main() {
 		fmt.Printf("Error writing patch: %v\n", err)
 		return
 	}
-	
+
 	fmt.Println("Created bypass-genesis.patch")
 	fmt.Println("\nThis patch:")
 	fmt.Println("1. Detects migrated data early in VM initialization")

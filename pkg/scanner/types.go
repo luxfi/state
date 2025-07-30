@@ -40,7 +40,7 @@ var projectConfigs = map[string]ProjectConfig{
 			"Validator": new(big.Int).Mul(big.NewInt(1000000), big.NewInt(1e18)), // 1M LUX
 			"Card":      new(big.Int).Mul(big.NewInt(500000), big.NewInt(1e18)),  // 500K LUX
 			"Coin":      new(big.Int).Mul(big.NewInt(100000), big.NewInt(1e18)),  // 100K LUX
-			"Token":     big.NewInt(0), // Tokens don't have staking power
+			"Token":     big.NewInt(0),                                           // Tokens don't have staking power
 		},
 		TypeIdentifiers: map[string][]string{
 			"Validator": {"validator", "genesis", "founder"},

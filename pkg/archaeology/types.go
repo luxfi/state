@@ -1,6 +1,5 @@
 package archaeology
 
-
 // Network represents a known blockchain network
 type Network struct {
 	Name         string
@@ -89,10 +88,10 @@ type DenamespacerConfig struct {
 
 // DenamespacerResult contains namespace operation results
 type DenamespacerResult struct {
-	KeysProcessed       int
-	KeysWithNamespace   int
+	KeysProcessed        int
+	KeysWithNamespace    int
 	KeysWithoutNamespace int
-	Errors              int
+	Errors               int
 }
 
 // ValidatorConfig holds configuration for the validator

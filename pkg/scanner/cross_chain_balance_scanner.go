@@ -228,7 +228,7 @@ func NewERC20(address common.Address, client bind.ContractBackend) (*ERC20, erro
 	if err != nil {
 		return nil, err
 	}
-	
+
 	contract := bind.NewBoundContract(address, parsed, client, client, client)
 	return &ERC20{contract: contract}, nil
 }

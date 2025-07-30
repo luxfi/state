@@ -15,7 +15,7 @@ func main() {
 	}
 
 	dbPath := os.Args[1]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
 		fmt.Printf("Failed to open database: %v\n", err)
@@ -24,7 +24,7 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("Checking canonical keys in database...")
-	
+
 	// Check all 0x68 prefixed keys
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: []byte{0x68},
@@ -41,7 +41,7 @@ func main() {
 
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		
+
 		switch len(key) {
 		case 9:
 			nineByteKeys++
@@ -74,7 +74,7 @@ func main() {
 	canonicalKey := make([]byte, 9)
 	canonicalKey[0] = 0x68
 	binary.BigEndian.PutUint64(canonicalKey[1:], 1082780)
-	
+
 	if value, closer, err := db.Get(canonicalKey); err == nil {
 		defer closer.Close()
 		fmt.Printf("\n✓ Found canonical hash at height 1082780: 0x%x\n", value)
@@ -85,14 +85,14 @@ func main() {
 	// Delete the 10-byte keys if any found
 	if len(toDelete) > 0 {
 		fmt.Printf("\nDeleting %d wrong format keys...\n", len(toDelete))
-		
+
 		batch := db.NewBatch()
 		for _, key := range toDelete {
 			if err := batch.Delete(key, nil); err != nil {
 				fmt.Printf("Failed to delete key %x: %v\n", key, err)
 			}
 		}
-		
+
 		if err := batch.Commit(pebble.Sync); err != nil {
 			fmt.Printf("Failed to commit deletions: %v\n", err)
 		} else {

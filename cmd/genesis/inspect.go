@@ -177,7 +177,7 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Inspecting Keys in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -190,7 +190,7 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("invalid hex key: %w", err)
 		}
-		
+
 		value, closer, err := db.Get(key)
 		if err != nil {
 			return fmt.Errorf("key not found: %w", err)
@@ -200,7 +200,7 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 		fmt.Printf("\nKey: %x\n", key)
 		fmt.Printf("Value: %x\n", value)
 		fmt.Printf("Key Type: %s\n", identifyKeyType(key))
-		
+
 		return nil
 	}
 
@@ -218,13 +218,13 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 		count++
 
 		fmt.Printf("\n[%d] Key: %x (len=%d)\n", count, key, len(key))
-		
+
 		keyType := identifyKeyType(key)
 		fmt.Printf("    Type: %s\n", keyType)
-		
+
 		if inspectVerbose {
 			fmt.Printf("    Value preview: %x... (len=%d)\n", truncateBytes(value, 32), len(value))
-			
+
 			// Try to decode if it's a known type
 			if decoded := tryDecodeValue(keyType, value); decoded != "" {
 				fmt.Printf("    Decoded: %s\n", decoded)
@@ -240,7 +240,7 @@ func runInspectBlocks(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Inspecting Blocks in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -264,9 +264,9 @@ func runInspectBlocks(cmd *cobra.Command, args []string) error {
 			value := iter.Value()
 			blockNum := decodeBlockNumber(key[1:9])
 			hash := key[9:]
-			
+
 			fmt.Printf("\nBlock %d (hash: %x):\n", blockNum, hash)
-			
+
 			if inspectDecodeRLP {
 				// Try to decode as block body
 				var body types.Body
@@ -277,7 +277,7 @@ func runInspectBlocks(cmd *cobra.Command, args []string) error {
 					fmt.Printf("  Failed to decode body: %v\n", err)
 				}
 			}
-			
+
 			count++
 		}
 	}
@@ -295,7 +295,7 @@ func runInspectHeaders(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Inspecting Headers in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -319,9 +319,9 @@ func runInspectHeaders(cmd *cobra.Command, args []string) error {
 			value := iter.Value()
 			blockNum := decodeBlockNumber(key[1:9])
 			hash := key[9:]
-			
+
 			fmt.Printf("\nHeader %d (hash: %x):\n", blockNum, hash[:8])
-			
+
 			// Try to decode header
 			var header types.Header
 			if err := rlp.DecodeBytes(value, &header); err == nil {
@@ -336,7 +336,7 @@ func runInspectHeaders(cmd *cobra.Command, args []string) error {
 			} else {
 				fmt.Printf("  Failed to decode header: %v\n", err)
 			}
-			
+
 			count++
 		}
 	}
@@ -354,7 +354,7 @@ func runInspectSnowman(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Inspecting Snowman DB in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -390,7 +390,7 @@ func runInspectSnowman(cmd *cobra.Command, args []string) error {
 	for iter.First(); iter.Valid() && shown < 10; iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		fmt.Printf("  Key: %x (len=%d)\n", key, len(key))
 		fmt.Printf("  Value: %x... (len=%d)\n", truncateBytes(value, 16), len(value))
 		shown++
@@ -403,7 +403,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Scanning Prefixes in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -413,7 +413,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 	// Track all unique prefixes with examples
 	prefixCounts := make(map[string]int)
 	prefixExamples := make(map[string]string)
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{})
 	if err != nil {
 		return err
@@ -424,7 +424,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		totalKeys++
-		
+
 		// Get various prefix lengths
 		if len(key) >= 1 {
 			prefix1 := fmt.Sprintf("1-byte: %02x", key[0])
@@ -432,7 +432,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 			if _, exists := prefixExamples[prefix1]; !exists {
 				prefixExamples[prefix1] = hex.EncodeToString(key)
 			}
-			
+
 			// Check for known single-byte prefixes
 			knownPrefix := fmt.Sprintf("Known: 0x%02x", key[0])
 			switch key[0] {
@@ -476,7 +476,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 			if _, exists := prefixExamples[prefix4]; !exists {
 				prefixExamples[prefix4] = hex.EncodeToString(key)
 			}
-			
+
 			// Check for ASCII prefixes
 			if isTextPrefix(key[:4]) {
 				asciiPrefix := fmt.Sprintf("ASCII: %s", string(key[:4]))
@@ -494,7 +494,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 		count   int
 		example string
 	}
-	
+
 	var prefixes []prefixInfo
 	for prefix, count := range prefixCounts {
 		prefixes = append(prefixes, prefixInfo{
@@ -503,7 +503,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 			example: prefixExamples[prefix],
 		})
 	}
-	
+
 	sort.Slice(prefixes, func(i, j int) bool {
 		if prefixes[i].count != prefixes[j].count {
 			return prefixes[i].count > prefixes[j].count
@@ -515,12 +515,12 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nTotal Keys: %d\n", totalKeys)
 	fmt.Println("\nKey Prefix Analysis (sorted by count):")
 	fmt.Println("=====================================")
-	
+
 	for _, p := range prefixes {
 		percentage := float64(p.count) * 100.0 / float64(totalKeys)
-		fmt.Printf("%-20s: %8d keys (%6.2f%%) - Example: %s\n", 
+		fmt.Printf("%-20s: %8d keys (%6.2f%%) - Example: %s\n",
 			p.prefix, p.count, percentage, p.example)
-		
+
 		// Show structure for significant 1-byte prefixes
 		if percentage > 1.0 && strings.HasPrefix(p.prefix, "1-byte:") && len(p.example) >= 24 {
 			keyBytes, _ := hex.DecodeString(p.example)
@@ -533,22 +533,22 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	// Check for EVM patterns
 	fmt.Println("\nEVM Database Pattern Check:")
 	fmt.Println("===========================")
 	patterns := map[string]string{
-		"ASCII: evmh": "EVM Headers (hash->header)",
-		"ASCII: evmH": "EVM Hash->Number mapping", 
-		"ASCII: evmn": "EVM Canonical (number->hash)",
-		"ASCII: evmb": "EVM Bodies",
-		"ASCII: evmr": "EVM Receipts",
-		"ASCII: evmt": "EVM Transactions",
+		"ASCII: evmh":     "EVM Headers (hash->header)",
+		"ASCII: evmH":     "EVM Hash->Number mapping",
+		"ASCII: evmn":     "EVM Canonical (number->hash)",
+		"ASCII: evmb":     "EVM Bodies",
+		"ASCII: evmr":     "EVM Receipts",
+		"ASCII: evmt":     "EVM Transactions",
 		"Known: 0x48 (H)": "Headers (raw prefix)",
 		"Known: 0x68 (h)": "Canonical hash (raw prefix)",
 		"Known: 0x62 (b)": "Bodies (raw prefix)",
 	}
-	
+
 	found := false
 	for pattern, description := range patterns {
 		for _, p := range prefixes {
@@ -559,7 +559,7 @@ func runInspectPrefixes(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	if !found {
 		fmt.Println("⚠ No standard EVM database patterns found")
 		fmt.Println("  This might be a namespaced or non-EVM database")
@@ -572,7 +572,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
 
 	fmt.Printf("=== Finding Chain Tip in %s ===\n", dbPath)
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -582,7 +582,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 	// Look for LastHeader, LastBlock, LastFast
 	keys := []string{
 		"LastHeader",
-		"LastBlock", 
+		"LastBlock",
 		"LastFast",
 	}
 
@@ -590,10 +590,10 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 		value, closer, err := db.Get([]byte(key))
 		if err == nil {
 			defer closer.Close()
-			
+
 			if len(value) == 32 {
 				fmt.Printf("%s: %x\n", key, value)
-				
+
 				// Try to find the block number
 				hashKey := append([]byte("H"), value...)
 				if numValue, closer2, err := db.Get(hashKey); err == nil {
@@ -610,7 +610,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 	// Also scan for highest block by iterating headers
 	fmt.Println("\nScanning for highest block...")
 	maxBlock := uint64(0)
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: []byte("h"),
 		UpperBound: []byte("i"),

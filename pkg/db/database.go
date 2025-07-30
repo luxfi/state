@@ -21,12 +21,12 @@ func Open(path string, opts *pebble.Options) (*DB, error) {
 	if opts == nil {
 		opts = &pebble.Options{}
 	}
-	
+
 	db, err := pebble.Open(path, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database at %s: %w", path, err)
 	}
-	
+
 	return &DB{DB: db, path: path}, nil
 }
 
@@ -56,7 +56,7 @@ func (db *DB) IteratePrefix(prefix []byte, fn func(key, value []byte) error) err
 			return err
 		}
 	}
-	
+
 	return iter.Error()
 }
 
@@ -88,7 +88,7 @@ func (db *DB) CopyTo(dst *DB) error {
 		if err := batch.Set(iter.Key(), iter.Value(), nil); err != nil {
 			return err
 		}
-		
+
 		count++
 		if count%batchSize == 0 {
 			if err := batch.Commit(pebble.Sync); err != nil {

@@ -20,7 +20,7 @@ func NewDenamespacer(config DenamespacerConfig) (*Denamespacer, error) {
 	if config.ChainID == 0 {
 		return nil, fmt.Errorf("chain ID is required")
 	}
-	
+
 	return &Denamespacer{config: config}, nil
 }
 
@@ -28,13 +28,13 @@ func NewDenamespacer(config DenamespacerConfig) (*Denamespacer, error) {
 func (d *Denamespacer) Process() (*DenamespacerResult, error) {
 	// TODO: Implement actual namespace logic
 	// This is a stub implementation
-	
+
 	result := &DenamespacerResult{
 		KeysProcessed:        1000000,
 		KeysWithNamespace:    900000,
 		KeysWithoutNamespace: 100000,
 		Errors:               0,
 	}
-	
+
 	return result, nil
 }

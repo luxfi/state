@@ -14,7 +14,7 @@ func NewAnalyzer(config AnalyzerConfig) (*Analyzer, error) {
 	if config.DatabasePath == "" {
 		return nil, fmt.Errorf("database path is required")
 	}
-	
+
 	return &Analyzer{config: config}, nil
 }
 
@@ -22,7 +22,7 @@ func NewAnalyzer(config AnalyzerConfig) (*Analyzer, error) {
 func (a *Analyzer) Analyze() (*AnalysisResult, error) {
 	// TODO: Implement actual analysis logic
 	// This is a stub implementation
-	
+
 	result := &AnalysisResult{
 		ChainID:          96369, // Placeholder
 		LatestBlock:      1500000,
@@ -35,7 +35,7 @@ func (a *Analyzer) Analyze() (*AnalysisResult, error) {
 			Timestamp: 1640995200,
 		},
 	}
-	
+
 	if a.config.AccountAddr != "" {
 		result.AccountInfo = &AccountInfo{
 			Address:    a.config.AccountAddr,
@@ -44,12 +44,12 @@ func (a *Analyzer) Analyze() (*AnalysisResult, error) {
 			IsContract: false,
 		}
 	}
-	
+
 	// Top accounts
 	result.TopAccounts = []AccountBalance{
 		{Address: "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714", Balance: "2000000000000000000000000000"},
 		{Address: "0x1234567890123456789012345678901234567890", Balance: "1000000000000000000000000"},
 	}
-	
+
 	return result, nil
 }

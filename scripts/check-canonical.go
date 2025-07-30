@@ -15,7 +15,7 @@ func main() {
 	}
 
 	dbPath := os.Args[1]
-	
+
 	// Open database
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
@@ -26,7 +26,7 @@ func main() {
 
 	// Check for the canonical key at height 1082780
 	key, _ := hex.DecodeString("68000000000010859c6e")
-	
+
 	value, closer, err := db.Get(key)
 	if err != nil {
 		fmt.Printf("Key not found: %v\n", err)

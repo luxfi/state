@@ -41,13 +41,13 @@ func main() {
 	count := 0
 	for iter.First(); iter.Valid() && count < 1000; iter.Next() {
 		value := iter.Value()
-		
+
 		// Header structure starts with parent hash, then uncle hash, etc.
 		// The block number is typically at a specific offset in the RLP-encoded header
 		// Let's look for reasonable block numbers in the value
 		if len(value) >= 8 {
 			for i := 0; i <= len(value)-8 && i < 200; i++ {
-				num := binary.BigEndian.Uint64(value[i:i+8])
+				num := binary.BigEndian.Uint64(value[i : i+8])
 				// Block numbers should be reasonable
 				if num > 0 && num < 100000000 {
 					if num > maxHeight {
@@ -78,7 +78,7 @@ func main() {
 	count2 := 0
 	for iter2.First(); iter2.Valid() && count2 < 1000; iter2.Next() {
 		value := iter2.Value()
-		
+
 		// Hash->number values should be simple uint64
 		if len(value) == 8 {
 			num := binary.BigEndian.Uint64(value)

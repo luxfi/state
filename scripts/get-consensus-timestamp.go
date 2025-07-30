@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-	
+
 	"github.com/cockroachdb/pebble"
 )
 
@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer consDB.Close()
-	
+
 	// Get timestamp
 	if val, closer, err := consDB.Get([]byte("timestamp")); err == nil && len(val) == 8 {
 		timestamp := binary.BigEndian.Uint64(val)

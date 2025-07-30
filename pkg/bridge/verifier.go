@@ -20,13 +20,13 @@ func (v *Verifier) VerifyNFTScan(result *NFTScanResult) (*VerificationResult, er
 	if result == nil {
 		return nil, fmt.Errorf("scan result is nil")
 	}
-	
+
 	vr := &VerificationResult{
 		Valid:    true,
 		Warnings: []string{},
 		Errors:   []string{},
 	}
-	
+
 	// Check for duplicate token IDs
 	seen := make(map[string]bool)
 	for _, nft := range result.NFTs {
@@ -36,7 +36,7 @@ func (v *Verifier) VerifyNFTScan(result *NFTScanResult) (*VerificationResult, er
 		}
 		seen[nft.TokenID] = true
 	}
-	
+
 	// Check for valid addresses
 	for _, nft := range result.NFTs {
 		if !isValidAddress(nft.Owner) {
@@ -44,10 +44,10 @@ func (v *Verifier) VerifyNFTScan(result *NFTScanResult) (*VerificationResult, er
 			vr.Valid = false
 		}
 	}
-	
+
 	// Add summary
 	vr.Summary = fmt.Sprintf("Verified %d NFTs from contract %s", len(result.NFTs), result.ContractAddress)
-	
+
 	return vr, nil
 }
 
@@ -56,25 +56,25 @@ func (v *Verifier) VerifyTokenScan(result *TokenScanResult) (*VerificationResult
 	if result == nil {
 		return nil, fmt.Errorf("scan result is nil")
 	}
-	
+
 	vr := &VerificationResult{
 		Valid:    true,
 		Warnings: []string{},
 		Errors:   []string{},
 	}
-	
+
 	// Parse minimum balance
 	minBal := new(big.Int)
 	minBal.SetString(v.config.MinBalance, 10)
-	
+
 	// Check total supply
 	totalSupply := new(big.Int)
 	totalSupply.SetString(result.TotalSupply, 10)
-	
+
 	// Verify balances sum to total supply
 	sum := new(big.Int)
 	validHolders := 0
-	
+
 	for _, holder := range result.Holders {
 		bal := new(big.Int)
 		if _, ok := bal.SetString(holder.Balance, 10); !ok {
@@ -82,30 +82,30 @@ func (v *Verifier) VerifyTokenScan(result *TokenScanResult) (*VerificationResult
 			vr.Valid = false
 			continue
 		}
-		
+
 		sum.Add(sum, bal)
-		
+
 		// Check minimum balance
 		if bal.Cmp(minBal) >= 0 {
 			validHolders++
 		}
-		
+
 		// Check valid address
 		if !isValidAddress(holder.Address) {
 			vr.Errors = append(vr.Errors, fmt.Sprintf("invalid holder address: %s", holder.Address))
 			vr.Valid = false
 		}
 	}
-	
+
 	// Check if sum matches total supply
 	if sum.Cmp(totalSupply) != 0 {
 		vr.Warnings = append(vr.Warnings, fmt.Sprintf("balance sum (%s) doesn't match total supply (%s)", sum.String(), totalSupply.String()))
 	}
-	
+
 	// Add summary
-	vr.Summary = fmt.Sprintf("Verified %d holders (%d above minimum) for %s (%s)", 
+	vr.Summary = fmt.Sprintf("Verified %d holders (%d above minimum) for %s (%s)",
 		len(result.Holders), validHolders, result.TokenName, result.Symbol)
-	
+
 	return vr, nil
 }
 
@@ -113,7 +113,7 @@ func (v *Verifier) VerifyTokenScan(result *TokenScanResult) (*VerificationResult
 func (v *Verifier) CrossReference(scanResult interface{}, chainData interface{}) (*CrossReferenceResult, error) {
 	// TODO: Implement actual cross-referencing logic
 	// This is a stub implementation
-	
+
 	return &CrossReferenceResult{
 		Matched:     900,
 		NotFound:    50,
@@ -123,14 +123,13 @@ func (v *Verifier) CrossReference(scanResult interface{}, chainData interface{})
 	}, nil
 }
 
-
 // isValidAddress checks if an address is valid
 func isValidAddress(address string) bool {
 	// Basic validation - 42 chars starting with 0x
 	if len(address) != 42 || address[:2] != "0x" {
 		return false
 	}
-	
+
 	// Check hex characters
 	for i := 2; i < len(address); i++ {
 		c := address[i]
@@ -138,6 +137,6 @@ func isValidAddress(address string) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }

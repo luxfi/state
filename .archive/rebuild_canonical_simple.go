@@ -74,7 +74,7 @@ func main() {
 			// Key format: evmh + 8-byte number + 32-byte hash
 			num := binary.BigEndian.Uint64(key[4:12])
 			copy(tipHash[:], key[12:44])
-			
+
 			if num > tipNum {
 				tipNum = num
 			}
@@ -108,13 +108,13 @@ func main() {
 		key := append([]byte("evmh"), make([]byte, 40)...)
 		binary.BigEndian.PutUint64(key[4:12], num)
 		copy(key[12:44], hash[:])
-		
+
 		val, closer, err := db.Get(key)
 		if err != nil {
 			log.Fatalf("Missing header at height %d, hash %s", num, hex.EncodeToString(hash[:]))
 		}
 		defer closer.Close()
-		
+
 		// Decode header to get parent hash
 		var header Header
 		if err := rlp.DecodeBytes(val, &header); err != nil {
@@ -149,11 +149,11 @@ func main() {
 		key := make([]byte, 12)
 		copy(key[:4], []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], num)
-		
+
 		if err := batch.Set(key, hash[:], nil); err != nil {
 			log.Fatalf("Failed to write mapping for height %d: %v", num, err)
 		}
-		
+
 		written++
 		if written%10000 == 0 {
 			// Flush batch periodically
@@ -172,13 +172,13 @@ func main() {
 
 	log.Printf("Successfully wrote %d canonical mappings", written)
 	log.Printf("Canonical chain tip: height=%d, hash=%s", tipNum, hex.EncodeToString(tipHash[:]))
-	
+
 	// Verify by reading back a sample
 	testNum := tipNum
 	testKey := make([]byte, 12)
 	copy(testKey[:4], []byte("evmn"))
 	binary.BigEndian.PutUint64(testKey[4:], testNum)
-	
+
 	if val, closer, err := db.Get(testKey); err == nil {
 		defer closer.Close()
 		log.Printf("Verification: height %d -> hash %s", testNum, hex.EncodeToString(val))

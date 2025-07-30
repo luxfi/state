@@ -14,15 +14,15 @@ func newRepairCmd() *cobra.Command {
 		Use:   "repair",
 		Short: "Database repair utilities",
 	}
-	
+
 	cmd.AddCommand(newDeleteSuffixCmd())
-	
+
 	return cmd
 }
 
 func newDeleteSuffixCmd() *cobra.Command {
 	var prefix string
-	
+
 	cmd := &cobra.Command{
 		Use:   "delete-suffix [db-path] [suffix]",
 		Short: "Delete keys with specific suffix",
@@ -30,12 +30,12 @@ func newDeleteSuffixCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dbPath := args[0]
 			suffixHex := args[1]
-			
+
 			suffix, err := hex.DecodeString(suffixHex)
 			if err != nil {
 				return fmt.Errorf("invalid suffix hex: %w", err)
 			}
-			
+
 			var prefixBytes []byte
 			if prefix != "" {
 				prefixBytes, err = hex.DecodeString(prefix)
@@ -43,14 +43,14 @@ func newDeleteSuffixCmd() *cobra.Command {
 					return fmt.Errorf("invalid prefix hex: %w", err)
 				}
 			}
-			
+
 			opts := &pebble.Options{}
 			db, err := pebble.Open(dbPath, opts)
 			if err != nil {
 				return fmt.Errorf("failed to open database: %w", err)
 			}
 			defer db.Close()
-			
+
 			// Count and delete keys with suffix
 			var count int
 			iter, err := db.NewIter(&pebble.IterOptions{})
@@ -58,10 +58,10 @@ func newDeleteSuffixCmd() *cobra.Command {
 				return fmt.Errorf("failed to create iterator: %w", err)
 			}
 			defer iter.Close()
-			
+
 			for iter.First(); iter.Valid(); iter.Next() {
 				key := iter.Key()
-				
+
 				// Check prefix if specified
 				if len(prefixBytes) > 0 && len(key) >= len(prefixBytes) {
 					hasPrefix := true
@@ -75,7 +75,7 @@ func newDeleteSuffixCmd() *cobra.Command {
 						continue
 					}
 				}
-				
+
 				// Check suffix
 				if len(key) >= len(suffix) {
 					hasSuffix := true
@@ -85,7 +85,7 @@ func newDeleteSuffixCmd() *cobra.Command {
 							break
 						}
 					}
-					
+
 					if hasSuffix {
 						keyCopy := make([]byte, len(key))
 						copy(keyCopy, key)
@@ -100,17 +100,17 @@ func newDeleteSuffixCmd() *cobra.Command {
 					}
 				}
 			}
-			
+
 			fmt.Printf("\n✅ Deleted %d keys with suffix 0x%s\n", count, suffixHex)
 			if prefix != "" {
 				fmt.Printf("   (filtered by prefix 0x%s)\n", prefix)
 			}
-			
+
 			return nil
 		},
 	}
-	
+
 	cmd.Flags().StringVar(&prefix, "prefix", "", "Optional prefix filter (hex)")
-	
+
 	return cmd
 }

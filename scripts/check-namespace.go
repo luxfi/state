@@ -27,7 +27,7 @@ func main() {
 
 	count := 0
 	fmt.Println("Looking for canonical mapping keys (should have 'n' after namespace):")
-	
+
 	for iter.First(); iter.Valid() && count < 1000; iter.Next() {
 		key := iter.Key()
 		if len(key) >= 34 {

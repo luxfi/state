@@ -98,7 +98,7 @@ func TestParseLUXAmount(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, 0, result.Cmp(tt.expected), 
+				assert.Equal(t, 0, result.Cmp(tt.expected),
 					"Expected %s but got %s", tt.expected.String(), result.String())
 			}
 		})
@@ -145,15 +145,15 @@ func TestCreateSimpleAllocation(t *testing.T) {
 	mockConverter := &mockAddressConverter{
 		luxAddr: "X-lux1234567890",
 	}
-	
+
 	builder := NewBuilder(mockConverter)
-	
+
 	ethAddr := "0x1234567890123456789012345678901234567890"
 	amount := big.NewInt(1000000000000000000) // 1M LUX
-	
+
 	alloc, err := builder.CreateSimpleAllocation(ethAddr, amount)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, ethAddr, alloc.ETHAddr)
 	assert.Equal(t, "X-lux1234567890", alloc.LuxAddr)
 	assert.Equal(t, 0, alloc.InitialAmount.Cmp(amount))
@@ -164,14 +164,14 @@ func TestCreateVestedAllocation(t *testing.T) {
 	mockConverter := &mockAddressConverter{
 		luxAddr: "X-lux1234567890",
 	}
-	
+
 	builder := NewBuilder(mockConverter)
-	
+
 	ethAddr := "0x1234567890123456789012345678901234567890"
 	// 12M LUX = 12000000 * 10^9
 	totalAmount := new(big.Int)
 	totalAmount.SetString("12000000000000000", 10)
-	
+
 	config := &UnlockScheduleConfig{
 		TotalAmount:  totalAmount,
 		StartDate:    time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -179,15 +179,15 @@ func TestCreateVestedAllocation(t *testing.T) {
 		Periods:      12,                   // Monthly
 		CliffPeriods: 3,                    // 3 month cliff
 	}
-	
+
 	alloc, err := builder.CreateVestedAllocation(ethAddr, config)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, ethAddr, alloc.ETHAddr)
 	assert.Equal(t, "X-lux1234567890", alloc.LuxAddr)
 	assert.Equal(t, int64(0), alloc.InitialAmount.Int64()) // All locked
-	assert.Len(t, alloc.UnlockSchedule, 9) // 12 - 3 cliff = 9 unlocks
-	
+	assert.Len(t, alloc.UnlockSchedule, 9)                 // 12 - 3 cliff = 9 unlocks
+
 	// Verify unlock schedule
 	totalUnlocked := big.NewInt(0)
 	for _, unlock := range alloc.UnlockSchedule {
@@ -204,9 +204,9 @@ func TestCreateLinearVestingSchedule(t *testing.T) {
 	mockConverter := &mockAddressConverter{
 		luxAddr: "X-lux1234567890",
 	}
-	
+
 	builder := NewBuilder(mockConverter)
-	
+
 	config := &UnlockScheduleConfig{
 		TotalAmount:  big.NewInt(1000000000000000000), // 1M LUX
 		StartDate:    time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -214,17 +214,17 @@ func TestCreateLinearVestingSchedule(t *testing.T) {
 		Periods:      4,
 		CliffPeriods: 0,
 	}
-	
+
 	schedule := builder.createUnlockSchedule(config)
-	
+
 	assert.Len(t, schedule, 4)
-	
+
 	// Verify each unlock is 250K LUX
 	expectedPerPeriod := big.NewInt(250000000000000000)
 	for i, unlock := range schedule {
-		assert.Equal(t, 0, unlock.Amount.Cmp(expectedPerPeriod), 
+		assert.Equal(t, 0, unlock.Amount.Cmp(expectedPerPeriod),
 			"Period %d amount mismatch", i)
-		
+
 		// Verify timing
 		expectedTime := config.StartDate.Add(time.Duration(i+1) * 30 * 24 * time.Hour)
 		assert.Equal(t, uint64(expectedTime.Unix()), unlock.Locktime)
@@ -235,20 +235,20 @@ func TestCreateStakingAllocation(t *testing.T) {
 	mockConverter := &mockAddressConverter{
 		luxAddr: "X-lux1234567890",
 	}
-	
+
 	builder := NewBuilder(mockConverter)
-	
+
 	ethAddr := "0x1234567890123456789012345678901234567890"
 	stakeAmount := big.NewInt(2000000000000000000) // 2M LUX
 	vestingYears := 2
-	
+
 	alloc, err := builder.CreateStakingAllocation(ethAddr, stakeAmount, vestingYears)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, ethAddr, alloc.ETHAddr)
 	assert.Equal(t, int64(0), alloc.InitialAmount.Int64())
 	assert.Len(t, alloc.UnlockSchedule, vestingYears)
-	
+
 	// Verify total
 	total := big.NewInt(0)
 	for _, unlock := range alloc.UnlockSchedule {
@@ -269,16 +269,16 @@ func TestAllocationJSON(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Test JSON marshaling
 	data, err := json.Marshal(alloc)
 	require.NoError(t, err)
-	
+
 	// Test JSON unmarshaling
 	var decoded Allocation
 	err = json.Unmarshal(data, &decoded)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, alloc.ETHAddr, decoded.ETHAddr)
 	assert.Equal(t, alloc.LuxAddr, decoded.LuxAddr)
 	assert.Equal(t, 0, alloc.InitialAmount.Cmp(decoded.InitialAmount))

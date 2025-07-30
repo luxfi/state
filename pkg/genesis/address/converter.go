@@ -60,7 +60,7 @@ func (c *Converter) LuxToETH(luxAddr string) (string, error) {
 // ValidateETHAddress checks if an Ethereum address is valid
 func ValidateETHAddress(addr string) error {
 	addr = strings.TrimPrefix(strings.ToLower(addr), "0x")
-	
+
 	if len(addr) != 40 {
 		return fmt.Errorf("invalid address length: expected 40 characters, got %d", len(addr))
 	}
@@ -82,7 +82,7 @@ func ValidateLuxAddress(addr string) error {
 // BatchConvert converts multiple Ethereum addresses to Lux addresses
 func (c *Converter) BatchConvert(ethAddrs []string, chain string) (map[string]string, error) {
 	result := make(map[string]string, len(ethAddrs))
-	
+
 	for _, ethAddr := range ethAddrs {
 		luxAddr, err := c.ETHToLux(ethAddr, chain)
 		if err != nil {
@@ -90,6 +90,6 @@ func (c *Converter) BatchConvert(ethAddrs []string, chain string) (map[string]st
 		}
 		result[ethAddr] = luxAddr
 	}
-	
+
 	return result, nil
 }

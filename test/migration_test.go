@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cockroachdb/pebble"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/cockroachdb/pebble"
 )
 
 func TestMigration(t *testing.T) {
@@ -25,16 +25,16 @@ var _ = BeforeSuite(func() {
 
 var _ = Describe("Subnet to C-Chain Migration", func() {
 	var (
-		tmpDir          string
-		subnetDataPath  string
-		migratedPath    string
+		tmpDir         string
+		subnetDataPath string
+		migratedPath   string
 	)
 
 	BeforeEach(func() {
 		// Use .tmp directory in project folder
 		projectRoot := "$HOME/work/lux/genesis"
 		baseTmpDir := filepath.Join(projectRoot, ".tmp")
-		
+
 		// Create .tmp directory if it doesn't exist
 		err := os.MkdirAll(baseTmpDir, 0755)
 		Expect(err).NotTo(HaveOccurred())
@@ -59,14 +59,14 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			// Ensure directory exists
 			err := os.MkdirAll(filepath.Dir(subnetDataPath), 0755)
 			Expect(err).NotTo(HaveOccurred())
-			
+
 			db, err := pebble.Open(subnetDataPath, &pebble.Options{})
 			Expect(err).NotTo(HaveOccurred())
 			defer db.Close()
 
 			// Add some test state trie nodes
 			batch := db.NewBatch()
-			
+
 			// Add state root
 			stateRoot := []byte{0x01, 0x02, 0x03}
 			err = batch.Set([]byte("stateRoot"), stateRoot, nil)
@@ -99,10 +99,10 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			if _, err := os.Stat(subnetDataPath); os.IsNotExist(err) {
 				err := os.MkdirAll(filepath.Dir(subnetDataPath), 0755)
 				Expect(err).NotTo(HaveOccurred())
-				
+
 				db, err := pebble.Open(subnetDataPath, &pebble.Options{})
 				Expect(err).NotTo(HaveOccurred())
-				
+
 				// Add some test data
 				batch := db.NewBatch()
 				for i := 0; i < 10; i++ {
@@ -115,7 +115,7 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				db.Close()
 			}
-			
+
 			By("Running the subnet import using genesis tool")
 			output, err := genesis("import", "subnet", subnetDataPath, migratedPath)
 			Expect(err).NotTo(HaveOccurred(), output)
@@ -162,7 +162,7 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			if _, err := os.Stat(migratedPath); os.IsNotExist(err) {
 				Skip("Migrated path doesn't exist")
 			}
-			
+
 			output, err := genesis("analyze", "keys", migratedPath)
 			if err == nil {
 				Expect(output).To(Or(
@@ -192,10 +192,10 @@ var _ = Describe("Subnet to C-Chain Migration", func() {
 			By("Running migration using import-subnet command")
 			fullMigrationPath := filepath.Join(tmpDir, "full-migration")
 			output, err := genesis("import", "subnet", subnetDataPath, fullMigrationPath)
-			
+
 			// The command should succeed for test data
 			Expect(err).NotTo(HaveOccurred(), output)
-			
+
 			By("Checking final state")
 			if _, err := os.Stat(fullMigrationPath); err == nil {
 				tip, _ := genesis("inspect", "tip", fullMigrationPath)

@@ -39,17 +39,17 @@ func main() {
 
 	// LastBlock - Coreth uses this
 	batch.Set([]byte("LastBlock"), blockHash, nil)
-	
+
 	// LastHeader - Also important
 	batch.Set([]byte("LastHeader"), blockHash, nil)
-	
+
 	// LastFinalized - For finality
 	batch.Set([]byte("LastFinalized"), blockHash, nil)
-	
+
 	// lastAccepted - Critical for consensus
 	batch.Set([]byte("lastAccepted"), blockHash, nil)
-	
-	// acceptorTip - Also for consensus  
+
+	// acceptorTip - Also for consensus
 	batch.Set([]byte("acceptorTip"), blockHash, nil)
 
 	// Height encoded as big endian uint64

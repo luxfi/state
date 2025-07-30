@@ -61,26 +61,26 @@ func main() {
 
 	for iter.First(); iter.Valid() && count < *limit; iter.Next() {
 		key := iter.Key()
-		
+
 		// Skip short keys
 		if len(key) < 34 {
 			continue
 		}
-		
+
 		// Strip namespace prefix (33 bytes)
 		actualKey := key[33:]
-		
+
 		// Create new key with evm prefix
 		newKey := make([]byte, len(evmPrefix)+len(actualKey))
 		copy(newKey, evmPrefix)
 		copy(newKey[len(evmPrefix):], actualKey)
-		
+
 		// Copy value
 		value := iter.Value()
 		if err := batch.Set(newKey, value, nil); err != nil {
 			log.Fatalf("Failed to set key: %v", err)
 		}
-		
+
 		// Track key types
 		if len(actualKey) > 0 {
 			switch actualKey[0] {
@@ -96,16 +96,16 @@ func main() {
 				hashes++
 			}
 		}
-		
+
 		count++
-		
+
 		// Commit batch periodically
 		if count%1000 == 0 {
 			if err := batch.Commit(nil); err != nil {
 				log.Fatalf("Failed to commit batch: %v", err)
 			}
 			batch = dstDB.NewBatch()
-			fmt.Printf("Migrated %d keys (h:%d H:%d b:%d r:%d n:%d)...\n", 
+			fmt.Printf("Migrated %d keys (h:%d H:%d b:%d r:%d n:%d)...\n",
 				count, headers, hashes, bodies, receipts, numbers)
 		}
 	}

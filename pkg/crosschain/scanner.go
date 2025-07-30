@@ -30,13 +30,13 @@ func NewEventScanner(client *Client) *EventScanner {
 func (s *EventScanner) ScanBurnEvents(ctx context.Context, tokenAddr common.Address, fromBlock, toBlock *big.Int) ([]BurnEvent, error) {
 	// Transfer event signature
 	transferSig := crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
-	
+
 	// Zero address
 	zeroAddr := common.HexToAddress("0x0000000000000000000000000000000000000000")
 	zeroAddrTopic := common.BytesToHash(common.LeftPadBytes(zeroAddr.Bytes(), 32))
-	
+
 	burns := []BurnEvent{}
-	
+
 	// Process in batches
 	current := new(big.Int).Set(fromBlock)
 	for current.Cmp(toBlock) <= 0 {
@@ -44,19 +44,19 @@ func (s *EventScanner) ScanBurnEvents(ctx context.Context, tokenAddr common.Addr
 		if end.Cmp(toBlock) > 0 {
 			end = toBlock
 		}
-		
+
 		// Create filter query
 		query := ethereum.FilterQuery{
 			FromBlock: current,
 			ToBlock:   end,
 			Addresses: []common.Address{tokenAddr},
 			Topics: [][]common.Hash{
-				{transferSig},         // Transfer event
-				nil,                   // from (any)
-				{zeroAddrTopic},       // to (0x0)
+				{transferSig},   // Transfer event
+				nil,             // from (any)
+				{zeroAddrTopic}, // to (0x0)
 			},
 		}
-		
+
 		// Get logs
 		logs, err := s.client.client.FilterLogs(ctx, query)
 		if err != nil {
@@ -67,25 +67,25 @@ func (s *EventScanner) ScanBurnEvents(ctx context.Context, tokenAddr common.Addr
 			}
 			return nil, fmt.Errorf("failed to get logs: %w", err)
 		}
-		
+
 		// Process logs
 		for _, log := range logs {
 			if len(log.Topics) < 3 {
 				continue
 			}
-			
+
 			// Extract from address
 			from := common.BytesToAddress(log.Topics[1].Bytes()[12:])
-			
+
 			// Extract amount
 			amount := new(big.Int).SetBytes(log.Data)
-			
+
 			// Get block timestamp
 			block, err := s.client.client.BlockByNumber(ctx, big.NewInt(int64(log.BlockNumber)))
 			if err != nil {
 				continue
 			}
-			
+
 			burns = append(burns, BurnEvent{
 				From:            from,
 				Amount:          amount,
@@ -94,17 +94,17 @@ func (s *EventScanner) ScanBurnEvents(ctx context.Context, tokenAddr common.Addr
 				Timestamp:       block.Time(),
 			})
 		}
-		
+
 		// Progress
 		fmt.Printf("Scanned blocks %s to %s, found %d burns\n", current, end, len(burns))
-		
+
 		// Next batch
 		current = new(big.Int).Add(end, big.NewInt(1))
-		
+
 		// Rate limit
 		time.Sleep(100 * time.Millisecond)
 	}
-	
+
 	return burns, nil
 }
 
@@ -112,9 +112,9 @@ func (s *EventScanner) ScanBurnEvents(ctx context.Context, tokenAddr common.Addr
 func (s *EventScanner) ScanTransferEvents(ctx context.Context, tokenAddr common.Address, fromBlock, toBlock *big.Int) ([]TransferEvent, error) {
 	// Transfer event signature
 	transferSig := crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
-	
+
 	transfers := []TransferEvent{}
-	
+
 	// Process in batches
 	current := new(big.Int).Set(fromBlock)
 	for current.Cmp(toBlock) <= 0 {
@@ -122,7 +122,7 @@ func (s *EventScanner) ScanTransferEvents(ctx context.Context, tokenAddr common.
 		if end.Cmp(toBlock) > 0 {
 			end = toBlock
 		}
-		
+
 		// Create filter query
 		query := ethereum.FilterQuery{
 			FromBlock: current,
@@ -132,7 +132,7 @@ func (s *EventScanner) ScanTransferEvents(ctx context.Context, tokenAddr common.
 				{transferSig}, // Transfer event
 			},
 		}
-		
+
 		// Get logs
 		logs, err := s.client.client.FilterLogs(ctx, query)
 		if err != nil {
@@ -143,7 +143,7 @@ func (s *EventScanner) ScanTransferEvents(ctx context.Context, tokenAddr common.
 			}
 			return nil, fmt.Errorf("failed to get logs: %w", err)
 		}
-		
+
 		// Process logs
 		for _, log := range logs {
 			transfer := s.parseTransferLog(log)
@@ -151,17 +151,17 @@ func (s *EventScanner) ScanTransferEvents(ctx context.Context, tokenAddr common.
 				transfers = append(transfers, *transfer)
 			}
 		}
-		
+
 		// Progress
 		fmt.Printf("Scanned blocks %s to %s, found %d transfers\n", current, end, len(transfers))
-		
+
 		// Next batch
 		current = new(big.Int).Add(end, big.NewInt(1))
-		
+
 		// Rate limit
 		time.Sleep(100 * time.Millisecond)
 	}
-	
+
 	return transfers, nil
 }
 
@@ -171,15 +171,15 @@ func (s *EventScanner) parseTransferLog(log types.Log) *TransferEvent {
 	if len(log.Topics) < 3 {
 		return nil
 	}
-	
+
 	// Extract addresses
 	from := common.BytesToAddress(log.Topics[1].Bytes()[12:])
 	to := common.BytesToAddress(log.Topics[2].Bytes()[12:])
-	
+
 	// Extract value or token ID
 	var value *big.Int
 	var tokenID *big.Int
-	
+
 	if len(log.Data) > 0 {
 		// ERC20 - value in data
 		value = new(big.Int).SetBytes(log.Data)
@@ -187,7 +187,7 @@ func (s *EventScanner) parseTransferLog(log types.Log) *TransferEvent {
 		// ERC721 - token ID in topics[3]
 		tokenID = new(big.Int).SetBytes(log.Topics[3].Bytes())
 	}
-	
+
 	return &TransferEvent{
 		From:            from,
 		To:              to,
@@ -202,7 +202,7 @@ func (s *EventScanner) parseTransferLog(log types.Log) *TransferEvent {
 func BuildTokenHolderSnapshot(transfers []TransferEvent) []TokenHolder {
 	// Track balances
 	balances := make(map[common.Address]*big.Int)
-	
+
 	// Process transfers chronologically
 	for _, transfer := range transfers {
 		// Subtract from sender (unless minting from 0x0)
@@ -213,7 +213,7 @@ func BuildTokenHolderSnapshot(transfers []TransferEvent) []TokenHolder {
 				balances[transfer.From] = new(big.Int).Neg(transfer.Value)
 			}
 		}
-		
+
 		// Add to recipient (unless burning to 0x0)
 		if transfer.To != (common.Address{}) {
 			if balance, ok := balances[transfer.To]; ok {
@@ -223,7 +223,7 @@ func BuildTokenHolderSnapshot(transfers []TransferEvent) []TokenHolder {
 			}
 		}
 	}
-	
+
 	// Build holder list
 	holders := []TokenHolder{}
 	for addr, balance := range balances {
@@ -234,6 +234,6 @@ func BuildTokenHolderSnapshot(transfers []TransferEvent) []TokenHolder {
 			})
 		}
 	}
-	
+
 	return holders
 }

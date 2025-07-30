@@ -9,38 +9,38 @@ import (
 
 // Genesis represents the C-Chain genesis configuration
 type Genesis struct {
-	Config     *ChainConfig           `json:"config"`
+	Config     *ChainConfig              `json:"config"`
 	Alloc      map[string]GenesisAccount `json:"alloc"`
-	Nonce      string                 `json:"nonce"`
-	Timestamp  string                 `json:"timestamp"`
-	ExtraData  string                 `json:"extraData"`
-	GasLimit   string                 `json:"gasLimit"`
-	Difficulty string                 `json:"difficulty"`
-	MixHash    string                 `json:"mixHash"`
-	Coinbase   string                 `json:"coinbase"`
-	Number     string                 `json:"number"`
-	GasUsed    string                 `json:"gasUsed"`
-	ParentHash string                 `json:"parentHash"`
+	Nonce      string                    `json:"nonce"`
+	Timestamp  string                    `json:"timestamp"`
+	ExtraData  string                    `json:"extraData"`
+	GasLimit   string                    `json:"gasLimit"`
+	Difficulty string                    `json:"difficulty"`
+	MixHash    string                    `json:"mixHash"`
+	Coinbase   string                    `json:"coinbase"`
+	Number     string                    `json:"number"`
+	GasUsed    string                    `json:"gasUsed"`
+	ParentHash string                    `json:"parentHash"`
 }
 
 // ChainConfig contains the C-Chain configuration parameters
 type ChainConfig struct {
-	ChainID             uint64      `json:"chainId"`
-	HomesteadBlock      uint64      `json:"homesteadBlock"`
-	EIP150Block         uint64      `json:"eip150Block"`
-	EIP150Hash          string      `json:"eip150Hash"`
-	EIP155Block         uint64      `json:"eip155Block"`
-	EIP158Block         uint64      `json:"eip158Block"`
-	ByzantiumBlock      uint64      `json:"byzantiumBlock"`
-	ConstantinopleBlock uint64      `json:"constantinopleBlock"`
-	PetersburgBlock     uint64      `json:"petersburgBlock"`
-	IstanbulBlock       uint64      `json:"istanbulBlock"`
-	MuirGlacierBlock    uint64      `json:"muirGlacierBlock"`
-	BerlinBlock         uint64      `json:"berlinBlock"`
-	LondonBlock         uint64      `json:"londonBlock"`
-	SubnetEVMTimestamp  uint64      `json:"subnetEVMTimestamp"`
-	FeeConfig           *FeeConfig  `json:"feeConfig"`
-	AllowFeeRecipients  bool        `json:"allowFeeRecipients"`
+	ChainID             uint64     `json:"chainId"`
+	HomesteadBlock      uint64     `json:"homesteadBlock"`
+	EIP150Block         uint64     `json:"eip150Block"`
+	EIP150Hash          string     `json:"eip150Hash"`
+	EIP155Block         uint64     `json:"eip155Block"`
+	EIP158Block         uint64     `json:"eip158Block"`
+	ByzantiumBlock      uint64     `json:"byzantiumBlock"`
+	ConstantinopleBlock uint64     `json:"constantinopleBlock"`
+	PetersburgBlock     uint64     `json:"petersburgBlock"`
+	IstanbulBlock       uint64     `json:"istanbulBlock"`
+	MuirGlacierBlock    uint64     `json:"muirGlacierBlock"`
+	BerlinBlock         uint64     `json:"berlinBlock"`
+	LondonBlock         uint64     `json:"londonBlock"`
+	SubnetEVMTimestamp  uint64     `json:"subnetEVMTimestamp"`
+	FeeConfig           *FeeConfig `json:"feeConfig"`
+	AllowFeeRecipients  bool       `json:"allowFeeRecipients"`
 }
 
 // FeeConfig contains fee configuration for the C-Chain
@@ -139,7 +139,7 @@ func (b *Builder) AddAccount(address string, balance *big.Int) {
 func AddAccountToGenesis(g *Genesis, address string, balance *big.Int) {
 	// Convert balance to hex string
 	balanceHex := fmt.Sprintf("0x%x", balance)
-	
+
 	g.Alloc[address] = GenesisAccount{
 		Balance: balanceHex,
 	}
@@ -148,7 +148,7 @@ func AddAccountToGenesis(g *Genesis, address string, balance *big.Int) {
 // AddCodedAccount adds an account with code (contract) to genesis
 func AddCodedAccount(g *Genesis, address string, balance *big.Int, code string, storage map[string]string) {
 	balanceHex := fmt.Sprintf("0x%x", balance)
-	
+
 	g.Alloc[address] = GenesisAccount{
 		Balance: balanceHex,
 		Code:    code,
@@ -166,30 +166,30 @@ func ImportAllocations(g *Genesis, allocationsJSON []byte) error {
 	var allocations map[string]struct {
 		Balance string `json:"balance"`
 	}
-	
+
 	if err := json.Unmarshal(allocationsJSON, &allocations); err != nil {
 		return fmt.Errorf("failed to unmarshal allocations: %w", err)
 	}
-	
+
 	for address, account := range allocations {
 		// Ensure address is lowercase and has 0x prefix
 		if len(address) > 2 && address[:2] != "0x" {
 			address = "0x" + address
 		}
 		address = strings.ToLower(address)
-		
+
 		g.Alloc[address] = GenesisAccount{
 			Balance: account.Balance,
 		}
 	}
-	
+
 	return nil
 }
 
 // GetTotalSupply calculates the total supply in the C-Chain genesis
 func (g *Genesis) GetTotalSupply() *big.Int {
 	total := new(big.Int)
-	
+
 	for _, account := range g.Alloc {
 		// Parse balance (remove 0x prefix)
 		balance := new(big.Int)
@@ -198,9 +198,9 @@ func (g *Genesis) GetTotalSupply() *big.Int {
 		} else {
 			balance.SetString(account.Balance, 10)
 		}
-		
+
 		total.Add(total, balance)
 	}
-	
+
 	return total
 }

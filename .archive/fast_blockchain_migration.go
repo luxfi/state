@@ -15,9 +15,9 @@ import (
 
 func main() {
 	var (
-		src = flag.String("src", "", "source subnet database path")
-		dst = flag.String("dst", "", "destination directory for C-Chain data")
-		verbose = flag.Bool("v", false, "verbose output")
+		src      = flag.String("src", "", "source subnet database path")
+		dst      = flag.String("dst", "", "destination directory for C-Chain data")
+		verbose  = flag.Bool("v", false, "verbose output")
 		cacheDir = flag.String("cache", ".tmp/migration-cache", "cache directory")
 	)
 	flag.Parse()
@@ -32,24 +32,24 @@ func main() {
 	if _, err := os.Stat(cacheFile); err == nil {
 		fmt.Println("=== Using cached migration results ===")
 		fmt.Printf("Cache found at: %s\n", cacheFile)
-		
+
 		// Read cache info
 		data, _ := os.ReadFile(cacheFile)
 		fmt.Print(string(data))
-		
+
 		// Copy cached results to destination
 		cachedEvm := filepath.Join(*cacheDir, "evm")
 		dstEvm := filepath.Join(*dst, "evm")
 		fmt.Printf("Copying cached data from %s to %s\n", cachedEvm, dstEvm)
-		
+
 		if err := os.RemoveAll(dstEvm); err != nil {
 			log.Fatalf("Failed to remove existing destination: %v", err)
 		}
-		
+
 		if err := copyDir(cachedEvm, dstEvm); err != nil {
 			log.Fatalf("Failed to copy cached data: %v", err)
 		}
-		
+
 		fmt.Println("Cache copied successfully!")
 		return
 	}
@@ -57,7 +57,7 @@ func main() {
 	// Create output directories
 	evmDB := filepath.Join(*dst, "evm", "pebbledb")
 	stateDB := filepath.Join(*dst, "state", "pebbledb")
-	
+
 	if err := os.MkdirAll(evmDB, 0755); err != nil {
 		log.Fatalf("Failed to create EVM directory: %v", err)
 	}
@@ -94,7 +94,7 @@ func main() {
 			log.Printf("Failed to cache evm data: %v", err)
 		} else {
 			// Write cache marker
-			cacheInfo := fmt.Sprintf("Migration completed at: %s\nMax height: %d\nSource: %s\n", 
+			cacheInfo := fmt.Sprintf("Migration completed at: %s\nMax height: %d\nSource: %s\n",
 				time.Now().Format(time.RFC3339), maxHeight, *src)
 			os.WriteFile(cacheFile, []byte(cacheInfo), 0644)
 		}
@@ -127,12 +127,12 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 	// First pass: Build hash->height map from H keys only
 	fmt.Println("Pass 1: Building hash->height map from H keys...")
 	hashToHeight := make(map[string]uint64)
-	
+
 	// Use prefix iterator for efficiency
 	hPrefix := make([]byte, 34)
 	copy(hPrefix[:33], bytes.Repeat([]byte{0xff}, 33)) // Assuming namespace
 	hPrefix[33] = 'H'
-	
+
 	iter, err := srcDB.NewIter(nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create iterator: %w", err)
@@ -142,13 +142,13 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) < 41 {
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
-		
+
+		logicalKey := key[33 : len(key)-8]
+
 		// Only process H keys
 		if len(logicalKey) > 1 && logicalKey[0] == 'H' {
 			if len(value) == 8 {
@@ -191,14 +191,14 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) < 41 {
 			skipped++
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
-		
+
+		logicalKey := key[33 : len(key)-8]
+
 		if len(logicalKey) == 0 {
 			skipped++
 			continue
@@ -219,11 +219,11 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 		// Handle number->hash keys specially
 		if logicalKey[0] == 'n' {
 			truncated := logicalKey[1:]
-			
+
 			// Find full hash match
 			var matchedHeight uint64
 			var found bool
-			
+
 			for fullHashStr, height := range hashToHeight {
 				fullHash := []byte(fullHashStr)
 				if bytes.HasPrefix(fullHash, truncated) {
@@ -232,17 +232,17 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 					break
 				}
 			}
-			
+
 			if found {
 				// Create proper evmn key
 				newKey := make([]byte, 12)
 				copy(newKey, []byte("evmn"))
 				binary.BigEndian.PutUint64(newKey[4:], matchedHeight)
-				
+
 				if err := batch.Set(newKey, value, nil); err != nil {
 					return 0, fmt.Errorf("failed to set key: %w", err)
 				}
-				
+
 				fixedNKeys++
 				stats['n']++
 			} else {
@@ -291,16 +291,16 @@ func migrateBlockchainOnly(src, dst string, verbose bool) (uint64, error) {
 
 func createConsensusState(evmDB, stateDB string, maxHeight uint64) error {
 	fmt.Printf("\n=== Creating Consensus State Marker ===\n")
-	
+
 	markerFile := filepath.Join(stateDB, "CONSENSUS_MARKER")
 	data := fmt.Sprintf("max_height=%d\ncreated=%s\n", maxHeight, time.Now())
-	
+
 	if err := os.WriteFile(markerFile, []byte(data), 0644); err != nil {
 		return fmt.Errorf("failed to write marker: %w", err)
 	}
-	
+
 	fmt.Printf("Created consensus state marker for height %d\n", maxHeight)
-	
+
 	return nil
 }
 

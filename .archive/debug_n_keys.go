@@ -25,10 +25,10 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("=== Debugging 'n' keys ===")
-	
+
 	// Count different types of keys
 	var nKeys, hKeys, totalKeys int
-	
+
 	iter, err := db.NewIter(nil)
 	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
@@ -37,28 +37,28 @@ func main() {
 
 	// Map to track hash->number mappings
 	hashToNumber := make(map[string]uint64)
-	
+
 	// First pass: count keys and collect H mappings
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) < 41 {
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
+
+		logicalKey := key[33 : len(key)-8]
 		if len(logicalKey) == 0 {
 			continue
 		}
-		
+
 		totalKeys++
-		
+
 		// Count 'n' keys
 		if logicalKey[0] == 'n' {
 			nKeys++
 		}
-		
+
 		// Count and collect 'H' keys
 		if logicalKey[0] == 'H' && len(logicalKey) > 1 {
 			hKeys++
@@ -68,7 +68,7 @@ func main() {
 				hashToNumber[hash] = number
 			}
 		}
-		
+
 		// Sample some keys
 		if totalKeys < 10 {
 			fmt.Printf("Sample key %d:\n", totalKeys)
@@ -79,31 +79,31 @@ func main() {
 			}
 		}
 	}
-	
+
 	fmt.Printf("\nTotal keys processed: %d\n", totalKeys)
 	fmt.Printf("'n' keys found: %d\n", nKeys)
 	fmt.Printf("'H' keys found: %d\n", hKeys)
 	fmt.Printf("Hash->Number mappings: %d\n", len(hashToNumber))
-	
+
 	// Now check how many 'n' keys we can match
 	iter2, err := db.NewIter(nil)
 	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
 	}
 	defer iter2.Close()
-	
+
 	matchedNKeys := 0
 	unmatchedSamples := 0
-	
+
 	for iter2.First(); iter2.Valid(); iter2.Next() {
 		key := iter2.Key()
-		
+
 		if len(key) < 41 {
 			continue
 		}
-		
-		logicalKey := key[33:len(key)-8]
-		
+
+		logicalKey := key[33 : len(key)-8]
+
 		if len(logicalKey) > 1 && logicalKey[0] == 'n' {
 			hashPart := string(logicalKey[1:])
 			if _, found := hashToNumber[hashPart]; found {
@@ -116,8 +116,8 @@ func main() {
 			}
 		}
 	}
-	
-	fmt.Printf("\n'n' keys that can be matched: %d / %d (%.2f%%)\n", 
+
+	fmt.Printf("\n'n' keys that can be matched: %d / %d (%.2f%%)\n",
 		matchedNKeys, nKeys, float64(matchedNKeys)*100/float64(nKeys))
 }
 

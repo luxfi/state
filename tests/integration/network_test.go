@@ -15,34 +15,34 @@ import (
 
 var _ = Describe("Network Integration", Ordered, func() {
 	var (
-		luxdPath     string
-		cliPath      string
-		baseDir      string
-		genesisDir   string
+		luxdPath   string
+		cliPath    string
+		baseDir    string
+		genesisDir string
 	)
 
 	BeforeAll(func() {
 		// Set up paths
 		pwd, err := os.Getwd()
 		Expect(err).NotTo(HaveOccurred())
-		
+
 		// Find genesis root (might be running from tests/ subdirectory)
 		genesisDir = pwd
 		for !strings.HasSuffix(genesisDir, "genesis") && genesisDir != "/" {
 			genesisDir = filepath.Dir(genesisDir)
 		}
-		
+
 		luxdPath = filepath.Join(genesisDir, "bin/luxd")
 		cliPath = filepath.Join(genesisDir, "bin/lux")
 		baseDir = filepath.Join(os.TempDir(), "lux-test-"+time.Now().Format("20060102-150405"))
-		
+
 		// Verify binaries exist
 		Expect(luxdPath).To(BeAnExistingFile(), "luxd binary not found")
 		Expect(cliPath).To(BeAnExistingFile(), "lux-cli binary not found")
-		
+
 		// Create test directory
 		Expect(os.MkdirAll(baseDir, 0755)).To(Succeed())
-		
+
 		DeferCleanup(func() {
 			os.RemoveAll(baseDir)
 		})
@@ -80,7 +80,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 			)
 			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			
+
 			By("Waiting for network to be healthy")
 			Eventually(func() bool {
 				healthCmd := exec.Command(cliPath, "network", "health",
@@ -112,7 +112,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should convert LevelDB to PebbleDB for 96369", func() {
 			Skip("Requires chaindata to be present")
-			
+
 			By("Checking if chaindata exists")
 			Expect(chainDataPath).To(BeADirectory())
 
@@ -133,11 +133,11 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should export 7777 accounts for X-Chain funding", func() {
 			Skip("Requires 7777 chaindata")
-			
+
 			By("Exporting 7777 accounts to CSV")
 			cmd := exec.Command("go", "run",
 				filepath.Join(genesisDir, "scripts/export_7777_accounts.go"),
-			"--db-path", filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db"),
+				"--db-path", filepath.Join(genesisDir, "chaindata/lux-genesis-7777/db"),
 				"--output", filepath.Join(baseDir, "7777-accounts.csv"),
 				"--exclude-treasury", "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714",
 			)
@@ -152,7 +152,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should import 96369 C-Chain data into running network", func() {
 			Skip("Requires running network and converted data")
-			
+
 			By("Importing 96369 data to C-Chain")
 			cmd := exec.Command(cliPath, "blockchain", "import", "c-chain",
 				"--genesis-file", filepath.Join(genesisDir, "configs/genesis-96369.json"),
@@ -180,7 +180,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 	Describe("L2 Subnet Deployment", func() {
 		It("should deploy ZOO as L2 subnet", func() {
 			Skip("Requires running primary network")
-			
+
 			By("Creating ZOO subnet")
 			cmd := exec.Command(cliPath, "subnet", "create",
 				"--subnet-name", "zoo",
@@ -190,7 +190,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-			
+
 			// Extract subnet ID from output
 			output := string(session.Out.Contents())
 			fmt.Fprintf(GinkgoWriter, "Subnet creation output: %s\n", output)
@@ -199,7 +199,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should deploy SPC as L2 subnet", func() {
 			Skip("Requires running primary network")
-			
+
 			By("Creating SPC subnet")
 			cmd := exec.Command(cliPath, "subnet", "create",
 				"--subnet-name", "spc",
@@ -213,7 +213,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should deploy Hanzo as L2 subnet", func() {
 			Skip("Requires running primary network")
-			
+
 			By("Creating Hanzo subnet")
 			cmd := exec.Command(cliPath, "subnet", "create",
 				"--subnet-name", "hanzo",
@@ -237,7 +237,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 
 		It("should run 7777 chain in dev mode", func() {
 			By("Converting 7777 data if needed")
-    pebbleDBPath := filepath.Join(genesisDir, "pebbledb/lux-genesis-7777")
+			pebbleDBPath := filepath.Join(genesisDir, "pebbledb/lux-genesis-7777")
 			if _, err := os.Stat(pebbleDBPath); os.IsNotExist(err) {
 				cmd := exec.Command("go", "run",
 					filepath.Join(genesisDir, "scripts/convert.go"),
@@ -257,7 +257,7 @@ var _ = Describe("Network Integration", Ordered, func() {
 				"--http-port=9630",
 				"--staking-port=9631",
 			)
-			
+
 			var err error
 			devSession, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())

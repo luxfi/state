@@ -29,14 +29,14 @@ func main() {
 
 	// Find all evmn keys and convert them
 	evmnPrefix := []byte("evmn")
-	
+
 	// First, collect all evmn keys
 	type keyValue struct {
 		oldKey []byte
 		value  []byte
 	}
 	var toConvert []keyValue
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: evmnPrefix,
 		UpperBound: append(evmnPrefix, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff),
@@ -69,12 +69,12 @@ func main() {
 			log.Printf("Failed to delete old key %x: %v", kv.oldKey, err)
 			continue
 		}
-		
+
 		// Create new geth key (0x68 + height bytes)
 		// evmn key format: "evmn" + 8 bytes height
 		heightBytes := kv.oldKey[4:] // Skip "evmn" prefix
 		newKey := append([]byte{0x68}, heightBytes...)
-		
+
 		// Write with geth prefix
 		if err := batch.Set(newKey, kv.value, nil); err != nil {
 			log.Printf("Failed to set new key %x: %v", newKey, err)
@@ -94,7 +94,7 @@ func main() {
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, height)
 	canonicalKey := append([]byte{0x68}, heightBytes...)
-	
+
 	val, closer, err := db.Get(canonicalKey)
 	if err == nil {
 		defer closer.Close()

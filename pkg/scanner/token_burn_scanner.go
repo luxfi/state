@@ -37,12 +37,12 @@ type TokenBurnScanner struct {
 
 // TokenBurnScanConfig configures the burn scanner
 type TokenBurnScanConfig struct {
-	RPC          string   `json:"rpc"`
-	TokenAddress string   `json:"tokenAddress"`
-	BurnAddress  string   `json:"burnAddress"`
-	FromBlock    uint64   `json:"fromBlock"`
-	ToBlock      uint64   `json:"toBlock"`
-	ChunkSize    uint64   `json:"chunkSize"`
+	RPC           string   `json:"rpc"`
+	TokenAddress  string   `json:"tokenAddress"`
+	BurnAddress   string   `json:"burnAddress"`
+	FromBlock     uint64   `json:"fromBlock"`
+	ToBlock       uint64   `json:"toBlock"`
+	ChunkSize     uint64   `json:"chunkSize"`
 	BurnAddresses []string `json:"burnAddresses,omitempty"` // Optional: multiple burn addresses
 }
 
@@ -123,7 +123,7 @@ func (s *TokenBurnScanner) ScanBurns() ([]TokenBurn, error) {
 			Addresses: []common.Address{s.tokenAddress},
 			Topics: [][]common.Hash{
 				{transferEventSig},
-				nil, // from (any)
+				nil,        // from (any)
 				burnTopics, // to (burn addresses)
 			},
 		}
@@ -240,7 +240,7 @@ func FilterBurnsByAmount(burns []TokenBurn, minAmount *big.Int) []TokenBurn {
 func GetUniqueBurners(burns []TokenBurn) []string {
 	seen := make(map[string]bool)
 	unique := []string{}
-	
+
 	for _, burn := range burns {
 		addr := strings.ToLower(burn.From)
 		if !seen[addr] {
@@ -248,7 +248,7 @@ func GetUniqueBurners(burns []TokenBurn) []string {
 			unique = append(unique, addr)
 		}
 	}
-	
+
 	return unique
 }
 

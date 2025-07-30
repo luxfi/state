@@ -24,7 +24,7 @@ func ExportTokenBurnsToCSV(burns []TokenBurn, filename string) error {
 
 	// Write header
 	header := []string{
-		"TxHash", "BlockNumber", "Timestamp", "From", "To", 
+		"TxHash", "BlockNumber", "Timestamp", "From", "To",
 		"Amount", "TokenAddress", "LogIndex",
 	}
 	if err := writer.Write(header); err != nil {

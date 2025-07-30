@@ -43,7 +43,7 @@ func (b *Builder) LoadCChainGenesis(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read C-Chain genesis: %w", err)
 	}
-	
+
 	b.SetCChainGenesis(string(data))
 	return nil
 }
@@ -63,7 +63,7 @@ func (b *Builder) AddValidatorsWithStaking(validators []ValidatorInfo) error {
 
 		// Add locked allocation for staking (2M LUX each)
 		stakingAmount := new(big.Int).SetUint64(2000000000000000) // 2M LUX in wei
-		
+
 		vestingConfig := &allocation.UnlockScheduleConfig{
 			TotalAmount:  stakingAmount,
 			StartDate:    time.Unix(1577836800, 0), // Jan 1, 2020
@@ -76,6 +76,6 @@ func (b *Builder) AddValidatorsWithStaking(validators []ValidatorInfo) error {
 			return fmt.Errorf("failed to add validator %d allocation: %w", i, err)
 		}
 	}
-	
+
 	return nil
 }

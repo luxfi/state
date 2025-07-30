@@ -22,23 +22,23 @@ const (
 
 // NetworkConfig contains configuration for a specific network
 type NetworkConfig struct {
-	ID                  NetworkID
-	Name                string
-	HRP                 string // Human-readable part for addresses
-	ChainID             uint64 // C-Chain ID
-	StartTime           time.Time
+	ID                   NetworkID
+	Name                 string
+	HRP                  string // Human-readable part for addresses
+	ChainID              uint64 // C-Chain ID
+	StartTime            time.Time
 	InitialStakeDuration time.Duration
-	MinValidatorStake   uint64
-	MinDelegatorStake   uint64
-	IsL2                bool      // Is this an L2 subnet?
-	ParentNetwork       string    // Parent network name (for L2s)
+	MinValidatorStake    uint64
+	MinDelegatorStake    uint64
+	IsL2                 bool   // Is this an L2 subnet?
+	ParentNetwork        string // Parent network name (for L2s)
 }
 
 // L2 Network IDs
 const (
-	ZooMainnetID NetworkID = 200200
-	ZooTestnetID NetworkID = 200201
-	SPCMainnetID NetworkID = 36911
+	ZooMainnetID   NetworkID = 200200
+	ZooTestnetID   NetworkID = 200201
+	SPCMainnetID   NetworkID = 36911
 	HanzoMainnetID NetworkID = 36963
 	HanzoTestnetID NetworkID = 36962
 )
@@ -47,99 +47,99 @@ const (
 var Networks = map[string]*NetworkConfig{
 	// Primary L1 Networks
 	"mainnet": {
-		ID:                  MainnetID,
-		Name:                "Lux Mainnet",
-		HRP:                 "lux",
-		ChainID:             96369,
-		StartTime:           time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), // Jan 1, 2020
-		InitialStakeDuration: 365 * 24 * time.Hour, // 1 year (maximum allowed by luxd)
-		MinValidatorStake:   2000000000000000, // 2M LUX (with 9 decimals)
-		MinDelegatorStake:   25000000000,      // 25 LUX (with 9 decimals)
-		IsL2:                false,
+		ID:                   MainnetID,
+		Name:                 "Lux Mainnet",
+		HRP:                  "lux",
+		ChainID:              96369,
+		StartTime:            time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), // Jan 1, 2020
+		InitialStakeDuration: 365 * 24 * time.Hour,                        // 1 year (maximum allowed by luxd)
+		MinValidatorStake:    2000000000000000,                            // 2M LUX (with 9 decimals)
+		MinDelegatorStake:    25000000000,                                 // 25 LUX (with 9 decimals)
+		IsL2:                 false,
 	},
 	"testnet": {
-		ID:                  TestnetID,
-		Name:                "Lux Testnet",
-		HRP:                 "test",
-		ChainID:             96368,
-		StartTime:           time.Now(),
+		ID:                   TestnetID,
+		Name:                 "Lux Testnet",
+		HRP:                  "test",
+		ChainID:              96368,
+		StartTime:            time.Now(),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   1000000000,  // 1 LUX (with 9 decimals)
-		MinDelegatorStake:   1000000000,  // 1 LUX (with 9 decimals)
-		IsL2:                false,
+		MinValidatorStake:    1000000000, // 1 LUX (with 9 decimals)
+		MinDelegatorStake:    1000000000, // 1 LUX (with 9 decimals)
+		IsL2:                 false,
 	},
 	"local": {
-		ID:                  LocalID,
-		Name:                "Local Network",
-		HRP:                 "local",
-		ChainID:             12345,
-		StartTime:           time.Now(),
+		ID:                   LocalID,
+		Name:                 "Local Network",
+		HRP:                  "local",
+		ChainID:              12345,
+		StartTime:            time.Now(),
 		InitialStakeDuration: 24 * time.Hour,
-		MinValidatorStake:   1000000000,  // 1 LUX (with 9 decimals)
-		MinDelegatorStake:   1000000000,  // 1 LUX (with 9 decimals)
-		IsL2:                false,
+		MinValidatorStake:    1000000000, // 1 LUX (with 9 decimals)
+		MinDelegatorStake:    1000000000, // 1 LUX (with 9 decimals)
+		IsL2:                 false,
 	},
-	
+
 	// L2 Networks (Subnets)
 	"zoo-mainnet": {
-		ID:                  ZooMainnetID,
-		Name:                "Zoo Mainnet L2",
-		HRP:                 "zoo",
-		ChainID:             200200,
-		StartTime:           time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
+		ID:                   ZooMainnetID,
+		Name:                 "Zoo Mainnet L2",
+		HRP:                  "zoo",
+		ChainID:              200200,
+		StartTime:            time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   2000000000000000, // 2M LUX (validators stake on parent)
-		MinDelegatorStake:   25000000000,      // 25 LUX
-		IsL2:                true,
-		ParentNetwork:       "mainnet",
+		MinValidatorStake:    2000000000000000, // 2M LUX (validators stake on parent)
+		MinDelegatorStake:    25000000000,      // 25 LUX
+		IsL2:                 true,
+		ParentNetwork:        "mainnet",
 	},
 	"zoo-testnet": {
-		ID:                  ZooTestnetID,
-		Name:                "Zoo Testnet L2",
-		HRP:                 "zoo-test",
-		ChainID:             200201,
-		StartTime:           time.Now(),
+		ID:                   ZooTestnetID,
+		Name:                 "Zoo Testnet L2",
+		HRP:                  "zoo-test",
+		ChainID:              200201,
+		StartTime:            time.Now(),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   1000000000,  // 1 LUX
-		MinDelegatorStake:   1000000000,  // 1 LUX
-		IsL2:                true,
-		ParentNetwork:       "testnet",
+		MinValidatorStake:    1000000000, // 1 LUX
+		MinDelegatorStake:    1000000000, // 1 LUX
+		IsL2:                 true,
+		ParentNetwork:        "testnet",
 	},
 	"spc-mainnet": {
-		ID:                  SPCMainnetID,
-		Name:                "SPC Mainnet L2",
-		HRP:                 "spc",
-		ChainID:             36911,
-		StartTime:           time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
+		ID:                   SPCMainnetID,
+		Name:                 "SPC Mainnet L2",
+		HRP:                  "spc",
+		ChainID:              36911,
+		StartTime:            time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   2000000000000000, // 2M LUX
-		MinDelegatorStake:   25000000000,      // 25 LUX
-		IsL2:                true,
-		ParentNetwork:       "mainnet",
+		MinValidatorStake:    2000000000000000, // 2M LUX
+		MinDelegatorStake:    25000000000,      // 25 LUX
+		IsL2:                 true,
+		ParentNetwork:        "mainnet",
 	},
 	"hanzo-mainnet": {
-		ID:                  HanzoMainnetID,
-		Name:                "Hanzo Mainnet L2",
-		HRP:                 "hanzo",
-		ChainID:             36963,
-		StartTime:           time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
+		ID:                   HanzoMainnetID,
+		Name:                 "Hanzo Mainnet L2",
+		HRP:                  "hanzo",
+		ChainID:              36963,
+		StartTime:            time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   2000000000000000, // 2M LUX
-		MinDelegatorStake:   25000000000,      // 25 LUX
-		IsL2:                true,
-		ParentNetwork:       "mainnet",
+		MinValidatorStake:    2000000000000000, // 2M LUX
+		MinDelegatorStake:    25000000000,      // 25 LUX
+		IsL2:                 true,
+		ParentNetwork:        "mainnet",
 	},
 	"hanzo-testnet": {
-		ID:                  HanzoTestnetID,
-		Name:                "Hanzo Testnet L2",
-		HRP:                 "hanzo-test",
-		ChainID:             36962,
-		StartTime:           time.Now(),
+		ID:                   HanzoTestnetID,
+		Name:                 "Hanzo Testnet L2",
+		HRP:                  "hanzo-test",
+		ChainID:              36962,
+		StartTime:            time.Now(),
 		InitialStakeDuration: 365 * 24 * time.Hour,
-		MinValidatorStake:   1000000000,  // 1 LUX
-		MinDelegatorStake:   1000000000,  // 1 LUX
-		IsL2:                true,
-		ParentNetwork:       "testnet",
+		MinValidatorStake:    1000000000, // 1 LUX
+		MinDelegatorStake:    1000000000, // 1 LUX
+		IsL2:                 true,
+		ParentNetwork:        "testnet",
 	},
 }
 

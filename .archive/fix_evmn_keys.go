@@ -35,7 +35,7 @@ func main() {
 	// First, collect all hash->number mappings
 	fmt.Println("\nStep 1: Reading hash->number mappings...")
 	hashToNumber := make(map[string]uint64)
-	
+
 	prefix := []byte("evmH")
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: prefix,
@@ -44,11 +44,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
 	}
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
-		
+
 		if len(key) > 4 && len(value) == 8 {
 			hash := key[4:] // Skip "evmH" prefix
 			number := binary.BigEndian.Uint64(value)
@@ -56,25 +56,25 @@ func main() {
 		}
 	}
 	iter.Close()
-	
+
 	fmt.Printf("Found %d hash->number mappings\n", len(hashToNumber))
 
 	// Now create proper evmn keys
 	fmt.Println("\nStep 2: Creating canonical number->hash keys...")
 	batch := db.NewBatch()
 	count := 0
-	
+
 	for hash, number := range hashToNumber {
 		// Create key: evmn + 8-byte number
 		key := make([]byte, 12)
 		copy(key, []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], number)
-		
+
 		// Value is the hash
 		if err := batch.Set(key, []byte(hash), nil); err != nil {
 			log.Fatalf("Failed to set key: %v", err)
 		}
-		
+
 		count++
 		if count%100 == 0 {
 			if err := batch.Commit(nil); err != nil {
@@ -84,16 +84,16 @@ func main() {
 			fmt.Printf("Created %d canonical keys...\n", count)
 		}
 	}
-	
+
 	// Commit final batch
 	if err := batch.Commit(nil); err != nil {
 		log.Fatalf("Failed to commit final batch: %v", err)
 	}
-	
+
 	// Remove old evmn keys with wrong format
 	fmt.Println("\nStep 3: Removing old evmn keys...")
 	oldCount := 0
-	
+
 	prefix = []byte("evmn")
 	iter2, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: prefix,
@@ -102,7 +102,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
 	}
-	
+
 	batch = db.NewBatch()
 	for iter2.First(); iter2.Valid(); iter2.Next() {
 		key := iter2.Key()
@@ -112,7 +112,7 @@ func main() {
 				log.Fatalf("Failed to delete key: %v", err)
 			}
 			oldCount++
-			
+
 			if oldCount%100 == 0 {
 				if err := batch.Commit(nil); err != nil {
 					log.Fatalf("Failed to commit batch: %v", err)
@@ -122,24 +122,24 @@ func main() {
 		}
 	}
 	iter2.Close()
-	
+
 	// Commit final batch
 	if err := batch.Commit(nil); err != nil {
 		log.Fatalf("Failed to commit final batch: %v", err)
 	}
-	
+
 	fmt.Printf("Removed %d old evmn keys\n", oldCount)
-	
+
 	// Verify the fix
 	fmt.Println("\nStep 4: Verifying fix...")
-	
+
 	// Check a few canonical keys
 	samples := 0
 	for i := uint64(0); i <= 10 && samples < 5; i++ {
 		key := make([]byte, 12)
 		copy(key, []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], i)
-		
+
 		value, closer, err := db.Get(key)
 		if err == nil {
 			fmt.Printf("  Block %d -> hash %s\n", i, hex.EncodeToString(value))
@@ -147,7 +147,7 @@ func main() {
 			samples++
 		}
 	}
-	
+
 	fmt.Printf("\n=== Fix Complete in %s ===\n", time.Since(start))
 	fmt.Printf("Created %d canonical number->hash mappings\n", count)
 	fmt.Printf("Removed %d old format keys\n", oldCount)

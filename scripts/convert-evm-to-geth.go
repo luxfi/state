@@ -12,7 +12,7 @@ import (
 // Mapping of EVM prefixes to Geth prefixes
 var prefixMap = map[string]byte{
 	"evmh": 0x48, // headers
-	"evmn": 0x68, // canonical 
+	"evmn": 0x68, // canonical
 	"evmb": 0x62, // bodies
 	"evmr": 0x72, // receipts
 	"evmt": 0x74, // transactions
@@ -67,7 +67,7 @@ func main() {
 		// Check if key starts with any EVM prefix
 		var newKey []byte
 		converted := false
-		
+
 		for evmPrefix, gethPrefix := range prefixMap {
 			if bytes.HasPrefix(key, []byte(evmPrefix)) {
 				// Convert EVM prefix to Geth prefix
@@ -90,14 +90,14 @@ func main() {
 		// Write to destination
 		valueCopy := make([]byte, len(value))
 		copy(valueCopy, value)
-		
+
 		if err := batch.Set(newKey, valueCopy, nil); err != nil {
 			log.Printf("Failed to set key %x: %v", newKey, err)
 			continue
 		}
 
 		// Commit batch every 10000 keys
-		if (convertCount+copyCount) % 10000 == 0 {
+		if (convertCount+copyCount)%10000 == 0 {
 			if err := batch.Commit(nil); err != nil {
 				log.Fatalf("Failed to commit batch: %v", err)
 			}

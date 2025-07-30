@@ -62,7 +62,7 @@ func main() {
 
 	fmt.Println("✅ Head pointers set successfully!")
 	fmt.Printf("   LastBlock: %s\n", blockHash.Hex())
-	fmt.Printf("   LastHeader: %s\n", blockHash.Hex()) 
+	fmt.Printf("   LastHeader: %s\n", blockHash.Hex())
 	fmt.Printf("   lastAccepted: %s\n", blockHash.Hex())
 	fmt.Printf("   Height: %d\n", blockHeight)
 }

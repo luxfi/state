@@ -14,15 +14,15 @@ type PathConfig struct {
 	ExecutableDir string // Directory containing the genesis executable
 	WorkDir       string // Working directory (current directory or override)
 	OutputDir     string // Output directory for generated files
-	
+
 	// Data paths
 	ChaindataDir string // Directory containing blockchain data
 	RuntimeDir   string // Directory for runtime/temporary data
 	ConfigsDir   string // Directory for configuration files
-	
+
 	// File paths
-	LuxdPath     string // Path to luxd binary
-	LuxCLIPath   string // Path to lux-cli binary
+	LuxdPath   string // Path to luxd binary
+	LuxCLIPath string // Path to lux-cli binary
 }
 
 // Global path configuration
@@ -35,47 +35,47 @@ var Paths *PathConfig
 // 4. Saved settings in ~/.lux/genesis/
 func InitializePaths() error {
 	Paths = &PathConfig{}
-	
+
 	// Get executable path
 	execPath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to get executable path: %w", err)
 	}
-	
+
 	// Resolve symlinks
 	execPath, err = filepath.EvalSymlinks(execPath)
 	if err != nil {
 		return fmt.Errorf("failed to resolve executable path: %w", err)
 	}
-	
+
 	// Set executable directory
 	Paths.ExecutableDir = filepath.Dir(execPath)
-	
+
 	// Default work directory is current working directory
 	pwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
-	
+
 	// Allow override via environment variable
 	if workDir := os.Getenv("GENESIS_WORK_DIR"); workDir != "" {
 		Paths.WorkDir = expandPath(workDir)
 	} else {
 		Paths.WorkDir = pwd
 	}
-	
+
 	// Set output directory
 	if outputDir := os.Getenv("GENESIS_OUTPUT_DIR"); outputDir != "" {
 		Paths.OutputDir = expandPath(outputDir)
 	} else {
 		Paths.OutputDir = filepath.Join(Paths.WorkDir, "output")
 	}
-	
+
 	// Set data directories
 	Paths.ChaindataDir = filepath.Join(Paths.WorkDir, "chaindata")
 	Paths.RuntimeDir = filepath.Join(Paths.WorkDir, "runs")
 	Paths.ConfigsDir = filepath.Join(Paths.WorkDir, "configs")
-	
+
 	// Allow overrides
 	if dir := os.Getenv("GENESIS_CHAINDATA_DIR"); dir != "" {
 		Paths.ChaindataDir = expandPath(dir)
@@ -86,7 +86,7 @@ func InitializePaths() error {
 	if dir := os.Getenv("GENESIS_CONFIGS_DIR"); dir != "" {
 		Paths.ConfigsDir = expandPath(dir)
 	}
-	
+
 	// Set tool paths - look in multiple locations
 	Paths.LuxdPath = findTool("luxd", []string{
 		filepath.Join(Paths.WorkDir, "..", "node", "build", "luxd"),
@@ -95,7 +95,7 @@ func InitializePaths() error {
 		"/usr/local/bin/luxd",
 		"luxd", // In PATH
 	})
-	
+
 	Paths.LuxCLIPath = findTool("avalanche", []string{
 		filepath.Join(Paths.WorkDir, "..", "cli", "bin", "avalanche"),
 		filepath.Join(Paths.WorkDir, "cli", "bin", "avalanche"),
@@ -103,7 +103,7 @@ func InitializePaths() error {
 		"/usr/local/bin/avalanche",
 		"avalanche", // In PATH
 	})
-	
+
 	// Allow tool path overrides
 	if path := os.Getenv("LUXD_PATH"); path != "" {
 		Paths.LuxdPath = expandPath(path)
@@ -111,13 +111,13 @@ func InitializePaths() error {
 	if path := os.Getenv("LUX_CLI_PATH"); path != "" {
 		Paths.LuxCLIPath = expandPath(path)
 	}
-	
+
 	// Load saved settings (for tool paths mainly)
 	if err := LoadSettings(); err != nil {
 		// Ignore errors loading settings, just use defaults
 		fmt.Fprintf(os.Stderr, "Warning: failed to load settings: %v\n", err)
 	}
-	
+
 	return nil
 }
 
@@ -128,15 +128,15 @@ func expandPath(path string) string {
 		home, _ := os.UserHomeDir()
 		path = filepath.Join(home, path[2:])
 	}
-	
+
 	// Expand environment variables
 	path = os.ExpandEnv(path)
-	
+
 	// Make absolute if relative
 	if !filepath.IsAbs(path) {
 		path, _ = filepath.Abs(path)
 	}
-	
+
 	return path
 }
 
@@ -196,48 +196,48 @@ func GetSettingsPath() string {
 func SaveSettings() error {
 	settingsPath := GetSettingsPath()
 	settingsDir := filepath.Dir(settingsPath)
-	
+
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(settingsDir, 0755); err != nil {
 		return fmt.Errorf("failed to create settings directory: %w", err)
 	}
-	
+
 	// Marshal settings to JSON
 	data, err := json.MarshalIndent(Paths, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal settings: %w", err)
 	}
-	
+
 	// Write to file
 	if err := os.WriteFile(settingsPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write settings: %w", err)
 	}
-	
+
 	return nil
 }
 
 // LoadSettings loads saved settings from ~/.lux/genesis/settings.json
 func LoadSettings() error {
 	settingsPath := GetSettingsPath()
-	
+
 	// Check if file exists
 	if _, err := os.Stat(settingsPath); os.IsNotExist(err) {
 		// No saved settings, use defaults
 		return nil
 	}
-	
+
 	// Read file
 	data, err := os.ReadFile(settingsPath)
 	if err != nil {
 		return fmt.Errorf("failed to read settings: %w", err)
 	}
-	
+
 	// Unmarshal settings
 	saved := &PathConfig{}
 	if err := json.Unmarshal(data, saved); err != nil {
 		return fmt.Errorf("failed to unmarshal settings: %w", err)
 	}
-	
+
 	// Apply saved settings (but don't override current directory defaults)
 	// This allows settings to persist tool locations but not force work directories
 	if Paths.LuxdPath == "luxd" && saved.LuxdPath != "" {
@@ -246,6 +246,6 @@ func LoadSettings() error {
 	if Paths.LuxCLIPath == "lux-cli" && saved.LuxCLIPath != "" {
 		Paths.LuxCLIPath = saved.LuxCLIPath
 	}
-	
+
 	return nil
 }

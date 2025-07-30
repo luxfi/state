@@ -24,7 +24,7 @@ func main() {
 
 	// Track prefix counts
 	prefixCounts := make(map[byte]int)
-	
+
 	// Sample some keys
 	iter, err := db.NewIter(nil)
 	if err != nil {
@@ -37,7 +37,7 @@ func main() {
 		key := iter.Key()
 		if len(key) > 0 {
 			prefixCounts[key[0]]++
-			
+
 			// Print first 10 samples
 			if count < 10 {
 				fmt.Printf("Sample key[%d]: hex=%s", count, hex.EncodeToString(key))

@@ -11,10 +11,10 @@ import (
 
 // Plugin represents a CLI plugin that extends lux-cli functionality
 type Plugin struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Executable  string            `json:"executable"`
-	Commands    []PluginCommand   `json:"commands"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Executable  string          `json:"executable"`
+	Commands    []PluginCommand `json:"commands"`
 }
 
 // PluginCommand represents a command provided by a plugin
@@ -123,7 +123,7 @@ func parseHelpOutput(help string) []PluginCommand {
 	// Simple parser - can be enhanced
 	var commands []PluginCommand
 	lines := strings.Split(help, "\n")
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "Commands:") {
@@ -132,7 +132,7 @@ func parseHelpOutput(help string) []PluginCommand {
 		}
 		// Add more sophisticated parsing here
 	}
-	
+
 	return commands
 }
 

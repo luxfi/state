@@ -21,7 +21,7 @@ type Project struct {
 type NFTScannerConfig struct {
 	Chain           string
 	ChainID         int64
-	RPC             string  // Changed from RPCURL to RPC
+	RPC             string // Changed from RPCURL to RPC
 	ContractAddress string
 	ProjectName     string
 	FromBlock       uint64
@@ -29,7 +29,7 @@ type NFTScannerConfig struct {
 	BatchSize       uint64
 	IncludeMetadata bool
 	CrossReference  string
-	ValidatorNFT    bool    // For NFTs that grant validator status
+	ValidatorNFT    bool // For NFTs that grant validator status
 }
 
 // NFTScanResult contains NFT scan results
@@ -46,7 +46,7 @@ type NFTScanResult struct {
 	TypeDistribution     map[string]int
 	TopHolders           []Holder
 	TotalNFTs            int
-	NFTs                 []ScannedNFT  // Add NFTs field for export
+	NFTs                 []ScannedNFT // Add NFTs field for export
 	StakingInfo          *StakingInfo
 	CrossReferenceResult *CrossReferenceResult
 }
@@ -63,7 +63,7 @@ type ScannedNFT struct {
 type TokenScannerConfig struct {
 	Chain           string
 	ChainID         int64
-	RPC             string  // Changed from RPCURL to RPC
+	RPC             string // Changed from RPCURL to RPC
 	ContractAddress string
 	ProjectName     string
 	FromBlock       uint64
@@ -85,7 +85,7 @@ type TokenScanResult struct {
 	ToBlock              uint64
 	Distribution         []DistributionTier
 	TopHolders           []TokenHolder
-	Holders              []TokenHolder  // Add all holders for export
+	Holders              []TokenHolder // Add all holders for export
 	CrossReferenceResult *CrossReferenceResult
 	MigrationInfo        *MigrationInfo
 }
@@ -108,12 +108,12 @@ type MigrationConfig struct {
 
 // MigrationAnalysis contains migration analysis results
 type MigrationAnalysis struct {
-	TokenName        string
-	Symbol           string
-	Decimals         int
-	TotalSupply      string
-	UniqueHolders    int
-	TotalNFTs        int
+	TokenName     string
+	Symbol        string
+	Decimals      int
+	TotalSupply   string
+	UniqueHolders int
+	TotalNFTs     int
 }
 
 // SnapshotResult contains snapshot results
@@ -168,18 +168,18 @@ type VerifierConfig struct {
 
 // VerificationResult contains verification results
 type VerificationResult struct {
-	Valid            bool               `json:"valid"`
-	Summary          string             `json:"summary"`
-	Warnings         []string           `json:"warnings"`
-	Errors           []string           `json:"errors"`
-	Status           string             `json:"status,omitempty"`
-	RecordsVerified  int                `json:"recordsVerified,omitempty"`
-	ChecksPerformed  int                `json:"checksPerformed,omitempty"`
-	ChecksPassed     int                `json:"checksPassed,omitempty"`
-	ChecksFailed     int                `json:"checksFailed,omitempty"`
-	Discrepancies    []Discrepancy      `json:"discrepancies,omitempty"`
-	BalanceCheck     *BalanceCheckResult `json:"balanceCheck,omitempty"`
-	HolderCheck      *HolderCheckResult  `json:"holderCheck,omitempty"`
+	Valid           bool                `json:"valid"`
+	Summary         string              `json:"summary"`
+	Warnings        []string            `json:"warnings"`
+	Errors          []string            `json:"errors"`
+	Status          string              `json:"status,omitempty"`
+	RecordsVerified int                 `json:"recordsVerified,omitempty"`
+	ChecksPerformed int                 `json:"checksPerformed,omitempty"`
+	ChecksPassed    int                 `json:"checksPassed,omitempty"`
+	ChecksFailed    int                 `json:"checksFailed,omitempty"`
+	Discrepancies   []Discrepancy       `json:"discrepancies,omitempty"`
+	BalanceCheck    *BalanceCheckResult `json:"balanceCheck,omitempty"`
+	HolderCheck     *HolderCheckResult  `json:"holderCheck,omitempty"`
 }
 
 // Helper types
@@ -220,9 +220,9 @@ type DistributionTier struct {
 }
 
 type MigrationInfo struct {
-	HoldersToMigrate  int
-	BalanceToMigrate  string
-	RecommendedLayer  string
+	HoldersToMigrate int
+	BalanceToMigrate string
+	RecommendedLayer string
 }
 
 type ProofInfo struct {

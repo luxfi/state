@@ -29,7 +29,7 @@ func main() {
 
 	// Check for evmn prefix (canonical keys in EVM format)
 	evmnPrefix := []byte("evmn")
-	
+
 	// Count keys with evmn prefix
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: evmnPrefix,
@@ -44,7 +44,7 @@ func main() {
 	count10byte := 0
 	count9byte := 0
 	var firstKey, lastKey []byte
-	
+
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if bytes.HasPrefix(key, evmnPrefix) {
@@ -55,7 +55,7 @@ func main() {
 			} else if keyLen == 9 {
 				count9byte++
 			}
-			
+
 			if count == 1 {
 				firstKey = make([]byte, len(key))
 				copy(firstKey, key)
@@ -68,7 +68,7 @@ func main() {
 	log.Printf("Found %d evmn keys total", count)
 	log.Printf("  - %d keys with 10-byte suffix (ending with 0x6e)", count10byte)
 	log.Printf("  - %d keys with 9-byte suffix", count9byte)
-	
+
 	if count > 0 {
 		log.Printf("First key: %x", firstKey)
 		log.Printf("Last key: %x", lastKey)
@@ -78,7 +78,7 @@ func main() {
 	height := uint64(1082780)
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, height)
-	
+
 	// Try 9-byte format
 	key9 := append(evmnPrefix, heightBytes...)
 	val, closer, err := db.Get(key9)
@@ -88,7 +88,7 @@ func main() {
 	} else {
 		log.Printf("✗ No canonical hash at height %d with 9-byte key", height)
 	}
-	
+
 	// Try 10-byte format
 	key10 := append(key9, 0x6e)
 	val2, closer2, err := db.Get(key10)

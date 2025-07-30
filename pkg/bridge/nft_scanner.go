@@ -41,7 +41,7 @@ func NewNFTScanner(config NFTScannerConfig) (*NFTScanner, error) {
 	if config.ProjectName == "" {
 		return nil, fmt.Errorf("project name is required")
 	}
-	
+
 	// Set default RPC if not provided
 	if config.RPC == "" {
 		switch config.Chain {
@@ -55,19 +55,19 @@ func NewNFTScanner(config NFTScannerConfig) (*NFTScanner, error) {
 			return nil, fmt.Errorf("RPC endpoint required for chain: %s", config.Chain)
 		}
 	}
-	
+
 	// Connect to the Ethereum client
 	client, err := ethclient.Dial(config.RPC)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to RPC: %w", err)
 	}
-	
+
 	// Parse the ABI
 	contractABI, err := abi.JSON(strings.NewReader(erc721ABI))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse ABI: %w", err)
 	}
-	
+
 	return &NFTScanner{
 		config:      config,
 		client:      client,
@@ -78,28 +78,28 @@ func NewNFTScanner(config NFTScannerConfig) (*NFTScanner, error) {
 // Scan performs the NFT scan
 func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 	ctx := context.Background()
-	
+
 	// Get contract address
 	contractAddr := common.HexToAddress(s.config.ContractAddress)
-	
+
 	// Get current block number
 	currentBlock, err := s.client.BlockNumber(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current block: %w", err)
 	}
-	
+
 	// Set ToBlock if not specified
 	if s.config.ToBlock == 0 {
 		s.config.ToBlock = currentBlock
 	}
-	
+
 	// Create contract instance
 	contract := bind.NewBoundContract(contractAddr, s.contractABI, s.client, s.client, s.client)
-	
+
 	// Get collection info
 	var name, symbol string
 	var totalSupply *big.Int
-	
+
 	// Get name
 	results := []interface{}{&name}
 	err = contract.Call(nil, &results, "name")
@@ -107,15 +107,15 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 		log.Printf("Warning: failed to get collection name: %v", err)
 		name = "Unknown Collection"
 	}
-	
+
 	// Get symbol
 	results = []interface{}{&symbol}
 	err = contract.Call(nil, &results, "symbol")
 	if err != nil {
-		log.Printf("Warning: failed to get collection symbol: %v", err) 
+		log.Printf("Warning: failed to get collection symbol: %v", err)
 		symbol = "UNKNOWN"
 	}
-	
+
 	// Get total supply
 	results = []interface{}{&totalSupply}
 	err = contract.Call(nil, &results, "totalSupply")
@@ -124,15 +124,15 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 		log.Printf("Warning: failed to get total supply, will count from events: %v", err)
 		totalSupply = big.NewInt(0)
 	}
-	
+
 	// Scan Transfer events to find all NFTs and current owners
-	nftMap := make(map[string]string) // tokenID -> owner
+	nftMap := make(map[string]string)   // tokenID -> owner
 	ownerCounts := make(map[string]int) // owner -> count
 	typeDistribution := make(map[string]int)
-	
+
 	// Define the Transfer event signature
 	transferEventSig := s.contractABI.Events["Transfer"].ID
-	
+
 	// Set FromBlock if not specified
 	fromBlock := s.config.FromBlock
 	if fromBlock == 0 {
@@ -142,18 +142,18 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 			fromBlock = 0
 		}
 	}
-	
+
 	chunkSize := uint64(10000)
 	totalScanned := 0
-	
+
 	log.Printf("Scanning NFT collection %s from block %d to %d", name, fromBlock, s.config.ToBlock)
-	
+
 	for startBlock := fromBlock; startBlock <= s.config.ToBlock; startBlock += chunkSize {
 		endBlock := startBlock + chunkSize - 1
 		if endBlock > s.config.ToBlock {
 			endBlock = s.config.ToBlock
 		}
-		
+
 		// Create filter query
 		query := ethereum.FilterQuery{
 			FromBlock: big.NewInt(int64(startBlock)),
@@ -161,14 +161,14 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 			Addresses: []common.Address{contractAddr},
 			Topics:    [][]common.Hash{{transferEventSig}},
 		}
-		
+
 		// Get logs
 		logs, err := s.client.FilterLogs(ctx, query)
 		if err != nil {
 			log.Printf("Warning: failed to get logs for blocks %d-%d: %v", startBlock, endBlock, err)
 			continue
 		}
-		
+
 		// Process Transfer events
 		for _, vLog := range logs {
 			var transferEvent struct {
@@ -176,7 +176,7 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 				To      common.Address
 				TokenId *big.Int
 			}
-			
+
 			err := s.contractABI.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
 			if err != nil {
 				// Try to parse indexed topics
@@ -189,9 +189,9 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 					continue
 				}
 			}
-			
+
 			tokenID := transferEvent.TokenId.String()
-			
+
 			// Update NFT ownership (latest transfer is current owner)
 			if transferEvent.To != common.HexToAddress("0x0") {
 				// Not a burn
@@ -201,20 +201,20 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 				delete(nftMap, tokenID)
 			}
 		}
-		
+
 		totalScanned += len(logs)
-		
+
 		// Progress indicator
 		if (endBlock-fromBlock)%100000 == 0 {
 			log.Printf("Scanned up to block %d/%d (found %d NFTs)", endBlock, s.config.ToBlock, len(nftMap))
 		}
 	}
-	
+
 	// Count NFTs per owner
 	for _, owner := range nftMap {
 		ownerCounts[owner]++
 	}
-	
+
 	// Find top holders
 	type holderCount struct {
 		address string
@@ -224,7 +224,7 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 	for addr, count := range ownerCounts {
 		holders = append(holders, holderCount{addr, count})
 	}
-	
+
 	// Sort holders by count (simple bubble sort for now)
 	for i := 0; i < len(holders); i++ {
 		for j := i + 1; j < len(holders); j++ {
@@ -233,7 +233,7 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 			}
 		}
 	}
-	
+
 	// Get top 10 holders
 	topHolders := []Holder{}
 	limit := 10
@@ -246,7 +246,7 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 			Count:   holders[i].count,
 		})
 	}
-	
+
 	// For Lux NFTs, determine validator NFTs
 	var stakingInfo *StakingInfo
 	if s.config.ProjectName == "lux" {
@@ -266,18 +266,18 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 				typeDistribution["Coin"]++
 			}
 		}
-		
+
 		stakingInfo = &StakingInfo{
 			ValidatorCount: validatorCount,
 			TotalPower:     fmt.Sprintf("%d000000000000000000000000", validatorCount), // Each validator = 1M tokens
 		}
 	}
-	
+
 	// If we couldn't get total supply from contract, use our count
 	if totalSupply.Cmp(big.NewInt(0)) == 0 {
 		totalSupply = big.NewInt(int64(len(nftMap)))
 	}
-	
+
 	// Build NFT list for export
 	nfts := make([]ScannedNFT, 0, len(nftMap))
 	for tokenID, owner := range nftMap {
@@ -285,7 +285,7 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 			TokenID: tokenID,
 			Owner:   owner,
 		}
-		
+
 		// For validator NFTs, add staking power
 		if s.config.ValidatorNFT || (s.config.ProjectName == "lux" && stakingInfo != nil) {
 			id := new(big.Int)
@@ -294,10 +294,10 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 				nft.StakingPower = "1000000000000000000000000" // 1M tokens
 			}
 		}
-		
+
 		nfts = append(nfts, nft)
 	}
-	
+
 	result := &NFTScanResult{
 		ContractAddress:  s.config.ContractAddress,
 		CollectionName:   name,
@@ -314,9 +314,9 @@ func (s *NFTScanner) Scan() (*NFTScanResult, error) {
 		TopHolders:       topHolders,
 		StakingInfo:      stakingInfo,
 	}
-	
+
 	log.Printf("Scan complete: found %d NFTs held by %d unique addresses", len(nftMap), len(ownerCounts))
-	
+
 	return result, nil
 }
 
@@ -326,16 +326,16 @@ func (s *NFTScanner) Export(outputPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to scan: %w", err)
 	}
-	
+
 	// Export as JSON
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal results: %w", err)
 	}
-	
+
 	// Write to file (in real implementation)
 	log.Printf("Export would write %d bytes to %s", len(data), outputPath)
-	
+
 	return nil
 }
 
@@ -343,19 +343,19 @@ func (s *NFTScanner) Export(outputPath string) error {
 func (s *NFTScanner) GetDetailedNFTs() ([]NFTDetail, error) {
 	contractAddr := common.HexToAddress(s.config.ContractAddress)
 	contract := bind.NewBoundContract(contractAddr, s.contractABI, s.client, s.client, s.client)
-	
+
 	// First get basic scan results
 	result, err := s.Scan()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	details := []NFTDetail{}
-	
+
 	// For each NFT, get detailed info
 	for i := 0; i < result.TotalNFTs && i < 100; i++ { // Limit to first 100 for performance
 		tokenID := big.NewInt(int64(i + 1))
-		
+
 		// Get owner
 		var owner common.Address
 		results := []interface{}{&owner}
@@ -363,7 +363,7 @@ func (s *NFTScanner) GetDetailedNFTs() ([]NFTDetail, error) {
 		if err != nil {
 			continue // Skip if can't get owner (might be burned)
 		}
-		
+
 		// Get URI
 		var uri string
 		results = []interface{}{&uri}
@@ -371,21 +371,21 @@ func (s *NFTScanner) GetDetailedNFTs() ([]NFTDetail, error) {
 		if err != nil {
 			uri = ""
 		}
-		
+
 		detail := NFTDetail{
 			TokenID: tokenID.String(),
 			Owner:   owner.Hex(),
 			URI:     uri,
 		}
-		
+
 		// For validator NFTs, add staking power
 		if s.config.ProjectName == "lux" && tokenID.Cmp(big.NewInt(100)) <= 0 {
 			detail.StakingPower = "1000000000000000000000000" // 1M tokens
 		}
-		
+
 		details = append(details, detail)
 	}
-	
+
 	return details, nil
 }
 

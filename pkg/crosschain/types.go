@@ -43,10 +43,10 @@ type BlockInfo struct {
 
 // ChainSnapshot represents a snapshot of chain data
 type ChainSnapshot struct {
-	ChainID         *big.Int       `json:"chainId"`
-	BlockNumber     *big.Int       `json:"blockNumber"`
-	Timestamp       uint64         `json:"timestamp"`
-	TokenHolders    []TokenHolder  `json:"tokenHolders,omitempty"`
-	BurnEvents      []BurnEvent    `json:"burnEvents,omitempty"`
-	TransferEvents  []TransferEvent `json:"transferEvents,omitempty"`
+	ChainID        *big.Int        `json:"chainId"`
+	BlockNumber    *big.Int        `json:"blockNumber"`
+	Timestamp      uint64          `json:"timestamp"`
+	TokenHolders   []TokenHolder   `json:"tokenHolders,omitempty"`
+	BurnEvents     []BurnEvent     `json:"burnEvents,omitempty"`
+	TransferEvents []TransferEvent `json:"transferEvents,omitempty"`
 }

@@ -77,7 +77,7 @@ var fixCanonicalCmd = &cobra.Command{
 		// Also check if we can read the header at this height
 		headerKey := append([]byte{0x48}, key[1:9]...)
 		headerKey = append(headerKey, hashBytes...)
-		
+
 		if headerValue, closer, err := db.Get(headerKey); err == nil {
 			defer closer.Close()
 			fmt.Printf("\nHeader found at this height:\n")

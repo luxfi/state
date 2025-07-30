@@ -39,15 +39,15 @@ type Scanner struct {
 
 // Result contains scan results
 type Result struct {
-	Chain            string
-	ContractAddress  string
-	AssetType        string
-	TotalHolders     int
-	TotalNFTs        int
-	TotalSupply      string
-	NFTCollections   map[string]int
-	CrossRefStats    *CrossRefStats
-	OutputFile       string
+	Chain           string
+	ContractAddress string
+	AssetType       string
+	TotalHolders    int
+	TotalNFTs       int
+	TotalSupply     string
+	NFTCollections  map[string]int
+	CrossRefStats   *CrossRefStats
+	OutputFile      string
 }
 
 // CrossRefStats contains cross-reference statistics
@@ -324,13 +324,13 @@ func FormatStakingPower(power *big.Int) string {
 	if power.Sign() == 0 {
 		return "0"
 	}
-	
+
 	// Convert to token units
 	tokens := new(big.Float).Quo(
 		new(big.Float).SetInt(power),
 		new(big.Float).SetInt(big.NewInt(1e18)),
 	)
-	
+
 	// Format with appropriate units
 	tokensFloat, _ := tokens.Float64()
 	if tokensFloat >= 1e6 {

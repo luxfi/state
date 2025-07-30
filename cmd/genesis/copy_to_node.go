@@ -143,6 +143,6 @@ func writeMarkers(chainDir, tipHash string, tipHeight uint64) error {
 	fmt.Printf("✅ Wrote consensus markers:\n")
 	fmt.Printf("   Height: %d (0x%x)\n", tipHeight, tipHeight)
 	fmt.Printf("   LastAccepted: %s\n", tipHash)
-	
+
 	return nil
 }

@@ -14,10 +14,10 @@ import (
 
 func main() {
 	var (
-		src        = flag.String("src", "", "source subnet database path")
-		dst        = flag.String("dst", "", "destination directory for migrated data")
-		chainID    = flag.Uint64("chain-id", 96369, "chain ID (96369 for LUX mainnet)")
-		cacheDir   = flag.String("cache", ".tmp/migration-cache", "cache directory")
+		src          = flag.String("src", "", "source subnet database path")
+		dst          = flag.String("dst", "", "destination directory for migrated data")
+		chainID      = flag.Uint64("chain-id", 96369, "chain ID (96369 for LUX mainnet)")
+		cacheDir     = flag.String("cache", ".tmp/migration-cache", "cache directory")
 		skipIfExists = flag.Bool("cache-skip", true, "skip if cached result exists")
 	)
 	flag.Parse()
@@ -138,7 +138,7 @@ func migrateWithEVMPrefix(src, dst string) error {
 
 		// Strip 33-byte namespace prefix
 		actualKey := key[33:]
-		
+
 		// Create new key with evm prefix
 		newKey := make([]byte, len(evmPrefix)+len(actualKey))
 		copy(newKey, evmPrefix)
@@ -176,7 +176,7 @@ func migrateWithEVMPrefix(src, dst string) error {
 
 func copyAndFixDatabase(src, dst string) error {
 	fmt.Printf("\n=== Step 2: Fixing evmn keys ===\n")
-	
+
 	// First copy the database
 	if err := copyDatabase(src, dst); err != nil {
 		return fmt.Errorf("failed to copy database: %w", err)
@@ -220,11 +220,11 @@ func copyAndFixDatabase(src, dst string) error {
 		key := make([]byte, 12)
 		copy(key, []byte("evmn"))
 		binary.BigEndian.PutUint64(key[4:], number)
-		
+
 		if err := batch.Set(key, []byte(hash), nil); err != nil {
 			return fmt.Errorf("failed to set key: %w", err)
 		}
-		
+
 		count++
 		if count%100 == 0 {
 			if err := batch.Commit(nil); err != nil {
@@ -233,7 +233,7 @@ func copyAndFixDatabase(src, dst string) error {
 			batch = db.NewBatch()
 		}
 	}
-	
+
 	if err := batch.Commit(nil); err != nil {
 		return fmt.Errorf("failed to commit final batch: %w", err)
 	}
@@ -264,7 +264,7 @@ func copyAndFixDatabase(src, dst string) error {
 			return fmt.Errorf("failed to delete key: %w", err)
 		}
 		oldCount++
-		
+
 		if oldCount%100 == 0 {
 			if err := batch.Commit(nil); err != nil {
 				return fmt.Errorf("failed to commit batch: %w", err)
@@ -272,7 +272,7 @@ func copyAndFixDatabase(src, dst string) error {
 			batch = db.NewBatch()
 		}
 	}
-	
+
 	if err := batch.Commit(nil); err != nil {
 		return fmt.Errorf("failed to commit final batch: %w", err)
 	}
@@ -347,7 +347,7 @@ func copyDatabase(src, dst string) error {
 
 func createConsensusState(evmDB, stateDB string, maxHeight uint64) error {
 	fmt.Printf("\n=== Step 3: Creating consensus state ===\n")
-	
+
 	// This is a simplified version - in production, use replay-consensus-pebble
 	if err := os.MkdirAll(stateDB, 0755); err != nil {
 		return fmt.Errorf("failed to create state directory: %w", err)

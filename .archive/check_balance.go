@@ -49,10 +49,10 @@ func main() {
 
 	// Try different key formats that might be used
 	prefixes := [][]byte{
-		[]byte("evms"),      // state
-		[]byte("evm\x73"),   // state (0x73)
-		[]byte("evm\x26"),   // accounts (0x26)
-		[]byte("evm\xa3"),   // storage (0xa3)
+		[]byte("evms"),    // state
+		[]byte("evm\x73"), // state (0x73)
+		[]byte("evm\x26"), // accounts (0x26)
+		[]byte("evm\xa3"), // storage (0xa3)
 	}
 
 	fmt.Printf("Checking balance for address: %s\n", *address)
@@ -61,7 +61,7 @@ func main() {
 
 	for _, prefix := range prefixes {
 		fmt.Printf("\nTrying prefix: %x (%s)\n", prefix, string(prefix[:3]))
-		
+
 		// Try account data first
 		accountKey := append(prefix, addrBytes...)
 		value, closer, err := database.Get(accountKey)
@@ -69,7 +69,7 @@ func main() {
 			fmt.Printf("Found account data! Length: %d\n", len(value))
 			fmt.Printf("Raw value: %x\n", value)
 			closer.Close()
-			
+
 			// Try to decode as RLP-encoded account
 			if len(value) >= 32 {
 				// Simple extraction - in production use proper RLP decoding
@@ -124,7 +124,7 @@ func main() {
 		}
 		count++
 	}
-	
+
 	fmt.Printf("\nScanned %d keys, found %d containing the address\n", count, found)
 }
 
@@ -134,7 +134,7 @@ func getBalanceStorageKey(address []byte) []byte {
 	data := make([]byte, 64)
 	copy(data[12:32], address) // address padded to 32 bytes
 	// slot 0 is already zeros
-	
+
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(data)
 	return hash.Sum(nil)

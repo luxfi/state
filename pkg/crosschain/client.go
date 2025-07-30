@@ -16,10 +16,10 @@ import (
 
 // ChainConfig holds configuration for a blockchain
 type ChainConfig struct {
-	Name      string
-	ChainID   *big.Int
-	RPCURLs   []string
-	CacheDir  string
+	Name     string
+	ChainID  *big.Int
+	RPCURLs  []string
+	CacheDir string
 }
 
 // Client provides access to cross-chain data with caching
@@ -49,12 +49,12 @@ func NewClient(config *ChainConfig) (*Client, error) {
 			continue
 		}
 		client = ethclient.NewClient(rpcClient)
-		
+
 		// Test connection
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_, err := client.ChainID(ctx)
 		cancel()
-		
+
 		if err == nil {
 			break
 		}
@@ -86,7 +86,7 @@ func (c *Client) CacheKey(method string, params ...interface{}) string {
 // GetFromCache retrieves cached data
 func (c *Client) GetFromCache(key string, result interface{}) (bool, error) {
 	cachePath := filepath.Join(c.cacheDir, key+".json")
-	
+
 	// Check if cache file exists
 	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
 		return false, nil
@@ -103,7 +103,7 @@ func (c *Client) GetFromCache(key string, result interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	if time.Since(info.ModTime()) > 24*time.Hour {
 		return false, nil // Cache expired
 	}
@@ -119,7 +119,7 @@ func (c *Client) GetFromCache(key string, result interface{}) (bool, error) {
 // SaveToCache saves data to cache
 func (c *Client) SaveToCache(key string, data interface{}) error {
 	cachePath := filepath.Join(c.cacheDir, key+".json")
-	
+
 	// Marshal data
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -152,7 +152,7 @@ func (c *Client) GetTokenHolders(ctx context.Context, tokenAddress common.Addres
 	// Check cache first
 	cacheKey := c.CacheKey("token_holders", tokenAddress.Hex(), blockNumber.String())
 	var holders []TokenHolder
-	
+
 	if found, _ := c.GetFromCache(cacheKey, &holders); found {
 		return holders, nil
 	}
@@ -167,7 +167,7 @@ func (c *Client) GetTokenHolders(ctx context.Context, tokenAddress common.Addres
 
 	// Save to cache
 	c.SaveToCache(cacheKey, holders)
-	
+
 	return holders, nil
 }
 
@@ -176,7 +176,7 @@ func (c *Client) GetBurnEvents(ctx context.Context, tokenAddress common.Address,
 	// Check cache
 	cacheKey := c.CacheKey("burn_events", tokenAddress.Hex(), fromBlock.String(), toBlock.String())
 	var events []BurnEvent
-	
+
 	if found, _ := c.GetFromCache(cacheKey, &events); found {
 		return events, nil
 	}
@@ -187,7 +187,7 @@ func (c *Client) GetBurnEvents(ctx context.Context, tokenAddress common.Address,
 
 	// Save to cache
 	c.SaveToCache(cacheKey, events)
-	
+
 	return events, nil
 }
 

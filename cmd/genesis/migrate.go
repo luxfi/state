@@ -231,7 +231,7 @@ func runMigrateRebuildCanonical(cmd *cobra.Command, args []string) error {
 
 	// First, scan all evmH (hash->number) mappings
 	hashToNum := make(map[string]uint64)
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: []byte("evmH"),
 		UpperBound: []byte("evmI"),
@@ -280,7 +280,7 @@ func runMigrateRebuildCanonical(cmd *cobra.Command, args []string) error {
 				newKey := make([]byte, 12)
 				copy(newKey, "evmn")
 				binary.BigEndian.PutUint64(newKey[4:], num)
-				
+
 				// Set correct mapping
 				batch.Set(newKey, []byte(hash), nil)
 				batch.Delete(key, nil)
@@ -309,7 +309,7 @@ func runMigratePeekTip(cmd *cobra.Command, args []string) error {
 
 	// Scan evmn keys to find highest block
 	var maxBlock uint64
-	
+
 	iter, err := db.NewIter(&pebble.IterOptions{
 		LowerBound: []byte("evmn"),
 		UpperBound: []byte("evmo"),
@@ -362,7 +362,7 @@ func runMigrateReplayConsensus(cmd *cobra.Command, args []string) error {
 	// Set basic pointers
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, tip)
-	
+
 	stateDB.Set([]byte("Height"), heightBytes, nil)
 	stateDB.Set([]byte("lastAccepted"), []byte("dummy-block-id"), nil)
 
@@ -385,7 +385,7 @@ func runMigrateCheckHead(cmd *cobra.Command, args []string) error {
 	// Check various head pointer keys
 	keys := []string{
 		"LastBlock",
-		"LastHeader", 
+		"LastHeader",
 		"lastAccepted",
 		"Height",
 	}
@@ -436,7 +436,7 @@ func runMigrateFullPipeline(cmd *cobra.Command, args []string) error {
 	replayCmd.Flags().String("evm", evmDB, "")
 	replayCmd.Flags().String("state", stateDB, "")
 	replayCmd.Flags().String("tip", tip, "")
-	
+
 	if err := runMigrateReplayConsensus(replayCmd, []string{}); err != nil {
 		return fmt.Errorf("step 4 failed: %w", err)
 	}
@@ -456,7 +456,7 @@ func captureOutput(fn func() error) string {
 	os.Stdout = w
 
 	err := fn()
-	
+
 	w.Close()
 	os.Stdout = old
 
