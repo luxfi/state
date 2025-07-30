@@ -13,7 +13,7 @@ WORKDIR /build
 COPY . /build/genesis
 
 # Build genesis tool
-RUN cd /build/genesis && make build
+RUN cd /build/genesis && go mod download && go build -o /build/genesis/bin/genesis ./cmd/genesis
 
 # Install luxd with canonical key patches
 # Using go install to get the tagged version
