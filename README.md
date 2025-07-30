@@ -30,10 +30,37 @@ make import
 make node
 ```
 
+**Important**: To enable C-Chain indexing for historical logs and `eth_getLogs` queries, add the following flag when launching luxd:
+```bash
+--chain-configs.enable-indexing
+```
+
 ### Step 3: Verify
 ```bash
+# Check block height (should be 0x10859c = 1082780)
 curl -s --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
   http://localhost:9650/ext/bc/C/rpc | jq .result
+
+# Or use the convenience command:
+make check-height
+```
+
+## Quick Verification
+
+After starting the container:
+
+```bash
+# Check current block height
+make check-height
+
+# Check president's balance  
+make check-balance
+
+# Monitor blockchain activity
+make monitor
+
+# Open interactive console
+make console
 ```
 
 ## Available Commands

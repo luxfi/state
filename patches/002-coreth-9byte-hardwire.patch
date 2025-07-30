@@ -1,0 +1,16 @@
+diff --git a/node/vms/evm/core/types/block.go b/node/vms/evm/core/types/block.go
+index abc123..def456 100644
+--- a/node/vms/evm/core/types/block.go
++++ b/node/vms/evm/core/types/block.go
+@@ -1,5 +1,9 @@
+ // GetCanonicalKey returns the database key for canonical block hash
+ func GetCanonicalKey(number *big.Int) []byte {
+-    canonHashKey := append([]byte{headerPrefixCanonicalHash}, number.Bytes()...)
++    // Force 8-byte number representation to ensure 9-byte total key
++    // (1 byte prefix + 8 bytes number)
++    canonHashKey := append(
++        []byte{headerPrefixCanonicalHash},
++        number.FillBytes(make([]byte, 8))...,
++    )
+     return canonHashKey
+ }

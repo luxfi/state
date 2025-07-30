@@ -78,15 +78,61 @@ clean:
 	@echo "🧹 cleaning runtime directory..."
 	@rm -rf $(REPO)/runtime
 
+### Monitoring and verification ###############################################
+.PHONY: monitor
+monitor:
+	@echo "📊 Monitoring C-Chain..."
+	docker compose exec lux luxd monitor chain C
+
+.PHONY: console
+console:
+	@echo "💻 Opening JS console..."
+	docker compose exec lux geth attach http://127.0.0.1:9630/ext/bc/C/rpc
+
+.PHONY: snapshot
+snapshot:
+	@echo "📸 Creating DB snapshot..."
+	docker compose exec lux tar -C /opt/lux/runtime -czf - db > snapshot-$(shell date +%Y%m%d-%H%M%S).tgz
+	@echo "✅ Snapshot created"
+
+.PHONY: check-height
+check-height:
+	@echo "🔍 Checking block height..."
+	@curl -s -H "content-type: application/json" \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+		http://localhost:8080/ | jq -r '.result' | xargs printf "Height: %d\n"
+
+.PHONY: check-balance
+check-balance:
+	@echo "💰 Checking president balance..."
+	@curl -s -H "content-type: application/json" \
+		-d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x9011E888251AB053B7bD1cdB598Db4f9DEd94714","latest"]}' \
+		http://localhost:8080/ | jq -r '.result'
+
 .PHONY: help
 help:
 	@echo "Available targets:"
+	@echo ""
+	@echo "Main workflow:"
 	@echo "  make migrate-and-launch  - Complete migration pipeline and launch luxd"
+	@echo "  make docker-run         - Build and run Docker container"
+	@echo "  make docker-clean       - Stop container and clean resources"
+	@echo ""
+	@echo "Build targets:"
 	@echo "  make build              - Build genesis binary"
-	@echo "  make migrate-subnet     - Extract and convert subnet data"
-	@echo "  make clean-68n          - Clean 10-byte canonical keys"
-	@echo "  make rebuild-canonical  - Rebuild canonical hash table"
-	@echo "  make copy-to-node       - Copy DB to node layout with markers"
-	@echo "  make launch-L1          - Launch luxd with migrated data"
+	@echo "  make docker-build       - Build Docker image"
+	@echo ""
+	@echo "Migration steps:"
+	@echo "  make migrate            - Run full migration pipeline"
+	@echo "  make launch             - Launch luxd with migrated data"
+	@echo ""
+	@echo "Monitoring:"
+	@echo "  make monitor            - Monitor blockchain activity"
+	@echo "  make console            - Open JS console"
+	@echo "  make check-height       - Check current block height"
+	@echo "  make check-balance      - Check president's balance"
+	@echo "  make snapshot           - Create DB snapshot"
+	@echo ""
+	@echo "Utilities:"
 	@echo "  make clean              - Clean runtime directory"
 	@echo "  make help               - Show this help message"

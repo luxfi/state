@@ -1,0 +1,44 @@
+diff --git a/node/vms/cchainvm/database.go b/node/vms/cchainvm/database.go
+index e7ab3c6..9492c60 100644
+--- a/node/vms/cchainvm/database.go
++++ b/node/vms/cchainvm/database.go
+@@ -1,13 +1,13 @@
+-// canonicalKey returns the _old_ 10-byte "h...n" key:
+-//   0x68 | uint64(blockNumber) | 0x6e
+-func canonicalKey(number uint64) []byte {
+-    key := make([]byte, 10)
+-    key[0] = 0x68                       // 'h'
+-    binary.BigEndian.PutUint64(key[1:], number)
+-    key[9] = 0x6e                       // 'n'
+-    return key
+-}
++// canonicalKey returns the **new** 9-byte key used after migration:
++//   0x68 | uint64(blockNumber)
++// This exactly matches what `genesis migrate rebuild-canonical`
++// just wrote into Pebble.
++func canonicalKey(number uint64) []byte {
++    key := make([]byte, 9)
++    key[0] = 0x68                       // 'h'
++    binary.BigEndian.PutUint64(key[1:], number)
++    return key
++}
+
+diff --git a/node/vms/cchainvm/backend.go b/node/vms/cchainvm/backend.go
+index 5bd9aab..7e59fdb 100644
+--- a/node/vms/cchainvm/backend.go
++++ b/node/vms/cchainvm/backend.go
+@@ -1,11 +1,11 @@
+-// getCanonicalHash reads a 10-byte key.
+-// Returns (hash, found)
+-func (b *Backend) getCanonicalHash(number uint64) ([]byte, bool) {
+-    key := canonicalKey(number)      // 10 bytes (old)
++// getCanonicalHash reads the **9-byte** canonical key.
++// Returns (hash, found)
++func (b *Backend) getCanonicalHash(number uint64) ([]byte, bool) {
++    key := canonicalKey(number)      // 9 bytes (new)
+     value, err := b.db.Get(key)
+     if err != nil {
+         return nil, false
+     }
+     return value, true
+ }
