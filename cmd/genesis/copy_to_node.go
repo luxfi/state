@@ -1,10 +1,14 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/cockroachdb/pebble"
 	"github.com/spf13/cobra"
 )
 
