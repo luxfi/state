@@ -17,7 +17,7 @@ func main() {
 
 	dbPath := os.Args[1]
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
-	if err \!= nil {
+	if err != nil {
 		log.Fatalf("Failed to open DB: %v", err)
 	}
 	defer db.Close()
@@ -27,7 +27,7 @@ func main() {
 	
 	// Sample some keys
 	iter, err := db.NewIter(nil)
-	if err \!= nil {
+	if err != nil {
 		log.Fatalf("Failed to create iterator: %v", err)
 	}
 	defer iter.Close()
@@ -56,4 +56,3 @@ func main() {
 		fmt.Printf("  key[0]=0x%02x: %d occurrences\n", prefix, cnt)
 	}
 }
-EOF < /dev/null
