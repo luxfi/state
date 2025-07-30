@@ -444,23 +444,6 @@ func formatBigInt(val []byte) string {
 	return fmt.Sprintf("%d bytes", len(val))
 }
 
-func incrementBytes(b []byte) []byte {
-	result := make([]byte, len(b))
-	copy(result, b)
-	for i := len(result) - 1; i >= 0; i-- {
-		if result[i] < 0xff {
-			result[i]++
-			break
-		}
-		result[i] = 0
-		if i == 0 {
-			// Overflow - append a byte
-			result = append(result, 1)
-		}
-	}
-	return result
-}
-
 func findLowestBlock(db *pebble.DB) uint64 {
 	// Check evmh prefix
 	iter, _ := db.NewIter(&pebble.IterOptions{
