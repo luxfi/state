@@ -9,8 +9,8 @@ import (
     "sort"
     
     "github.com/cockroachdb/pebble"
-    "github.com/luxfi/geth/core/types"
-    "github.com/luxfi/geth/rlp"
+    "github.com/ethereum/go-ethereum/core/types"
+    "github.com/ethereum/go-ethereum/rlp"
 )
 
 func main() {

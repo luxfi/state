@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/ethclient"
-	"github.com/luxfi/geth/rpc"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // ChainConfig holds configuration for a blockchain

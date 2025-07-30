@@ -9,7 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/luxfi/geth/common"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 )
 

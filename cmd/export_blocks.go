@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/rlp"
+	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/spf13/cobra"
 )
 

@@ -1,6 +1,6 @@
 package rawdb
 
-// Constants exported from github.com/luxfi/geth/core/rawdb/schema.go
+// Constants exported from github.com/ethereum/go-ethereum/core/rawdb/schema.go
 // These are needed for migration tools but are not exported in the upstream
 
 var (

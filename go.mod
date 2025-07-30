@@ -4,28 +4,21 @@ go 1.24.5
 
 require (
 	github.com/cockroachdb/pebble v1.1.5
-	github.com/lib/pq v1.10.9
-	github.com/luxfi/geth v1.16.2
-	github.com/luxfi/ids v0.1.0
-	github.com/luxfi/node v1.15.0
+	github.com/ethereum/go-ethereum v1.16.1
+	github.com/luxfi/node v1.13.3
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a
 )
 
-replace (
-	github.com/luxfi/geth => ../geth
-	github.com/luxfi/node => ../node
-)
+// All dependencies must be published - no local replaces for CI
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/StephenButtolph/canoto v0.17.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.5 // indirect
-	github.com/ava-labs/avalanchego v1.13.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
@@ -63,14 +56,12 @@ require (
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1 // indirect
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db // indirect
-	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/luxfi/crypto v1.0.2 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -122,4 +113,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/luxfi/lpm => ../lpm
+replace github.com/luxfi/crypto => github.com/luxfi/crypto v0.1.1

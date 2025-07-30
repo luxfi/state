@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/ethclient"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // TokenTransfer represents a token transfer

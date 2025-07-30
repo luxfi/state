@@ -10,7 +10,7 @@ import (
     "path/filepath"
 
     "github.com/cockroachdb/pebble"
-    "github.com/luxfi/geth/core/rawdb"
+    "github.com/ethereum/go-ethereum/core/rawdb"
 )
 
 // CopyChaindata opens the Pebble DB at srcPath and dstPath, then iterates through all

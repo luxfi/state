@@ -8,10 +8,10 @@ import (
     "os"
     
     "github.com/cockroachdb/pebble"
-    "github.com/luxfi/geth/core/rawdb"
-    "github.com/luxfi/geth/core/types"
-    "github.com/luxfi/geth/ethdb"
-    "github.com/luxfi/geth/rlp"
+    "github.com/ethereum/go-ethereum/core/rawdb"
+    "github.com/ethereum/go-ethereum/core/types"
+    "github.com/ethereum/go-ethereum/ethdb"
+    "github.com/ethereum/go-ethereum/rlp"
 )
 
 // pebbleDB wraps a Pebble database
