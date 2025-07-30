@@ -151,7 +151,7 @@ func runAnalyzeKeys(dbPath string, limit int, detailed bool) error {
 		info := prefixMap[prefix]
 		percentage := float64(info.count) * 100.0 / float64(totalKeys)
 		fmt.Printf("%-20s: %8d keys (%5.2f%%)", prefix, info.count, percentage)
-		
+
 		if detailed {
 			fmt.Printf("\n  Sample: %x", info.sampleKey)
 			if len(info.sampleValue) > 0 {
@@ -177,21 +177,21 @@ func runAnalyzePrefixes(cmd *cobra.Command, args []string) error {
 
 	// Known prefix patterns
 	knownPrefixes := map[string]string{
-		"0x41": "accountSnapshot",
-		"0x42": "storageSnapshot", 
-		"0x43": "code",
-		"0x48": "header",
-		"0x62": "blockBody",
-		"0x63": "cliqueSnapshot",
-		"0x65": "epochAccumulator",
-		"0x66": "blockFullTxLookup",
-		"0x68": "canonicalHash",
+		"0x41":  "accountSnapshot",
+		"0x42":  "storageSnapshot",
+		"0x43":  "code",
+		"0x48":  "header",
+		"0x62":  "blockBody",
+		"0x63":  "cliqueSnapshot",
+		"0x65":  "epochAccumulator",
+		"0x66":  "blockFullTxLookup",
+		"0x68":  "canonicalHash",
 		"0x48n": "headerNumber",
 		"0x68n": "canonicalHash+suffix",
-		"0x72": "receipts",
-		"0x74": "txLookup",
-		"0x75": "bloomBits",
-		"evm": "EVM namespace",
+		"0x72":  "receipts",
+		"0x74":  "txLookup",
+		"0x75":  "bloomBits",
+		"evm":   "EVM namespace",
 	}
 
 	prefixCounts := make(map[string]int)
@@ -245,9 +245,9 @@ func runAnalyzeNamespace(cmd *cobra.Command, args []string) error {
 	fmt.Println("Analyzing namespace patterns...")
 
 	type namespaceInfo struct {
-		count       int
-		prefixes    map[string]int
-		sampleKeys  []string
+		count      int
+		prefixes   map[string]int
+		sampleKeys []string
 	}
 
 	namespaces := make(map[string]*namespaceInfo)
@@ -257,7 +257,7 @@ func runAnalyzeNamespace(cmd *cobra.Command, args []string) error {
 
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		
+
 		// Extract namespace (everything before first ':')
 		namespace := "raw"
 		keyStr := string(key)
@@ -521,7 +521,7 @@ func hasBlockHeader(db *pebble.DB, blockNum uint64) bool {
 	blockBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(blockBytes, blockNum)
 	evmhKey := append([]byte("evmh"), blockBytes...)
-	
+
 	if _, closer, err := db.Get(evmhKey); err == nil {
 		closer.Close()
 		return true
@@ -541,7 +541,7 @@ func hasBlockBody(db *pebble.DB, blockNum uint64) bool {
 	blockBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(blockBytes, blockNum)
 	evmbKey := append([]byte("evmb"), blockBytes...)
-	
+
 	if _, closer, err := db.Get(evmbKey); err == nil {
 		closer.Close()
 		return true
@@ -553,7 +553,7 @@ func hasBlockBody(db *pebble.DB, blockNum uint64) bool {
 func hasCanonicalMapping(db *pebble.DB, blockNum uint64) bool {
 	blockBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(blockBytes, blockNum)
-	
+
 	// Check evmn key
 	evmnKey := append([]byte("evmn"), blockBytes...)
 	if _, closer, err := db.Get(evmnKey); err == nil {

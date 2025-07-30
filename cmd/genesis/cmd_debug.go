@@ -172,11 +172,11 @@ func runDebugState(cmd *cobra.Command, args []string) error {
 	// Find chain boundaries
 	fmt.Println("\nChain Boundaries:")
 	fmt.Println("-----------------")
-	
+
 	// Find lowest block
 	lowestBlock := findLowestBlock(db)
 	fmt.Printf("Lowest block: %d\n", lowestBlock)
-	
+
 	// Find highest block
 	highestBlock := findHighestBlockDebug(db)
 	fmt.Printf("Highest block: %d\n", highestBlock)
@@ -200,7 +200,7 @@ func runDebugState(cmd *cobra.Command, args []string) error {
 	// Database statistics
 	fmt.Println("\nDatabase Statistics:")
 	fmt.Println("-------------------")
-	
+
 	totalKeys := 0
 	totalSize := uint64(0)
 	prefixStats := make(map[string]int)
@@ -211,7 +211,7 @@ func runDebugState(cmd *cobra.Command, args []string) error {
 	for iter.First(); iter.Valid(); iter.Next() {
 		totalKeys++
 		totalSize += uint64(len(iter.Key()) + len(iter.Value()))
-		
+
 		prefix := getKeyPrefix(iter.Key())
 		prefixStats[prefix]++
 	}
@@ -284,7 +284,7 @@ func runDebugBlock(dbPath string, blockNum uint64) error {
 
 	if !found {
 		fmt.Println("\nNo data found for this block!")
-		
+
 		// Try to find nearby blocks
 		fmt.Println("\nSearching for nearby blocks...")
 		for delta := uint64(1); delta <= 10; delta++ {
@@ -347,7 +347,7 @@ func runDebugPrefix(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Found %d keys with this prefix\n", count)
 	fmt.Printf("Total size: %.2f KB\n", float64(sizeTotal)/1024)
-	
+
 	if len(samples) > 0 {
 		fmt.Println("\nSample keys:")
 		for _, s := range samples {
@@ -502,7 +502,7 @@ func findHighestBlockDebug(db *pebble.DB) uint64 {
 				UpperBound: []byte("evmi"),
 			})
 			defer iter.Close()
-			
+
 			max := uint64(0)
 			for iter.Last(); iter.Valid(); iter.Prev() {
 				key := iter.Key()

@@ -243,7 +243,7 @@ func runMigrateCanonical(cmd *cobra.Command, args []string) error {
 
 		if len(key) == 12 { // evmn + 8 bytes
 			blockNum := binary.BigEndian.Uint64(key[4:])
-			
+
 			// Create 9-byte canonical key
 			canonicalKey := make([]byte, 9)
 			canonicalKey[0] = 0x68

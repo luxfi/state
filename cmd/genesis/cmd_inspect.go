@@ -74,7 +74,7 @@ func newInspectConsensusCmd() *cobra.Command {
 
 func runInspectTip(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -82,7 +82,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	fmt.Println("Finding chain tip...")
-	
+
 	// Check for evmh prefix (headers)
 	maxBlock := uint64(0)
 	iter, _ := db.NewIter(&pebble.IterOptions{
@@ -119,7 +119,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Maximum block number: %d\n", maxBlock)
-	
+
 	// Check consensus Height
 	if heightBytes, closer, err := db.Get([]byte("Height")); err == nil {
 		height := binary.BigEndian.Uint64(heightBytes)
@@ -138,7 +138,7 @@ func runInspectTip(cmd *cobra.Command, args []string) error {
 
 func runInspectBlocks(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -147,25 +147,25 @@ func runInspectBlocks(cmd *cobra.Command, args []string) error {
 
 	// Sample some blocks
 	fmt.Println("Sampling block data...")
-	
+
 	// Check evmh prefix
 	fmt.Println("\nHeaders (evmh prefix):")
 	sampleKeys(db, []byte("evmh"), 5)
-	
+
 	// Check 0x68 prefix
 	fmt.Println("\nHeaders (0x68 prefix):")
 	sampleKeys(db, []byte{0x68}, 5)
-	
+
 	// Check bodies
 	fmt.Println("\nBodies (evmb prefix):")
 	sampleKeys(db, []byte("evmb"), 5)
-	
+
 	return nil
 }
 
 func runInspectKeys(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -173,17 +173,17 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	fmt.Println("Analyzing key patterns...")
-	
+
 	prefixCounts := make(map[string]int)
 	totalKeys := 0
-	
+
 	iter, _ := db.NewIter(&pebble.IterOptions{})
 	defer iter.Close()
-	
+
 	for iter.First(); iter.Valid() && totalKeys < 100000; iter.Next() {
 		key := iter.Key()
 		totalKeys++
-		
+
 		// Categorize by prefix
 		if len(key) > 0 {
 			// Check string prefixes
@@ -197,19 +197,19 @@ func runInspectKeys(cmd *cobra.Command, args []string) error {
 			prefixCounts[fmt.Sprintf("0x%02x", key[0])]++
 		}
 	}
-	
+
 	fmt.Printf("\nAnalyzed %d keys\n", totalKeys)
 	fmt.Println("\nPrefix distribution:")
 	for prefix, count := range prefixCounts {
 		fmt.Printf("  %s: %d\n", prefix, count)
 	}
-	
+
 	return nil
 }
 
 func runInspectCanonical(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -217,29 +217,29 @@ func runInspectCanonical(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	fmt.Println("Checking canonical mappings...")
-	
+
 	// Check specific blocks
 	blocks := []uint64{0, 1, 2, 100, 1000, 10000}
-	
+
 	for _, blockNum := range blocks {
 		fmt.Printf("\nBlock %d:\n", blockNum)
-		
+
 		// Check evmn key
 		blockBytes := make([]byte, 8)
 		binary.BigEndian.PutUint64(blockBytes, blockNum)
 		evmnKey := append([]byte("evmn"), blockBytes...)
-		
+
 		if hash, closer, err := db.Get(evmnKey); err == nil {
 			fmt.Printf("  evmn mapping: 0x%s\n", hex.EncodeToString(hash))
 			closer.Close()
 		} else {
 			fmt.Printf("  evmn mapping: not found\n")
 		}
-		
+
 		// Check 9-byte canonical key
 		canonicalKey := append([]byte{0x68}, blockBytes...)
 		canonicalKey = append(canonicalKey, 0x6e)
-		
+
 		if hash, closer, err := db.Get(canonicalKey); err == nil {
 			fmt.Printf("  9-byte canonical: 0x%s\n", hex.EncodeToString(hash))
 			closer.Close()
@@ -247,7 +247,7 @@ func runInspectCanonical(cmd *cobra.Command, args []string) error {
 			// Check 10-byte format
 			canonicalKey10 := append([]byte{0x68}, blockBytes...)
 			canonicalKey10 = append(canonicalKey10, 0x6e)
-			
+
 			if hash, closer, err := db.Get(canonicalKey10); err == nil {
 				fmt.Printf("  10-byte canonical: 0x%s\n", hex.EncodeToString(hash))
 				closer.Close()
@@ -256,13 +256,13 @@ func runInspectCanonical(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 func runInspectConsensus(cmd *cobra.Command, args []string) error {
 	dbPath := args[0]
-	
+
 	db, err := pebble.Open(dbPath, &pebble.Options{ReadOnly: true})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -270,7 +270,7 @@ func runInspectConsensus(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	fmt.Println("Checking consensus state...")
-	
+
 	// Check Height
 	if val, closer, err := db.Get([]byte("Height")); err == nil {
 		height := binary.BigEndian.Uint64(val)
@@ -279,7 +279,7 @@ func runInspectConsensus(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Println("Height: not found")
 	}
-	
+
 	// Check LastAccepted
 	if val, closer, err := db.Get([]byte("LastAccepted")); err == nil {
 		fmt.Printf("LastAccepted: 0x%s\n", hex.EncodeToString(val))
@@ -287,7 +287,7 @@ func runInspectConsensus(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Println("LastAccepted: not found")
 	}
-	
+
 	// Check other consensus keys
 	consensusKeys := []string{
 		"lastAccepted",
@@ -296,7 +296,7 @@ func runInspectConsensus(cmd *cobra.Command, args []string) error {
 		"LastBlock",
 		"LastHeader",
 	}
-	
+
 	for _, key := range consensusKeys {
 		if val, closer, err := db.Get([]byte(key)); err == nil {
 			if len(val) == 8 {
@@ -309,7 +309,7 @@ func runInspectConsensus(cmd *cobra.Command, args []string) error {
 			closer.Close()
 		}
 	}
-	
+
 	return nil
 }
 
@@ -319,16 +319,16 @@ func sampleKeys(db *pebble.DB, prefix []byte, count int) {
 		UpperBound: append(prefix, 0xff),
 	})
 	defer iter.Close()
-	
+
 	sampled := 0
 	for iter.First(); iter.Valid() && sampled < count; iter.Next() {
 		key := iter.Key()
 		val := iter.Value()
-		
+
 		fmt.Printf("  Key: %x (len=%d), Value: %d bytes\n", key, len(key), len(val))
 		sampled++
 	}
-	
+
 	if sampled == 0 {
 		fmt.Println("  No keys found with this prefix")
 	}
