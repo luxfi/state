@@ -39,10 +39,10 @@ func init() {
 	// Initialize all subcommands
 	rootCmd.AddCommand(
 		newImportCmd(),
-		newInspectCmd(),
-		newAnalyzeCmd(),
+		NewInspectCommand(),
+		NewAnalyzeCommand(),
 		newFixCmd(),
-		newMigrateCmd(),
+		NewMigrateCommand(),
 		newDebugCmd(),
 		newLaunchCmd(),
 		newGenerateCmd(),
