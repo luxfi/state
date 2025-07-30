@@ -527,7 +527,7 @@ func TestCommandStructure(t *testing.T) {
 }
 
 // Helper function to capture output
-func captureOutput(f func()) string {
+func captureTestOutput(f func()) string {
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
@@ -543,7 +543,7 @@ func captureOutput(f func()) string {
 }
 
 func TestToolsCommand(t *testing.T) {
-	output := captureOutput(func() {
+	output := captureTestOutput(func() {
 		cmd := &cobra.Command{}
 		runTools(cmd, []string{})
 	})
