@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  genesis-migration:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: luxfi/genesis-migration:latest
+    container_name: lux-genesis
+    ports:
+      - "9630:9630"
+      - "9631:9631"
+    volumes:
+      # Mount the old subnet chaindata (read-only)
+      - ./chaindata:/app/chaindata:ro
+      # Mount runtime directory for migrated data (read-write)
+      - ./runtime:/app/runtime
+    environment:
+      - NETWORK_ID=96369
+      - CHAIN_ID=X6CU5qgMJfzsTB9UWxj2ZY5hd68x41HfZ4m4hCBWbHuj1Ebc3
+      - VM_ID=mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6
+      - TIP_HEIGHT=1082780
+      - TIP_HASH=0x32dede1fc8e0f11ecde12fb42aef7933fc6c5fcf863bc277b5eac08ae4d461f0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9630/ext/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+
+# Optional: Add monitoring services
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #   restart: unless-stopped
+
+networks:
+  default:
+    name: lux-network
