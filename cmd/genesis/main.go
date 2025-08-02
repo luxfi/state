@@ -127,6 +127,9 @@ Use 'genesis --help' to see all available commands.`,
 		RunE:  runGenerate,
 	}
 	addGenerateFlags(generateCmd)
+	
+	// Add 8-chains subcommand to generate
+	generateCmd.AddCommand(generate8ChainsCmd())
 
 	// Validators command group
 	validatorsCmd := &cobra.Command{

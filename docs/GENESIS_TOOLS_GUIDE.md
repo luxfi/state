@@ -330,15 +330,82 @@ ls -la configs/mainnet/*/genesis.json
 ### 2. Importing Historical Data
 
 ```bash
-# Extract 7777 network data
-./bin/genesis extract state /archived/lux-7777/pebbledb ./extracted-7777 \
-    --network 7777 \
-    --state
+# Complete end-to-end C-Chain import runbook
+# This workflow takes your raw Subnet-EVM PebbleDB, rebuilds all canonical mappings,
+# imports blocks and state, and launches a fully-bootstrapped C-Chain node with luxd.
 
-# Analyze the data
-./bin/genesis analyze \
-    -db ./extracted-7777 \
-    -network lux-7777
+# 0. Prerequisites
+# - CLI tools built under bin/: migrate_evm, rebuild_canonical,
+#   peek_tip_v2, replay-consensus-pebble, luxd
+# - genesis JSON for chain-id 96369 in current directory
+# - No other luxd running on ports 9630, 9650, etc.
+
+# 1. Set up workspace
+export TEST_ROOT=$HOME/.tmp/cchain-import
+rm -rf $TEST_ROOT && mkdir -p \
+  $TEST_ROOT/src/pebbledb \
+  $TEST_ROOT/evm/pebbledb \
+  $TEST_ROOT/state/pebbledb
+
+# Sync your Subnet DB (full or partial for smoke test)
+rsync -a /path/to/subnet/pebbledb/ $TEST_ROOT/src/pebbledb/
+
+# 2. Migrate & de-namespace EVM keys
+bin/migrate_evm \
+  --src $TEST_ROOT/src/pebbledb \
+  --dst $TEST_ROOT/evm/pebbledb
+
+# Verify EVM prefix keys (h, b, r, n, H):
+pebble lsm $TEST_ROOT/evm/pebbledb \
+  | grep -E '^key\[0\]=0x65(766d68|766d62|766d72|766d6e|766d48)'
+
+# 3. Rebuild canonical evmn mappings
+bin/rebuild_canonical --db $TEST_ROOT/evm/pebbledb
+# Pass 1: collect full hash→height; Pass 2: fix all evmn keys
+
+# 4. Peek migrated tip
+export TIP=$(bin/peek_tip_v2 --db $TEST_ROOT/evm/pebbledb)
+echo "Final tip = $TIP"
+
+# 5. Replay Snowman consensus into state DB
+bin/replay-consensus-pebble \
+  --evm   $TEST_ROOT/evm/pebbledb \
+  --state $TEST_ROOT/state/pebbledb \
+  --tip   $TIP
+
+# 6. Drop old ChainConfigKey (force genesis reload)
+pebble del \
+  --db=$TEST_ROOT/evm/pebbledb \
+  436861696e436f6e666967436f6e6669674b6579
+
+# 7. Launch C-Chain node
+luxd \
+  --db-dir=$TEST_ROOT \
+  --network-id=96369 \
+  --staking-enabled=false \
+  --http-port=9630 \
+  --chain-configs.enable-indexing
+
+# Look for bootstrap log lines:
+# [C Chain] starting bootstrapper {"lastAcceptedHeight":<TIP>}
+# [C Chain] bootstrapped
+
+# 8. Smoke-test via RPC
+
+# 8.1 Block number
+curl -s --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  http://localhost:9630/ext/bc/C/rpc \
+  | jq .result  # => "0x$(printf %x $TIP)"
+
+# 8.2 Genesis hash
+curl -s --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x0",false],"id":1}' \
+  http://localhost:9630/ext/bc/C/rpc \
+  | jq .result.hash
+
+# 8.3 Treasury balance
+curl -s --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x9011e888251ab053b7bd1cdb598db4f9ded94714","latest"],"id":1}' \
+  http://localhost:9630/ext/bc/C/rpc \
+  | jq .result  # expect >= 0x1B1AE4D6E2EF50000
 ```
 
 ### 3. Importing from Original Genesis
