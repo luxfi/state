@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	github.com/cockroachdb/pebble v1.1.5
 	github.com/luxfi/geth v1.16.6
-	github.com/luxfi/ids v0.1.1
+	github.com/luxfi/ids v1.0.2
 	github.com/luxfi/node v1.15.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0

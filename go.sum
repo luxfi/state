@@ -36,6 +36,7 @@ github.com/cespare/cp v0.1.0/go.mod h1:SOGHArjBr4JWaSDEVpWpo/hNg6RoKrls6Oh40hiwW
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
+github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f h1:otljaYPt5hWxV3MUfO5dFPFiOXg9CyG5/kCfayTqsJ4=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
 github.com/cockroachdb/errors v1.11.3 h1:5bA+k2Y6r+oz/6Z/RFlNeVCesGARKuC6YymtcDrbC/I=
@@ -89,6 +90,7 @@ github.com/ferranbt/fastssz v0.1.4/go.mod h1:Ea3+oeoRGGLGm5shYAeDgu6PGUlcvQhE2fI
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
+github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 h1:f6D9Hr8xV8uYKlyuj8XIruxlh9WjVjdh1gIicAS7ays=
 github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08/go.mod h1:x7DCsMOv1taUwEWCzT4cmDeAkigA5/QCwUodaVOe8Ww=
 github.com/getsentry/sentry-go v0.27.0 h1:Pv98CIbtB3LkMWmXi4Joa5OOcwbmnX88sF5qbK3r3Ps=
@@ -122,6 +124,7 @@ github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/golang/snappy v0.0.4/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/golang/snappy v1.0.0 h1:Oy607GVXHs7RtbggtPBnr2RmDArIsAefDwvrdWvRhGs=
+github.com/golang/snappy v1.0.0/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/google/flatbuffers v25.2.10+incompatible h1:F3vclr7C3HpB1k9mxCGRMXq6FdUalZ6H/pNX4FP1v0Q=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
@@ -184,13 +187,20 @@ github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+
 github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzWu4=
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
 github.com/luxfi/crypto v1.1.1 h1:6roT/QzdwUoz3v7Fv2bM1s1CyCp/UpEnG7yRVWbw0do=
+github.com/luxfi/crypto v1.1.1/go.mod h1:Wt4fomM14VWfQ/89PZh1dApz+0XteEG9x99Q9SHIRtY=
 github.com/luxfi/database v1.1.4 h1:C8yFA7ilwYnde/+tjSif9RgBlC9mN8Lj52jIIv/Vayk=
+github.com/luxfi/database v1.1.4/go.mod h1:/dUq+IYFvgFitQEXr4zj/9jJ0cjT/bf5558pB1rKpX8=
 github.com/luxfi/evm v0.8.2 h1:F9BZ9EDZlB282fjdHrvP7HtzdEmOzCzRciZRYLPB2vk=
 github.com/luxfi/evm v0.8.2/go.mod h1:pWNPADWd0x/ELqdjJ7M/SNMWkSP/Jr6u8B997tcd8hk=
 github.com/luxfi/ids v0.1.1 h1:ga/sNdsDEpkOB1B89BWVsGowCECOK3FfXiy7EgeumzQ=
+github.com/luxfi/ids v1.0.2 h1:OnbCWBgdmuBPZat1r1vRikk1FFrdHMfSknpfKmX0KBg=
+github.com/luxfi/ids v1.0.2/go.mod h1:cMbto3Q8N3IaBxdz4Lzaq9wYl33coGXUdlr2+YwXeUw=
 github.com/luxfi/log v0.1.1 h1:KRTOIGqyPTrN3nWcBMVI50B6EXTayYex2+HyGjJ06Ew=
+github.com/luxfi/log v0.1.1/go.mod h1:trb99HbI+YW6nu+So4jWKey20oHeRhlee70xbuR6Gak=
 github.com/luxfi/metrics v1.1.1 h1:aKVEtytAl3TqSvInRpDc6ZdSJsCbTmCCl0UAl2YNXWU=
+github.com/luxfi/metrics v1.1.1/go.mod h1:ynSRcRjG+t1snUvFUbQFEu0UGibyw8gsitltQ9H1YDA=
 github.com/luxfi/trace v0.1.0 h1:U1QRwBqmQ/LbP1KtWzLWv6c1HWKqG5gOurxIfvFqt+Q=
+github.com/luxfi/trace v0.1.0/go.mod h1:nxbVJybpgn9JI38vYrguYUYwQDaqCMG5hHy73k/j9e4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=
 github.com/mattn/go-colorable v0.1.14/go.mod h1:6LmQG8QLFO4G5z1gPvYEzlUgJ2wF+stgPZH1UqBm1s8=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
@@ -389,6 +399,7 @@ gonum.org/v1/gonum v0.14.0/go.mod h1:AoWeoz0becf9QMWtE8iWXNXc27fK4fNeHNf/oMejGfU
 google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 h1:mVXdvnmR3S3BQOqHECm9NGMjYiRtEvDYcqAqedTXY6s=
 google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074/go.mod h1:vYFwMYFbmA8vl6Z/krj/h7+U/AqpHknwJX4Uqgfyc7I=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 h1:MAKi5q709QWfnkkpNQ0M12hYJ1+e8qYVDyowc4U1XZM=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
 google.golang.org/grpc v1.74.2 h1:WoosgB65DlWVC9FqI82dGsZhWFNBSLjQ84bjROOpMu4=
 google.golang.org/grpc v1.74.2/go.mod h1:CtQ+BGjaAIXHs/5YS3i473GqwBBa1zGQNevxdeBEXrM=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
