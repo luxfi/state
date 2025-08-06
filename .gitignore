@@ -63,3 +63,12 @@ archaeology-plugin.json
 
 output
 runtime
+
+badger-chain/
+badger-mainnet/
+badger-replay/
+cchain/
+chaindata/lux-mainnet-96369/db/LOCK
+chaindata/lux-mainnet-96369/db/pebbledb/LOCK
+chaindata/lux-mainnet-96369/db/pebbledb/LOG.old
+chaindata/zoo-mainnet-200200/db/pebbledb/LOCK
