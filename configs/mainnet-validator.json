@@ -1,0 +1,74 @@
+{
+  "network-id": "mainnet",
+  "db-type": "badgerdb",
+  "chain-configs-dir": "/Users/z/work/lux/state/configs/chains",
+  "chain-data-dir": "/Users/z/.luxd/chainData",
+  "chain-config-content": {
+    "C": {
+      "state-sync-enabled": false,
+      "pruning-enabled": false,
+      "eth-apis": [
+        "eth",
+        "eth-filter",
+        "net",
+        "web3",
+        "internal-eth",
+        "internal-blockchain",
+        "internal-transaction",
+        "internal-tx-pool",
+        "internal-account",
+        "internal-personal",
+        "debug",
+        "debug-handler"
+      ]
+    }
+  },
+  "bootstrap-ips": [
+    "18.237.227.175:9651",
+    "54.189.208.216:9651",
+    "52.88.204.201:9651"
+  ],
+  "bootstrap-ids": [
+    "NodeID-5pdUKBFmJSSGNFxH7qW7rTJvwXPeXHmVB",
+    "NodeID-JCKRn2BpHASg9wPPKH7EFnL5JpK9vZBpR",
+    "NodeID-MFJm9kvBWWHeNgaVDsuhCxabyxnPFkBuX"
+  ],
+  "http-host": "0.0.0.0",
+  "http-port": 9650,
+  "staking-port": 9651,
+  "log-level": "info",
+  "data-dir": "/Users/z/.luxd",
+  "snow-mixed-query-num-push-vdr": 10,
+  "consensus-shutdown-timeout": "30s",
+  "consensus-gossip-frequency": "10s",
+  "network-compression-type": "zstd",
+  "c-chain-config": {
+    "snowman-api-enabled": true,
+    "coreth-admin-api-enabled": true,
+    "coreth-admin-api-dir": "",
+    "eth-apis": [
+      "eth",
+      "eth-filter",
+      "net",
+      "web3",
+      "internal-eth",
+      "internal-blockchain",
+      "internal-transaction",
+      "internal-tx-pool",
+      "internal-account",
+      "internal-personal",
+      "debug",
+      "debug-handler"
+    ],
+    "pruning-enabled": false,
+    "local-txs-enabled": true,
+    "api-max-duration": "0",
+    "ws-cpu-refill-rate": "0",
+    "ws-cpu-max-stored": "0",
+    "api-max-blocks-per-request": "0",
+    "allow-unfinalized-queries": true,
+    "allow-unprotected-txs": true,
+    "remote-tx-gossip-only-enabled": false,
+    "log-level": "debug"
+  }
+}

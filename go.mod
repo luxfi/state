@@ -67,7 +67,7 @@ require (
 	github.com/luxfi/crypto v1.1.1 // indirect
 	github.com/luxfi/database v1.1.4 // indirect
 	github.com/luxfi/log v0.1.1 // indirect
-	github.com/luxfi/metrics v1.1.1 // indirect
+	github.com/luxfi/metric v1.1.1 // indirect
 	github.com/luxfi/trace v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
